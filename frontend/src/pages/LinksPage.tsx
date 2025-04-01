@@ -59,7 +59,7 @@ export default function LinksPage() {
         <TabsList>
           <TabsTrigger value="all-links">All Links</TabsTrigger>
           <TabsTrigger value="add-link">Add Link</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          {/* <TabsTrigger value="analytics">Analytics</TabsTrigger> */}
         </TabsList>
 
         <TabsContent value="all-links">
