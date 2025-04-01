@@ -28,4 +28,11 @@ export default defineConfig({
       },
     },
   },
+  server: {
+    headers: {
+      // Configurer Content-Security-Policy pour autoriser les images de domaines externes
+      "Content-Security-Policy":
+        "default-src 'self'; img-src 'self' data: https://astronomy-store.com *.astronomy-store.com; font-src 'self' data:;",
+    },
+  },
 });

@@ -411,7 +411,59 @@ export const handleRedirection = async (req: Request, res: Response) => {
     });
 
     if (!link) {
-      return res.status(404).json({ message: "Link not found" });
+      // Retourner une page HTML conviviale au lieu d'un message d'erreur JSON
+      return res.status(404).send(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Link not found</title>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                margin: 0;
+                padding: 20px;
+                text-align: center;
+                color: #333;
+                background-color: #f8f9fa;
+              }
+              .container {
+                max-width: 600px;
+                padding: 40px;
+                background-color: white;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+              }
+              h1 {
+                font-size: 24px;
+                margin-bottom: 20px;
+              }
+              p {
+                font-size: 16px;
+                line-height: 1.5;
+                margin-bottom: 25px;
+              }
+              .icon {
+                font-size: 48px;
+                margin-bottom: 20px;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="icon">😕</div>
+              <h1>Link not found</h1>
+              <p>The link you accessed is no longer available.</p>
+            </div>
+          </body>
+        </html>
+      `);
     }
 
     // Find matching rule for user's country
