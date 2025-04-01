@@ -8,6 +8,8 @@ import {
   isAuthenticated,
   login as loginApi,
   logout as logoutApi,
+  removeDefaultProject,
+  setDefaultProject,
   setupOTP as setupOTPApi,
   verifyOTP as verifyOTPApi,
 } from "@/lib/auth";
@@ -33,6 +35,10 @@ interface AuthContextType {
   verifyOTP: (otp: string) => Promise<boolean>;
   disableOTP: (password: string) => Promise<void>;
   getBackupCodes: () => Promise<string[]>;
+  defaultProjectId: number | null;
+  setDefaultProjectId: (projectId: number) => void;
+  currentProjectId: number | null;
+  setCurrentProjectId: (projectId: number | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -50,7 +56,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentProjectId, setCurrentProjectId] = useState<number | null>(
+    () => {
+      const stored = localStorage.getItem("currentProjectId");
+      return stored ? parseInt(stored, 10) : null;
+    }
+  );
   const navigate = useNavigate();
+
+  // Mise à jour du localStorage quand currentProjectId change
+  useEffect(() => {
+    if (currentProjectId) {
+      localStorage.setItem("currentProjectId", currentProjectId.toString());
+    } else {
+      localStorage.removeItem("currentProjectId");
+    }
+  }, [currentProjectId]);
 
   const refreshUser = async () => {
     try {
@@ -59,6 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       if (!isAuthenticated()) {
         console.log("No token found, setting user to null");
         setUser(null);
+        setCurrentProjectId(null);
         setIsLoading(false);
         return;
       }
@@ -66,9 +88,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const currentUser = await getCurrentUser();
       console.log("Current user:", currentUser);
       setUser(currentUser);
+
+      // Si pas de projet courant, utiliser le projet par défaut
+      if (!currentProjectId && currentUser?.defaultProjectId) {
+        setCurrentProjectId(currentUser.defaultProjectId);
+      }
     } catch (error) {
       console.error("Error retrieving profile:", error);
       setUser(null);
+      setCurrentProjectId(null);
     } finally {
       setIsLoading(false);
     }
@@ -83,6 +111,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setIsLoading(true);
       const userInfo = await loginApi({ email, password, otp });
       setUser(userInfo);
+      if (userInfo.defaultProjectId) {
+        setDefaultProject(userInfo.defaultProjectId);
+        setCurrentProjectId(userInfo.defaultProjectId);
+      }
       toast.success("Login successful");
       navigate("/");
     } catch (error: unknown) {
@@ -115,6 +147,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setIsLoading(true);
       await logoutApi();
       setUser(null);
+      setCurrentProjectId(null);
+      removeDefaultProject();
+      localStorage.removeItem("currentProjectId");
       toast.success("Logout successful");
       navigate("/login");
     } catch (error) {
@@ -202,6 +237,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const setDefaultProjectId = (projectId: number) => {
+    setDefaultProject(projectId);
+    setUser((prev) => (prev ? { ...prev, defaultProjectId: projectId } : null));
+  };
+
   const value = {
     user,
     isLoading,
@@ -215,6 +255,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     verifyOTP,
     disableOTP,
     getBackupCodes,
+    defaultProjectId: user?.defaultProjectId ?? null,
+    setDefaultProjectId,
+    currentProjectId,
+    setCurrentProjectId,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

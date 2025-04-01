@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 
 import { AuthProvider } from "./contexts/AuthContext";
 import HomePage from "./pages/HomePage";
+import LinksPage from "./pages/LinksPage";
 import LoginPage from "./pages/LoginPage";
 import MainLayout from "./layouts/MainLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -24,6 +25,7 @@ function App() {
           <Route element={<MainLayout />}>
             <Route index element={<HomePage />} />
             <Route path="settings" element={<SettingsPage />} />
+            <Route path="/links" element={<LinksPage />} />
           </Route>
         </Route>
       </Routes>

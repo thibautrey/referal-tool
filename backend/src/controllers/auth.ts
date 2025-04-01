@@ -84,6 +84,9 @@ export const login: ControllerFunction = async (
     // Vérifier si l'utilisateur existe
     const user = await prisma.user.findUnique({
       where: { email },
+      include: {
+        projects: true,
+      },
     });
 
     if (!user) {
@@ -108,6 +111,18 @@ export const login: ControllerFunction = async (
         message: "Email ou mot de passe incorrect",
       });
       return;
+    }
+
+    // Vérifier si l'utilisateur a au moins un projet
+    if (user.projects.length === 0) {
+      // Créer un projet par défaut
+      await prisma.project.create({
+        data: {
+          name: "Mon premier projet",
+          description: "Projet créé automatiquement",
+          userId: user.id,
+        },
+      });
     }
 
     // Vérifier l'OTP si activé
@@ -160,6 +175,9 @@ export const login: ControllerFunction = async (
       { expiresIn: "24h" }
     );
 
+    const defaultProjectId =
+      user.projects.length > 0 ? user.projects[0].id : null;
+
     const response: ApiResponse = {
       message: "Connexion réussie",
       data: {
@@ -170,6 +188,7 @@ export const login: ControllerFunction = async (
           firstName: user.firstName,
           lastName: user.lastName,
           role: user.role,
+          defaultProjectId,
         },
       },
     };

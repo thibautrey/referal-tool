@@ -1,4 +1,6 @@
 import express, { Request, Response } from "express";
+
+import linkRoutes from "./link";
 import userRoutes from "./user";
 
 const router = express.Router();
@@ -10,5 +12,6 @@ router.get("/status", (req: Request, res: Response) => {
 
 // Utilisation du routeur utilisateur
 router.use("/users", userRoutes);
+router.use("/links", linkRoutes);
 
 export default router;

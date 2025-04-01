@@ -1,5 +1,7 @@
 // Simple wrapper pour fetch avec gestion des tokens d'authentification
 
+import { ReferralLink } from "@/pages/types";
+
 // Configuration des URLs d'API par environnement
 const API_URLS = {
   development: "http://localhost:3001/api",
@@ -50,6 +52,14 @@ export interface ApiError {
   data?: unknown;
 }
 
+// Type pour la réponse de l'API des liens
+export interface LinksResponse {
+  links: ReferralLink[];
+  total: number;
+  page: number;
+  totalPages: number;
+}
+
 // Classe pour gérer les appels API
 class Api {
   private baseUrl: string;
@@ -83,7 +93,8 @@ class Api {
   private async request<T>(
     endpoint: string,
     method: string,
-    data?: unknown
+    data?: unknown,
+    projectId?: number | null
   ): Promise<ApiResponse<T>> {
     const url = this.buildUrl(endpoint);
 
@@ -92,15 +103,19 @@ class Api {
       headers: { ...this.headers },
     };
 
-    if (data) {
-      options.body = JSON.stringify(data);
-    }
-
     try {
-      // Récupérer le token du localStorage au moment de la requête
       const token = localStorage.getItem("auth_token");
-      if (token && !options.headers["Authorization"]) {
+
+      if (token) {
         options.headers["Authorization"] = `Bearer ${token}`;
+      }
+
+      if (projectId) {
+        options.headers["X-Project-ID"] = projectId.toString();
+      }
+
+      if (data) {
+        options.body = JSON.stringify(data);
       }
 
       const response = await fetch(url, options);
@@ -138,9 +153,10 @@ class Api {
 
   async post<T, D = unknown>(
     endpoint: string,
-    data: D
+    data: D,
+    projectId?: number | null
   ): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, "POST", data);
+    return this.request<T>(endpoint, "POST", data, projectId);
   }
 
   async put<T, D = unknown>(
@@ -150,8 +166,26 @@ class Api {
     return this.request<T>(endpoint, "PUT", data);
   }
 
-  async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, "DELETE");
+  async delete<T>(
+    endpoint: string,
+    projectId?: number | null
+  ): Promise<ApiResponse<T>> {
+    return this.request<T>(endpoint, "DELETE", undefined, projectId);
+  }
+
+  async getLinks(
+    projectId: number,
+    page: number = 1,
+    limit: number = 10
+  ): Promise<LinksResponse> {
+    const response = await this.get<LinksResponse>(
+      `/links/project/${projectId}?page=${page}&limit=${limit}`
+    );
+    return response.data;
+  }
+
+  async deleteLink(projectId: number, id: string): Promise<ApiResponse<void>> {
+    return this.delete<void>(`/links/${id}`, projectId);
   }
 }
 

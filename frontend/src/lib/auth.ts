@@ -7,6 +7,7 @@ export interface User {
   lastName: string;
   role: string;
   otpEnabled: boolean;
+  defaultProjectId?: number;
 }
 
 interface LoginResponse {
@@ -159,4 +160,17 @@ export const getBackupCodes = async (): Promise<string[]> => {
     console.error("Backup codes fetch error:", error);
     throw error;
   }
+};
+
+export const setDefaultProject = (projectId: number): void => {
+  localStorage.setItem("default_project", projectId.toString());
+};
+
+export const getDefaultProject = (): number | null => {
+  const projectId = localStorage.getItem("default_project");
+  return projectId ? parseInt(projectId) : null;
+};
+
+export const removeDefaultProject = (): void => {
+  localStorage.removeItem("default_project");
 };
