@@ -75,10 +75,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const refreshUser = async () => {
     try {
-      console.log("Refreshing user...");
       // Vérifier d'abord si un token existe
       if (!isAuthenticated()) {
-        console.log("No token found, setting user to null");
         setUser(null);
         setCurrentProjectId(null);
         setIsLoading(false);
@@ -86,7 +84,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       const currentUser = await getCurrentUser();
-      console.log("Current user:", currentUser);
       setUser(currentUser);
 
       // Si pas de projet courant, utiliser le projet par défaut

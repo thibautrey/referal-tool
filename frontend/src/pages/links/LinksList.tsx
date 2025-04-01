@@ -11,8 +11,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import {
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   Copy,
   Edit,
   Loader2,
@@ -39,18 +41,31 @@ interface LinksListProps {
   projectId: number;
 }
 
+type SortOrder = "asc" | "desc";
+type SortField = "createdAt";
+
 export function LinksList({ onAddLinkClick, projectId }: LinksListProps) {
   const [links, setLinks] = useState<ReferralLink[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [currentDomain, setCurrentDomain] = useState("");
+  const [sortField, setSortField] = useState<SortField>("createdAt");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
-  const fetchLinks = async (page: number) => {
+  const fetchLinks = async (
+    page: number,
+    sortBy: SortField = "createdAt",
+    order: SortOrder = "desc"
+  ) => {
     try {
-      const response = await api.getLinks(projectId, page);
+      setIsLoading(true);
+      const response = await api.getLinks(projectId, page, sortBy, order);
       setLinks(response.links);
       setTotalPages(response.totalPages);
       setCurrentPage(response.page);
+      setSortField((response.sortBy as SortField) || "createdAt");
+      setSortOrder(response.sortOrder || "desc");
     } catch {
       toast.error("Unable to load links");
     } finally {
@@ -59,11 +74,22 @@ export function LinksList({ onAddLinkClick, projectId }: LinksListProps) {
   };
 
   useEffect(() => {
-    fetchLinks(currentPage);
-  }, [currentPage]);
+    fetchLinks(currentPage, sortField, sortOrder);
+  }, [currentPage, sortField, sortOrder]);
+
+  useEffect(() => {
+    setCurrentDomain(window.location.host);
+  }, []);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  const handleSort = (field: SortField) => {
+    const newOrder =
+      field === sortField && sortOrder === "desc" ? "asc" : "desc";
+    setSortField(field);
+    setSortOrder(newOrder);
   };
 
   const handleDeleteLink = async (id: string) => {
@@ -76,8 +102,9 @@ export function LinksList({ onAddLinkClick, projectId }: LinksListProps) {
     }
   };
 
-  const handleCopyLink = (url: string) => {
-    navigator.clipboard.writeText(url);
+  const handleCopyLink = (shortCode: string) => {
+    const fullUrl = `${window.location.protocol}//${currentDomain}/${shortCode}`;
+    navigator.clipboard.writeText(fullUrl);
     toast.success("Link copied to clipboard");
   };
 
@@ -93,6 +120,15 @@ export function LinksList({ onAddLinkClick, projectId }: LinksListProps) {
     } catch {
       return "Invalid date";
     }
+  };
+
+  const getSortIcon = (field: SortField) => {
+    if (field !== sortField) return null;
+    return sortOrder === "asc" ? (
+      <ChevronUp className="h-4 w-4 ml-1 inline" />
+    ) : (
+      <ChevronDown className="h-4 w-4 ml-1 inline" />
+    );
   };
 
   if (isLoading) {
@@ -142,11 +178,17 @@ export function LinksList({ onAddLinkClick, projectId }: LinksListProps) {
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="font-semibold">Name</TableHead>
-                  <TableHead className="font-semibold">URL</TableHead>
+                  <TableHead className="font-semibold">Referral URL</TableHead>
+                  <TableHead className="font-semibold">Short URL</TableHead>
                   <TableHead className="font-semibold text-right">
                     Clicks
                   </TableHead>
-                  <TableHead className="font-semibold">Creation date</TableHead>
+                  <TableHead
+                    className="font-semibold cursor-pointer select-none"
+                    onClick={() => handleSort("createdAt")}
+                  >
+                    Creation date {getSortIcon("createdAt")}
+                  </TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -157,20 +199,31 @@ export function LinksList({ onAddLinkClick, projectId }: LinksListProps) {
                     <TableCell className="truncate max-w-xs text-muted-foreground">
                       {link.baseUrl}
                     </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      <div className="flex items-center">
+                        <div className="flex items-center border rounded-md px-3 py-1 bg-muted/30">
+                          <span className="text-sm">{currentDomain}/</span>
+                          <span className="font-medium text-sm">
+                            {link.shortCode}
+                          </span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 ml-1"
+                          onClick={() => handleCopyLink(link.shortCode)}
+                          title="Copy link"
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </TableCell>
                     <TableCell className="text-right">{link.clicks}</TableCell>
                     <TableCell className="text-muted-foreground">
                       {formatDate(link.createdAt)}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center justify-end gap-2">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => handleCopyLink(link.baseUrl)}
-                        >
-                          <Copy className="h-3.5 w-3.5 mr-1" />
-                          Copy
-                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"

@@ -42,6 +42,7 @@ model Link {
     id        Int         @id @default(autoincrement())
     name      String
     baseUrl   String
+    shortCode String      @unique // Code court unique pour l'URL
     project   Project     @relation(fields: [projectId], references: [id])
     projectId Int
     rules     LinkRule[]

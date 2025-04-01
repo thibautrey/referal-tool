@@ -16,6 +16,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { Plus, RefreshCw } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -23,23 +24,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Plus } from "lucide-react";
+import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { useState } from "react";
 
 export interface GeoRule {
-  redirectUrl: string; // Renommé de url à redirectUrl
+  redirectUrl: string;
   region: string;
   countries: string[];
 }
 
 interface LinkFormData {
-  name: string; // Ajout du champ name
-  baseUrl: string; // Renommé de mainUrl à baseUrl
+  name: string;
+  baseUrl: string;
+  shortCode: string;
   geoRules: GeoRule[];
 }
 
@@ -47,11 +49,113 @@ interface AddLinkFormProps {
   onSubmit: (data: LinkFormData) => Promise<void>;
 }
 
+// Fonction pour générer un code aléatoire avec des lettres et des chiffres
+const generateRandomCode = (length: number = 4): string => {
+  const letters = "abcdefghijklmnopqrstuvwxyz";
+  const numbers = "0123456789";
+  const chars = letters + numbers;
+
+  // S'assurer qu'il y a au moins un chiffre dans le code
+  let result = "";
+  // Ajouter un chiffre aléatoire
+  result += numbers.charAt(Math.floor(Math.random() * numbers.length));
+
+  // Remplir le reste du code avec des caractères aléatoires
+  for (let i = 1; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+
+  // Mélanger les caractères pour que le chiffre ne soit pas toujours au début
+  return result
+    .split("")
+    .sort(() => Math.random() - 0.5)
+    .join("");
+};
+
 export function AddLinkForm({ onSubmit }: AddLinkFormProps) {
-  const [linkName, setLinkName] = useState(""); // Nouveau state pour le nom
-  const [baseUrl, setBaseUrl] = useState(""); // Renommé de newLinkUrl
+  const [linkName, setLinkName] = useState("");
+  const [baseUrl, setBaseUrl] = useState("");
+  const [shortCode, setShortCode] = useState(generateRandomCode());
+  const [isShortCodeAvailable, setIsShortCodeAvailable] = useState(true);
+  const [isCheckingShortCode, setIsCheckingShortCode] = useState(false);
   const [geoRules, setGeoRules] = useState<GeoRule[]>([]);
-  const [searchTerm, setSearchTerm] = useState(""); // for filtering countries in the Command dropdown
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentDomain, setCurrentDomain] = useState("");
+  const shortCodeInputRef = useRef<HTMLInputElement>(null);
+
+  // Obtenir le domaine actuel au chargement du composant
+  useEffect(() => {
+    setCurrentDomain(window.location.host);
+  }, []);
+
+  // Trouver un code court disponible au chargement du composant
+  useEffect(() => {
+    const findAvailableShortCode = async () => {
+      let isAvailable = false;
+      let newCode = shortCode;
+      let attempts = 0;
+      const maxAttempts = 10; // Limiter le nombre de tentatives
+
+      while (!isAvailable && attempts < maxAttempts) {
+        attempts++;
+        setIsCheckingShortCode(true);
+
+        try {
+          interface ShortCodeResponse {
+            available: boolean;
+          }
+          const response = await api.get<ShortCodeResponse>(
+            `/links/check-short-code/${newCode}`
+          );
+
+          isAvailable = response.data.available;
+
+          if (!isAvailable) {
+            newCode = generateRandomCode();
+          }
+        } catch {
+          // En cas d'erreur, générer un nouveau code
+          newCode = generateRandomCode();
+        }
+      }
+
+      setShortCode(newCode);
+      setIsShortCodeAvailable(isAvailable);
+      setIsCheckingShortCode(false);
+    };
+
+    findAvailableShortCode();
+  }, []); // Exécuter uniquement au montage du composant
+
+  // Vérifier la disponibilité du code court lors des changements manuels
+  useEffect(() => {
+    const checkShortCodeAvailability = async () => {
+      if (!shortCode) return;
+
+      setIsCheckingShortCode(true);
+      try {
+        interface ShortCodeResponse {
+          available: boolean;
+        }
+        const response = await api.get<ShortCodeResponse>(
+          `/links/check-short-code/${shortCode}`
+        );
+
+        setIsShortCodeAvailable(response.data.available);
+      } catch {
+        setIsShortCodeAvailable(false);
+      } finally {
+        setIsCheckingShortCode(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(checkShortCodeAvailability, 500);
+    return () => clearTimeout(debounceTimer);
+  }, [shortCode]);
+
+  const regenerateShortCode = () => {
+    setShortCode(generateRandomCode());
+  };
 
   const handleAddGeoRule = (rule: GeoRule) => {
     const ruleIndex = geoRules.findIndex(
@@ -102,6 +206,16 @@ export function AddLinkForm({ onSubmit }: AddLinkFormProps) {
       return;
     }
 
+    if (!shortCode.trim()) {
+      toast.error("Short code is required");
+      return;
+    }
+
+    if (!isShortCodeAvailable) {
+      toast.error("This short code is already taken");
+      return;
+    }
+
     const validRules = geoRules.filter(
       (rule) => rule.redirectUrl.trim() && rule.countries.length > 0
     );
@@ -109,6 +223,7 @@ export function AddLinkForm({ onSubmit }: AddLinkFormProps) {
     onSubmit({
       name: linkName,
       baseUrl: baseUrl,
+      shortCode: shortCode,
       geoRules: validRules,
     });
   };
@@ -147,6 +262,48 @@ export function AddLinkForm({ onSubmit }: AddLinkFormProps) {
             value={baseUrl}
             onChange={(e) => setBaseUrl(e.target.value)}
           />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="shortCode">Short Code</Label>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <div
+                className={`flex items-center border rounded-md pr-0 overflow-hidden ${
+                  !isShortCodeAvailable ? "border-red-500" : "border-input"
+                }`}
+              >
+                <span className="bg-muted px-3 py-2 text-muted-foreground text-sm">
+                  {currentDomain}/
+                </span>
+                <input
+                  ref={shortCodeInputRef}
+                  id="shortCode"
+                  value={shortCode}
+                  onChange={(e) => setShortCode(e.target.value.toLowerCase())}
+                  className="flex-1 bg-transparent px-3 py-2 text-sm outline-none"
+                  placeholder="code"
+                />
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={regenerateShortCode}
+              title="Generate new code"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
+          {!isShortCodeAvailable && (
+            <p className="text-sm text-red-500 mt-1">
+              This short code is already taken. Please choose a different one.
+            </p>
+          )}
+          {isCheckingShortCode && (
+            <p className="text-sm text-muted-foreground mt-1">
+              Checking availability...
+            </p>
+          )}
         </div>
 
         <div className="space-y-4">

@@ -12,6 +12,7 @@ import { useState } from "react";
 interface LinkFormData {
   name: string;
   baseUrl: string;
+  shortCode: string;
   geoRules: GeoRule[];
 }
 
@@ -19,12 +20,13 @@ export default function LinksPage() {
   const { currentProjectId } = useAuth();
   const [activeTab, setActiveTab] = useState("all-links");
   const [links, setLinks] = useState<ReferralLink[]>([]);
-  console.log("currentProjectId", currentProjectId);
+
   const handleAddLink = async (formData: LinkFormData) => {
     try {
       const linkData = {
         name: formData.name,
         baseUrl: formData.baseUrl,
+        shortCode: formData.shortCode,
         rules: formData.geoRules.map((rule) => ({
           redirectUrl: rule.redirectUrl,
           countries: rule.countries,

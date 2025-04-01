@@ -19,6 +19,12 @@ router.get("/:id", linkController.getLinkById);
 router.put("/:id", linkController.updateLink);
 router.delete("/:id", linkController.deleteLink);
 
+// Nouvelle route pour vérifier la disponibilité du code court
+router.get(
+  "/check-short-code/:code",
+  linkController.checkShortCodeAvailability
+);
+
 // Link rules operations
 router.post("/:linkId/rules", linkController.addRule);
 router.put("/rules/:ruleId", linkController.updateRule);

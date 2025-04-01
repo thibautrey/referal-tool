@@ -8,6 +8,7 @@ export interface ReferralLink {
   conversions: number;
   createdAt: Date;
   updatedAt: Date;
+  shortCode: string;
   rules?: {
     id: number;
     redirectUrl: string;

@@ -58,6 +58,8 @@ export interface LinksResponse {
   total: number;
   page: number;
   totalPages: number;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
 }
 
 // Classe pour gérer les appels API
@@ -130,6 +132,7 @@ class Api {
       }
 
       return {
+        ...responseData,
         data: responseData.data,
         message: responseData.message,
         status: response.status,
@@ -176,10 +179,12 @@ class Api {
   async getLinks(
     projectId: number,
     page: number = 1,
+    sortBy: string = "createdAt",
+    sortOrder: "asc" | "desc" = "desc",
     limit: number = 10
   ): Promise<LinksResponse> {
     const response = await this.get<LinksResponse>(
-      `/links/project/${projectId}?page=${page}&limit=${limit}`
+      `/links/project/${projectId}?page=${page}&limit=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`
     );
     return response.data;
   }

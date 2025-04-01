@@ -24,7 +24,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
             <Route index element={<HomePage />} />
-            <Route path="settings" element={<SettingsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
             <Route path="/links" element={<LinksPage />} />
           </Route>
         </Route>

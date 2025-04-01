@@ -3,6 +3,45 @@ import { Request, Response } from "express";
 import { getCountryFromIp } from "../utils/geolocation";
 import prisma from "../lib/prisma";
 
+// Fonction pour générer un code court aléatoire
+const generateRandomCode = (length: number = 4): string => {
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let result = "";
+  for (let i = 0; i < length; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+};
+
+// Vérifier si un code court est disponible
+export const checkShortCodeAvailability = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { code } = req.params;
+
+    if (!code || code.trim() === "") {
+      return res.json({ available: false });
+    }
+
+    const existingLink = await prisma.link.findUnique({
+      where: { shortCode: code },
+    });
+
+    // Ajouter des logs pour débogage
+    console.log(`Checking short code: ${code}, exists: ${!!existingLink}`);
+
+    // Si existingLink est null, le code est disponible
+    return res.json({ data: { available: !existingLink } });
+  } catch (error) {
+    console.error("Error checking short code availability:", error);
+    return res
+      .status(500)
+      .json({ error: "Failed to check short code availability" });
+  }
+};
+
 // Get all links for a project
 export const getLinksByProject = async (req: Request, res: Response) => {
   try {
@@ -10,6 +49,8 @@ export const getLinksByProject = async (req: Request, res: Response) => {
     const userId = req.user?.id;
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
+    const sortBy = (req.query.sortBy as string) || "createdAt";
+    const sortOrder = (req.query.sortOrder as "asc" | "desc") || "desc";
 
     if (!projectId) {
       return res.status(400).json({ message: "Project ID is required" });
@@ -38,7 +79,7 @@ export const getLinksByProject = async (req: Request, res: Response) => {
 
     const totalPages = Math.ceil(total / limit);
 
-    // Get paginated links
+    // Get paginated links with sorting
     const links = await prisma.link.findMany({
       where: {
         projectId: parseInt(projectId),
@@ -48,6 +89,9 @@ export const getLinksByProject = async (req: Request, res: Response) => {
       },
       skip: (page - 1) * limit,
       take: limit,
+      orderBy: {
+        [sortBy]: sortOrder,
+      },
     });
 
     res.json({
@@ -56,6 +100,8 @@ export const getLinksByProject = async (req: Request, res: Response) => {
         links,
         page,
         totalPages,
+        sortBy,
+        sortOrder,
       },
     });
   } catch (error) {
@@ -63,79 +109,74 @@ export const getLinksByProject = async (req: Request, res: Response) => {
   }
 };
 
-// Create new link
+// Créer un nouveau lien avec un code court
 export const createLink = async (req: Request, res: Response) => {
   try {
-    const projectId = req.headers["x-project-id"] as string;
-    const { name, baseUrl, rules } = req.body;
-    const userId = req.user?.id;
-    const targetProjectId =
-      projectId === "undefined" ? req.currentProjectId : projectId;
+    const { name, baseUrl, shortCode, rules } = req.body;
+    const projectId = parseInt(
+      req.params.projectId || (req.headers["x-project-id"] as string)
+    );
 
-    // Validation des données requises
+    // Valider les entrées
     if (!name || !baseUrl) {
-      return res.status(400).json({
-        message: "Le nom et l'URL de base sont requis",
+      return res.status(400).json({ error: "Name and base URL are required" });
+    }
+
+    // Générer un code court si non fourni
+    let finalShortCode = shortCode;
+    if (!finalShortCode) {
+      let isUnique = false;
+      while (!isUnique) {
+        finalShortCode = generateRandomCode();
+        const existingLink = await prisma.link.findUnique({
+          where: { shortCode: finalShortCode },
+        });
+        isUnique = !existingLink;
+      }
+    } else {
+      // Vérifier si le code court existe déjà
+      const existingLink = await prisma.link.findUnique({
+        where: { shortCode: finalShortCode },
       });
+
+      if (existingLink) {
+        return res.status(400).json({ error: "Short code already in use" });
+      }
     }
 
-    if (!targetProjectId) {
-      return res.status(400).json({
-        message:
-          "Project ID is required. Either provide it in the URL or set a default project.",
-      });
-    }
-
-    // Verify project ownership
-    const project = await prisma.project.findFirst({
-      where: {
-        id: parseInt(targetProjectId),
-        userId: userId,
-      },
-    });
-
-    if (!project) {
-      return res
-        .status(404)
-        .json({ message: "Projet non trouvé ou accès non autorisé" });
-    }
-
-    // Validate and format rules if they exist
-    interface FormattedRule {
-      redirectUrl: string;
-      countries: string;
-    }
-    let formattedRules: FormattedRule[] = [];
-    if (rules && Array.isArray(rules)) {
-      formattedRules = rules.map((rule) => ({
-        redirectUrl: rule.redirectUrl,
-        countries: Array.isArray(rule.countries)
-          ? JSON.stringify(rule.countries)
-          : "[]",
-      }));
-    }
-
+    // Créer le lien avec son code court
     const link = await prisma.link.create({
       data: {
         name,
         baseUrl,
-        projectId: parseInt(targetProjectId),
-        rules: {
-          create: formattedRules,
-        },
-      },
-      include: {
-        rules: true,
+        shortCode: finalShortCode,
+        projectId,
       },
     });
 
-    res.status(201).json({ message: "Link created successfully", data: link });
-  } catch (error) {
-    console.error("Link creation error:", error);
-    res.status(500).json({
-      message: "Error creating link",
-      error: error instanceof Error ? error.message : "Unknown error",
+    // Ajouter les règles si fournies
+    if (rules && Array.isArray(rules)) {
+      for (const rule of rules) {
+        await prisma.linkRule.create({
+          data: {
+            redirectUrl: rule.redirectUrl,
+            countries: JSON.stringify(rule.countries),
+            linkId: link.id,
+          },
+        });
+      }
+    }
+
+    // Récupérer le lien avec ses règles
+    const linkWithRules = await prisma.link.findUnique({
+      where: { id: link.id },
+      include: { rules: true },
     });
+
+    return res.status(201).json(linkWithRules);
+  } catch (error) {
+    console.error("Error creating link:", error);
+    return res.status(500).json({ error: "Failed to create link" });
   }
 };
 

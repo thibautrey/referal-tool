@@ -7,6 +7,7 @@ import dotenv from "dotenv";
 import { handleRedirection } from "./controllers/link";
 import helmet from "helmet";
 import morgan from "morgan";
+import path from "path";
 
 // Configuration
 dotenv.config();
@@ -45,10 +46,24 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
   next();
 });
 
-// Routes
+// Routes API
 app.use("/api", apiRoutes);
 
-// Catch-all route for link redirections - must be placed after API routes
+// Chemin vers le build de l'application React
+const frontendBuildPath = path.resolve(__dirname, "../../frontend/dist");
+
+// Servir les fichiers statiques du frontend pour les routes commençant par /app
+app.use("/app", express.static(frontendBuildPath));
+
+// Définir une route spécifique pour les assets pour être sûr qu'ils sont bien servis
+app.use("/app/assets", express.static(path.join(frontendBuildPath, "assets")));
+
+// Toutes les routes sous /app renvoient vers index.html pour le routing côté client
+app.get("/app/*", (_req, res) => {
+  res.sendFile(path.join(frontendBuildPath, "index.html"));
+});
+
+// Catch-all route for link redirections - must be placed after API routes and frontend routes
 app.get("/:path([a-zA-Z0-9-_]+)", handleRedirection);
 
 // Error handling middleware avec logs détaillés
@@ -83,5 +98,8 @@ app.listen(PORT, () => {
     `[${new Date().toISOString()}] Environment: ${
       process.env.NODE_ENV || "development"
     }`
+  );
+  console.log(
+    `[${new Date().toISOString()}] Frontend available at http://localhost:${PORT}/app`
   );
 });
