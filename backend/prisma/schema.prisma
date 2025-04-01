@@ -1,0 +1,32 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "mysql" // Vous pouvez le changer en "mysql" ou "sqlite" selon vos besoins
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id             Int      @id @default(autoincrement())
+    email          String   @unique
+    firstName      String?
+    lastName       String?
+    password       String
+    role           Role     @default(USER)
+    active         Boolean  @default(true)
+    otpEnabled     Boolean  @default(false) // Indique si l'OTP est activé
+    otpSecret      String? // Clé secrète pour l'OTP (nullable car optionnel)
+    otpVerified    Boolean  @default(false) // Indique si l'OTP a été vérifié
+    otpBackupCodes String? // Pour stocker les codes de secours (JSON formaté)
+    createdAt      DateTime @default(now())
+    updatedAt      DateTime @updatedAt
+}
+
+enum Role {
+    USER
+    ADMIN
+}

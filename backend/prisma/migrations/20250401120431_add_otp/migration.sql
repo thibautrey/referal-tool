@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE `User` ADD COLUMN `otpBackupCodes` VARCHAR(191) NULL,
+    ADD COLUMN `otpEnabled` BOOLEAN NOT NULL DEFAULT false,
+    ADD COLUMN `otpSecret` VARCHAR(191) NULL,
+    ADD COLUMN `otpVerified` BOOLEAN NOT NULL DEFAULT false;
