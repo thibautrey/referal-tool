@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 
+import { getCountryFromIp } from "../utils/geolocation";
 import prisma from "../lib/prisma";
 
 // Get all links for a project
@@ -347,5 +348,57 @@ export const deleteRule = async (req: Request, res: Response) => {
     res.json({ message: "Rule deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: "Error deleting rule", error });
+  }
+};
+
+// Handle link redirection
+export const handleRedirection = async (req: Request, res: Response) => {
+  try {
+    const path = req.params.path;
+    const ip = req.ip || "0.0.0.0";
+
+    const [userCountry, userCity] = await getCountryFromIp(ip);
+
+    const link = await prisma.link.findFirst({
+      where: {
+        name: path,
+        active: true,
+      },
+      include: {
+        rules: true,
+      },
+    });
+
+    if (!link) {
+      return res.status(404).json({ message: "Link not found" });
+    }
+
+    // Find matching rule for user's country
+    const matchingRule = link.rules.find((rule) => {
+      const countries = JSON.parse(rule.countries);
+      return countries.includes(userCountry);
+    });
+
+    const redirectUrl = matchingRule ? matchingRule.redirectUrl : link.baseUrl;
+
+    // Asynchronously record the visit
+    prisma.linkVisit
+      .create({
+        data: {
+          linkId: link.id,
+          ip,
+          country: userCountry,
+          city: userCity,
+          ruleId: matchingRule?.id || null,
+        },
+      })
+      .catch((error) => {
+        console.error("Error recording visit:", error);
+      });
+
+    res.redirect(301, redirectUrl);
+  } catch (error) {
+    console.error("Redirection error:", error);
+    res.status(500).json({ message: "Error handling redirection" });
   }
 };

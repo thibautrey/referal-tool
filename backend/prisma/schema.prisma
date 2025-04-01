@@ -39,25 +39,51 @@ model Project {
 }
 
 model Link {
-    id        Int        @id @default(autoincrement())
+    id        Int         @id @default(autoincrement())
     name      String
     baseUrl   String
-    project   Project    @relation(fields: [projectId], references: [id])
+    project   Project     @relation(fields: [projectId], references: [id])
     projectId Int
     rules     LinkRule[]
-    active    Boolean    @default(true)
-    createdAt DateTime   @default(now())
-    updatedAt DateTime   @updatedAt
+    active    Boolean     @default(true)
+    createdAt DateTime    @default(now())
+    updatedAt DateTime    @updatedAt
+    LinkVisit LinkVisit[]
 }
 
 model LinkRule {
-    id          Int      @id @default(autoincrement())
+    id          Int         @id @default(autoincrement())
     redirectUrl String
     countries   String // Stocké en JSON comme liste de codes pays
-    link        Link     @relation(fields: [linkId], references: [id])
+    link        Link        @relation(fields: [linkId], references: [id])
     linkId      Int
+    createdAt   DateTime    @default(now())
+    updatedAt   DateTime    @updatedAt
+    LinkVisit   LinkVisit[]
+}
+
+model IpCountryCache {
+    ip          String   @id
+    countryCode String
+    city        String?
+    expiresAt   DateTime
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
+}
+
+model LinkVisit {
+    id        Int       @id @default(autoincrement())
+    link      Link      @relation(fields: [linkId], references: [id])
+    linkId    Int
+    ip        String?
+    country   String
+    city      String?
+    rule      LinkRule? @relation(fields: [ruleId], references: [id])
+    ruleId    Int?
+    createdAt DateTime  @default(now())
+
+    @@index([linkId])
+    @@index([ip])
 }
 
 enum Role {

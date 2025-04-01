@@ -4,6 +4,7 @@ import express, { Application, NextFunction, Request, Response } from "express";
 import apiRoutes from "./routes/api";
 import cors from "cors";
 import dotenv from "dotenv";
+import { handleRedirection } from "./controllers/link";
 import helmet from "helmet";
 import morgan from "morgan";
 
@@ -46,6 +47,9 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
 
 // Routes
 app.use("/api", apiRoutes);
+
+// Catch-all route for link redirections - must be placed after API routes
+app.get("/:path([a-zA-Z0-9-_]+)", handleRedirection);
 
 // Error handling middleware avec logs détaillés
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
