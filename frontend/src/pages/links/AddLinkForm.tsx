@@ -16,7 +16,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Plus, RefreshCw } from "lucide-react";
+import { Plus, RefreshCw, Save } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -29,24 +29,27 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LinkFormData } from "./types";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
+import { useSearchParams } from "react-router-dom";
 
 export interface GeoRule {
   redirectUrl: string;
-  region: string;
+  region?: string;
   countries: string[];
-}
-
-interface LinkFormData {
-  name: string;
-  baseUrl: string;
-  shortCode: string;
-  geoRules: GeoRule[];
 }
 
 interface AddLinkFormProps {
   onSubmit: (data: LinkFormData) => Promise<void>;
+  initialData?: {
+    id: number;
+    name: string;
+    baseUrl: string;
+    shortCode: string;
+    rules: GeoRule[];
+  };
+  mode?: "add" | "edit";
 }
 
 // Fonction pour générer un code aléatoire avec des lettres et des chiffres
@@ -72,16 +75,42 @@ const generateRandomCode = (length: number = 4): string => {
     .join("");
 };
 
-export function AddLinkForm({ onSubmit }: AddLinkFormProps) {
-  const [linkName, setLinkName] = useState("");
-  const [baseUrl, setBaseUrl] = useState("");
-  const [shortCode, setShortCode] = useState(generateRandomCode());
+export function AddLinkForm({ onSubmit, initialData }: AddLinkFormProps) {
+  const [searchParams] = useSearchParams();
+  const [linkName, setLinkName] = useState(initialData?.name || "");
+  const [baseUrl, setBaseUrl] = useState(initialData?.baseUrl || "");
+  const [shortCode, setShortCode] = useState(
+    initialData?.shortCode || generateRandomCode()
+  );
+  const [geoRules, setGeoRules] = useState<GeoRule[]>(initialData?.rules || []);
   const [isShortCodeAvailable, setIsShortCodeAvailable] = useState(true);
   const [isCheckingShortCode, setIsCheckingShortCode] = useState(false);
-  const [geoRules, setGeoRules] = useState<GeoRule[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentDomain, setCurrentDomain] = useState("");
   const shortCodeInputRef = useRef<HTMLInputElement>(null);
+
+  const isEditMode = searchParams.get("mode") === "edit";
+  const id = Number(searchParams.get("id"));
+
+  useEffect(() => {
+    if (isEditMode && !initialData) {
+      const fetchLinkData = async () => {
+        try {
+          const response = await api.get<LinkFormData>(`/links/${id}`);
+          const data = response.data;
+          setLinkName(data.name);
+          setBaseUrl(data.baseUrl);
+          setShortCode(data.shortCode);
+          setGeoRules(data.rules || []); // Assurer un tableau vide par défaut
+        } catch {
+          toast.error("Failed to fetch link data");
+          setGeoRules([]); // Initialiser avec un tableau vide en cas d'erreur
+        }
+      };
+
+      fetchLinkData();
+    }
+  }, [id, isEditMode, initialData]); // Ajouter les dépendances manquantes
 
   // Obtenir le domaine actuel au chargement du composant
   useEffect(() => {
@@ -90,6 +119,8 @@ export function AddLinkForm({ onSubmit }: AddLinkFormProps) {
 
   // Trouver un code court disponible au chargement du composant
   useEffect(() => {
+    if (isEditMode) return;
+
     const findAvailableShortCode = async () => {
       let isAvailable = false;
       let newCode = shortCode;
@@ -129,6 +160,8 @@ export function AddLinkForm({ onSubmit }: AddLinkFormProps) {
 
   // Vérifier la disponibilité du code court lors des changements manuels
   useEffect(() => {
+    if (isEditMode) return;
+
     const checkShortCodeAvailability = async () => {
       if (!shortCode) return;
 
@@ -206,26 +239,25 @@ export function AddLinkForm({ onSubmit }: AddLinkFormProps) {
       return;
     }
 
-    if (!shortCode.trim()) {
-      toast.error("Short code is required");
+    if (!isEditMode && (!shortCode || !isShortCodeAvailable)) {
+      toast.error("A valid short code is required");
       return;
     }
 
-    if (!isShortCodeAvailable) {
-      toast.error("This short code is already taken");
-      return;
-    }
-
-    const validRules = geoRules.filter(
+    const validRules = geoRules?.filter(
       (rule) => rule.redirectUrl.trim() && rule.countries.length > 0
     );
 
-    onSubmit({
+    // Ajouter l'ID pour la mise à jour
+    const data = {
       name: linkName,
       baseUrl: baseUrl,
       shortCode: shortCode,
-      geoRules: validRules,
-    });
+      rules: validRules,
+      ...(isEditMode && { id }),
+    };
+
+    onSubmit(data);
   };
 
   // Filter country options based on the search term and remove already selected ones
@@ -239,9 +271,11 @@ export function AddLinkForm({ onSubmit }: AddLinkFormProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Add New Link</CardTitle>
+        <CardTitle>{isEditMode ? "Edit Link" : "Add New Link"}</CardTitle>
         <CardDescription>
-          Create a new referral link to share with your community.
+          {isEditMode
+            ? "Update your referral link settings."
+            : "Create a new referral link to share with your community."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -265,35 +299,42 @@ export function AddLinkForm({ onSubmit }: AddLinkFormProps) {
         </div>
         <div className="space-y-2">
           <Label htmlFor="shortCode">Short Code</Label>
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <div
-                className={`flex items-center border rounded-md pr-0 overflow-hidden ${
-                  !isShortCodeAvailable ? "border-red-500" : "border-input"
-                }`}
-              >
-                <span className="bg-muted px-3 py-2 text-muted-foreground text-sm">
-                  {currentDomain}/
-                </span>
-                <input
-                  ref={shortCodeInputRef}
-                  id="shortCode"
-                  value={shortCode}
-                  onChange={(e) => setShortCode(e.target.value.toLowerCase())}
-                  className="flex-1 bg-transparent px-3 py-2 text-sm outline-none"
-                  placeholder="code"
-                />
-              </div>
+          {isEditMode ? (
+            <div className="flex items-center border rounded-md px-3 py-2 bg-muted">
+              <span className="text-muted-foreground">{currentDomain}/</span>
+              <span className="font-medium">{shortCode}</span>
             </div>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={regenerateShortCode}
-              title="Generate new code"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </Button>
-          </div>
+          ) : (
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <div
+                  className={`flex items-center border rounded-md pr-0 overflow-hidden ${
+                    !isShortCodeAvailable ? "border-red-500" : "border-input"
+                  }`}
+                >
+                  <span className="bg-muted px-3 py-2 text-muted-foreground text-sm">
+                    {currentDomain}/
+                  </span>
+                  <input
+                    ref={shortCodeInputRef}
+                    id="shortCode"
+                    value={shortCode}
+                    onChange={(e) => setShortCode(e.target.value.toLowerCase())}
+                    className="flex-1 bg-transparent px-3 py-2 text-sm outline-none"
+                    placeholder="code"
+                  />
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={regenerateShortCode}
+                title="Generate new code"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
           {!isShortCodeAvailable && (
             <p className="text-sm text-red-500 mt-1">
               This short code is already taken. Please choose a different one.
@@ -387,7 +428,7 @@ export function AddLinkForm({ onSubmit }: AddLinkFormProps) {
                             size="sm"
                             className="h-4 w-4 p-0 ml-2"
                             onClick={() => {
-                              const newCountries = rule.countries.filter(
+                              const newCountries = rule?.countries?.filter(
                                 (c) => c !== country
                               );
                               handleCountryChange(newCountries, rule, index);
@@ -452,8 +493,17 @@ export function AddLinkForm({ onSubmit }: AddLinkFormProps) {
       </CardContent>
       <CardFooter>
         <Button onClick={handleSubmit}>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Link
+          {isEditMode ? (
+            <>
+              <Save className="h-4 w-4 mr-2" />
+              Save Changes
+            </>
+          ) : (
+            <>
+              <Plus className="h-4 w-4 mr-2" />
+              Add Link
+            </>
+          )}
         </Button>
       </CardFooter>
     </Card>

@@ -1,21 +1,22 @@
 import { AddLinkForm, GeoRule } from "./links/AddLinkForm";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ApiResponse, api } from "@/lib/api";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEffect, useState } from "react";
 
 import { AlertCircle } from "lucide-react";
 import { LinksList } from "./links/LinksList";
 import { ReferralLink } from "./types";
-import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSearchParams } from "react-router-dom";
 
 interface LinkFormData {
+  id?: number;
   name: string;
   baseUrl: string;
   shortCode: string;
-  geoRules: GeoRule[];
+  rules: GeoRule[];
 }
 
 export default function LinksPage() {
@@ -41,29 +42,40 @@ export default function LinksPage() {
 
   const handleAddLink = async (formData: LinkFormData) => {
     try {
+      console.log(formData);
+      let response: ApiResponse<ReferralLink>;
       const linkData = {
         name: formData.name,
         baseUrl: formData.baseUrl,
         shortCode: formData.shortCode,
-        rules: formData.geoRules.map((rule) => ({
+        rules: formData.rules.map((rule) => ({
           redirectUrl: rule.redirectUrl,
           countries: rule.countries,
         })),
       };
 
-      const response = await api.post<ReferralLink>(
-        "/links/project",
-        linkData,
-        currentProjectId
-      );
-      setLinks([...links, response.data]);
-      toast.success("Link created successfully");
+      if (formData.id) {
+        response = await api.updateLink(formData.id, linkData);
+        setLinks(
+          links.map((link) => (link.id === formData.id ? response.data : link))
+        );
+        toast.success("Link updated successfully");
+      } else {
+        response = await api.post<ReferralLink>(
+          "/links/project",
+          linkData,
+          currentProjectId
+        );
+        setLinks([...links, response.data]);
+        toast.success("Link created successfully");
+      }
+
       setActiveTab("all-links");
       setSearchParams({ tab: "all-links" });
     } catch (err) {
-      console.error("Error creating link:", err);
+      console.error("Error saving link:", err);
       const errorMessage =
-        err instanceof Error ? err.message : "Failed to create link";
+        err instanceof Error ? err.message : "Failed to save link";
       toast.error(errorMessage);
     }
   };
@@ -113,6 +125,14 @@ export default function LinksPage() {
             <LinksList
               projectId={currentProjectId}
               onAddLinkClick={() => setActiveTab("add-link")}
+              onEditLinkClick={(link) => {
+                setActiveTab("add-link");
+                setSearchParams({
+                  tab: "add-link",
+                  mode: "edit",
+                  id: `${link.id}`,
+                });
+              }}
               onError={(message: string) => setError(message)}
             />
           )}

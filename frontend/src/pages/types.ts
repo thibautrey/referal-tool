@@ -9,6 +9,9 @@ export interface ReferralLink {
   conversionRate?: number;
   createdAt: string;
   updatedAt: string;
+  _count?: {
+    LinkVisit?: number;
+  };
 }
 
 export interface CountryVisit {

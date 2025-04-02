@@ -386,8 +386,8 @@ export default function HomePage() {
                           /{link.shortCode}
                         </p>
                       </div>
-                      <div className="text-sm font-medium bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
-                        {link.clicks} clicks
+                      <div className="text-sm font-medium ">
+                        {link?._count?.LinkVisit} clicks
                       </div>
                     </div>
                   ))}

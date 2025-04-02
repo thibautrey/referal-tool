@@ -39,6 +39,7 @@ import { toast } from "sonner";
 
 interface LinksListProps {
   onAddLinkClick: () => void;
+  onEditLinkClick: (link: ReferralLink) => void;
   projectId: number;
   onError?: (message: string) => void;
 }
@@ -48,6 +49,7 @@ type SortField = "createdAt";
 
 export function LinksList({
   onAddLinkClick,
+  onEditLinkClick,
   projectId,
   onError,
 }: LinksListProps) {
@@ -140,6 +142,9 @@ export function LinksList({
     const fullUrl = `${window.location.protocol}//${currentDomain}/${shortCode}`;
     navigator.clipboard.writeText(fullUrl);
     toast.success("Link copied to clipboard");
+  };
+  const handleEditClick = (link: ReferralLink) => {
+    onEditLinkClick?.(link);
   };
 
   const formatDate = (dateString: string | Date) => {
@@ -279,6 +284,7 @@ export function LinksList({
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0"
+                          onClick={() => handleEditClick(link)}
                         >
                           <Edit className="h-3.5 w-3.5" />
                         </Button>

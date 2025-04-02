@@ -1,5 +1,6 @@
 // Simple wrapper pour fetch avec gestion des tokens d'authentification
 
+import { GeoRule } from "@/pages/links/AddLinkForm";
 import { ReferralLink } from "@/pages/types";
 
 // Configuration des URLs d'API par environnement
@@ -39,7 +40,7 @@ interface RequestOptions {
 }
 
 // Type pour la réponse
-interface ApiResponse<T = unknown> {
+export interface ApiResponse<T = unknown> {
   data: T;
   message: string;
   status: number;
@@ -279,6 +280,26 @@ class Api {
 
     const response = await this.get<DashboardStats>(endpoint);
     return response.data;
+  }
+
+  // Méthode pour mettre à jour un lien
+  async updateLink(
+    linkId: number,
+    data: {
+      name: string;
+      baseUrl: string;
+      rules: GeoRule[];
+    }
+  ): Promise<ApiResponse<ReferralLink>> {
+    const transformedData = {
+      name: data.name,
+      baseUrl: data.baseUrl,
+      rules: data.rules.map((rule) => ({
+        redirectUrl: rule.redirectUrl,
+        countries: rule.countries,
+      })),
+    };
+    return this.put<ReferralLink>(`/links/${linkId}`, transformedData);
   }
 }
 

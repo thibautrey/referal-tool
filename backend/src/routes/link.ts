@@ -11,12 +11,11 @@ router.use(authenticateJWT);
 router.use(extractProjectContext);
 
 // Link CRUD operations
-router.get("/project", linkController.getLinksByProject); // New route for default project
+router.get("/project", linkController.getLinksByProject);
 router.get("/project/:projectId", linkController.getLinksByProject);
-router.post("/project", linkController.createLink); // New route for default project
-router.post("/project/:projectId", linkController.createLink);
 router.get("/:id", linkController.getLinkById);
-router.put("/:id", linkController.updateLink);
+router.post("/project", linkController.createLink); // Route pour créer
+router.put("/:id", linkController.updateLink); // Route pour mettre à jour
 router.delete("/:id", linkController.deleteLink);
 
 // Nouvelle route pour vérifier la disponibilité du code court

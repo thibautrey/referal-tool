@@ -1,6 +1,10 @@
+import { GeoRule } from "./AddLinkForm";
+
 export interface LinkFormData {
   name: string;
-  url: string;
+  baseUrl: string;
+  shortCode: string;
+  rules: GeoRule[];
 }
 
 export type LinkFormProps = {

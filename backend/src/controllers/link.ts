@@ -133,6 +133,11 @@ export const getLinksByProject = async (req: Request, res: Response) => {
       },
       include: {
         rules: true,
+        _count: {
+          select: {
+            LinkVisit: true,
+          },
+        },
       },
       skip: (page - 1) * limit,
       take: limit,
