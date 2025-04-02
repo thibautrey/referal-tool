@@ -1,0 +1,1 @@
+docker compose -f docker-compose.yaml pull; docker deployx --compose-file docker-compose.yaml --with-registry-auth referal

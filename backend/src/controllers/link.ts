@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import { getFromCache, saveToCache } from "../lib/redis";
 
 import { getCountryFromIp } from "../utils/geolocation";
 import prisma from "../lib/prisma";
@@ -470,20 +471,31 @@ export const handleRedirection = async (req: Request, res: Response) => {
     const path = req.params.path;
     const ip = req.ip || "0.0.0.0";
 
-    const [userCountry, userCity] = await getCountryFromIp(ip);
+    // Check cache for link data first
+    const linkCacheKey = `link:${path}`;
+    const cachedLink = await getFromCache(linkCacheKey);
 
-    const link = await prisma.link.findFirst({
-      where: {
-        shortCode: path,
-        active: true,
-      },
-      include: {
-        rules: true,
-      },
-    });
+    let link;
+    if (cachedLink) {
+      link = cachedLink;
+    } else {
+      link = await prisma.link.findFirst({
+        where: {
+          shortCode: path,
+          active: true,
+        },
+        include: {
+          rules: true,
+        },
+      });
+
+      if (link) {
+        // Cache link data for 5 minutes (300 seconds)
+        await saveToCache(linkCacheKey, link, 300);
+      }
+    }
 
     if (!link) {
-      // Retourner une page HTML conviviale au lieu d'un message d'erreur JSON
       return res.status(404).send(`
         <!DOCTYPE html>
         <html>
@@ -538,9 +550,17 @@ export const handleRedirection = async (req: Request, res: Response) => {
       `);
     }
 
+    const [userCountry, userCity] = await getCountryFromIp(ip);
+
     // Find matching rule for user's country
-    const matchingRule = link.rules.find((rule) => {
-      const countries = JSON.parse(rule.countries);
+    interface Rule {
+      id: number;
+      countries: string;
+      redirectUrl: string;
+    }
+
+    const matchingRule: Rule | undefined = link.rules.find((rule: Rule) => {
+      const countries: string[] = JSON.parse(rule.countries);
       return countries.includes(userCountry);
     });
 

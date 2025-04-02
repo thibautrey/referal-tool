@@ -1,13 +1,22 @@
 import { Request, Response } from "express";
+import { getFromCache, saveToCache } from "../lib/redis";
 
-import { Prisma } from "@prisma/client";
 import prisma from "../lib/prisma";
 
 // Obtenir les statistiques de visites pour un lien ou un projet spécifique
 export const getVisitStats = async (req: Request, res: Response) => {
+  const projectId = req.currentProjectId;
+  const cacheKey = `visits:${projectId}`;
+
+  // Try to get from cache first
+  const cachedStats = await getFromCache(cacheKey);
+  if (cachedStats) {
+    return res.json(cachedStats);
+  }
+
   try {
     const userId = req.user?.id;
-    const { projectId, linkId } = req.query;
+    const { linkId } = req.query;
     const timeRange = (req.query.timeRange as string) || "week"; // day, week, month, year
     const startDate = req.query.startDate
       ? new Date(req.query.startDate as string)
@@ -144,7 +153,7 @@ export const getVisitStats = async (req: Request, res: Response) => {
       });
     }
 
-    res.json({
+    const stats = {
       message: "Statistiques récupérées avec succès",
       data: {
         totalVisits,
@@ -155,7 +164,12 @@ export const getVisitStats = async (req: Request, res: Response) => {
         visitsByDate,
         visitsByRule,
       },
-    });
+    };
+
+    // Cache the results for 5 minutes (300 seconds)
+    await saveToCache(cacheKey, stats, 300);
+
+    res.json(stats);
   } catch (error) {
     console.error("Error retrieving analytics:", error);
     res.status(500).json({
@@ -262,17 +276,22 @@ function formatDateByTimeRange(date: Date, timeRange: string): string {
 
 // Obtenir des statistiques agrégées pour le tableau de bord
 export const getDashboardStats = async (req: Request, res: Response) => {
+  const projectId = req.currentProjectId;
+  const cacheKey = `dashboard:${projectId}`;
+
+  const cachedStats = await getFromCache(cacheKey);
+  if (cachedStats) {
+    return res.json(cachedStats);
+  }
+
   try {
     const userId = req.user?.id;
-    const projectId = req.query.projectId
-      ? parseInt(req.query.projectId as string)
-      : null;
 
     // Vérifier l'accès au projet
     if (projectId) {
       const project = await prisma.project.findFirst({
         where: {
-          id: projectId,
+          id: Number(projectId),
           userId,
         },
       });
@@ -286,12 +305,14 @@ export const getDashboardStats = async (req: Request, res: Response) => {
 
     // Construire la clause where commune
     const baseWhereClause = projectId
-      ? { link: { projectId } }
+      ? { link: { projectId: Number(projectId) } }
       : { link: { project: { userId } } };
 
     // Obtenir le nombre total de liens
     const totalLinks = await prisma.link.count({
-      where: projectId ? { projectId } : { project: { userId } },
+      where: projectId
+        ? { projectId: Number(projectId) }
+        : { project: { userId } },
     });
 
     // Obtenir le nombre total de visites
@@ -362,7 +383,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
       };
     });
 
-    res.json({
+    const stats = {
       message: "Statistiques du tableau de bord récupérées avec succès",
       data: {
         totalLinks,
@@ -374,7 +395,12 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         })),
         topLinks: topLinksWithDetails,
       },
-    });
+    };
+
+    // Cache dashboard stats for 5 minutes
+    await saveToCache(cacheKey, stats, 300);
+
+    res.json(stats);
   } catch (error) {
     console.error("Error retrieving dashboard stats:", error);
     res.status(500).json({
