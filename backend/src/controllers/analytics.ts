@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { getFromCache, saveToCache } from "../lib/redis";
 
+import { RuleStats } from "../types";
 import prisma from "../lib/prisma";
 
 // Obtenir les statistiques de visites pour un lien ou un projet spécifique
@@ -121,13 +122,13 @@ export const getVisitStats = async (req: Request, res: Response) => {
     // Si linkId est spécifié, ajouter les statistiques par règles
     let visitsByRule = null;
     if (linkId) {
-      visitsByRule = await prisma.linkVisit.groupBy({
+      visitsByRule = (await prisma.linkVisit.groupBy({
         by: ["ruleId"],
         _count: {
           id: true,
         },
         where: whereClause,
-      });
+      })) as unknown as RuleStats[];
 
       // Récupérer les détails des règles pour les afficher
       const rulesInfo = await prisma.linkRule.findMany({

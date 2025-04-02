@@ -3,7 +3,9 @@ import { NextFunction, Request, Response } from "express";
 // Add interfaces for our data structures
 export interface RuleStats {
   ruleId: number;
-  count: number;
+  _count: {
+    id: number;
+  };
   rule: {
     id: number;
     redirectUrl: string;
@@ -29,7 +31,7 @@ export interface CountryCount {
 export const addRuleStats = (ruleStats: RuleStats[]) => {
   return ruleStats.map((r: RuleStats) => ({
     ruleId: r.ruleId,
-    count: r.count,
+    count: r._count,
     ruleInfo: r.rule,
   }));
 };
