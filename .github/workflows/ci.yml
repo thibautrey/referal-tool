@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    #runs-on: self-hosted
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: "Create env file"
+        run: |
+          touch .env
+          echo DEV=false >> .env
+          echo ENVIRONMENT=production >> .env
+          echo DATABASE_URL=${{ secrets.DATABASE_URL }} >> .env
+      - name: Set image tag
+        run: echo "IMAGE_TAG=sha-${GITHUB_SHA::7}" >> $GITHUB_ENV
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.TOKEN }}
+      - name: Build Docker containers
+        run: |
+          docker compose -f docker-compose.yaml build
+          docker compose -f docker-compose.yaml push
+        env:
+          IMAGE_TAG: ${{ env.IMAGE_TAG }}
+
+  deploy:
+    #runs-on: self-hosted
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Set image tag
+        run: echo "IMAGE_TAG=sha-${GITHUB_SHA::7}" >> $GITHUB_ENV
+      - name: Configure SSH
+        uses: webfactory/ssh-agent@v0.8.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Create env file and deploy
+        run: |
+          set -e
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ubuntu@${{ secrets.SSH_HOST }} "sudo mkdir -p /home/ubuntu/referal-tool && \
+          sudo chown ubuntu:ubuntu /home/ubuntu/referal-tool && \
+          sudo rm -f /home/ubuntu/referal-tool/.env && \
+          sudo -u ubuntu touch /home/ubuntu/referal-tool/.env && \
+          echo DEV=false >> /home/ubuntu/referal-tool/.env && \
+          echo ENVIRONMENT=production >> /home/ubuntu/referal-tool/.env && \
+          echo DATABASE_URL=${{ secrets.DATABASE_URL }} >> /home/ubuntu/referal-tool/.env && \
+          cd /home/ubuntu/referal-tool && \
+          sudo ./deploy.sh"
