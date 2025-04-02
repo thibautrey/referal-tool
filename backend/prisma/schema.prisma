@@ -33,9 +33,11 @@ model Project {
     description String?
     user        User     @relation(fields: [userId], references: [id])
     userId      Int
-    links       Link[] // Nouvelle relation
+    links       Link[]
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
+
+    @@index([userId])
 }
 
 model Link {
@@ -50,6 +52,8 @@ model Link {
     createdAt DateTime    @default(now())
     updatedAt DateTime    @updatedAt
     LinkVisit LinkVisit[]
+
+    @@index([projectId])
 }
 
 model LinkRule {
@@ -61,6 +65,8 @@ model LinkRule {
     createdAt   DateTime    @default(now())
     updatedAt   DateTime    @updatedAt
     LinkVisit   LinkVisit[]
+
+    @@index([linkId])
 }
 
 model IpCountryCache {
@@ -70,6 +76,8 @@ model IpCountryCache {
     expiresAt   DateTime
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
+
+    @@index([expiresAt])
 }
 
 model LinkVisit {
@@ -85,6 +93,7 @@ model LinkVisit {
 
     @@index([linkId])
     @@index([ip])
+    @@index([ruleId])
 }
 
 enum Role {
