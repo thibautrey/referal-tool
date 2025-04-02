@@ -1,20 +1,43 @@
 export interface ReferralLink {
-  id: string;
+  id: number;
   name: string;
+  shortCode: string;
   baseUrl: string;
   projectId: number;
-  active: boolean;
   clicks: number;
   conversions: number;
-  createdAt: Date;
-  updatedAt: Date;
-  shortCode: string;
-  rules?: {
+  conversionRate?: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CountryVisit {
+  country: string;
+  count: number;
+}
+
+export interface DateVisit {
+  date: string;
+  count: number;
+}
+
+export interface RuleVisit {
+  ruleId: number;
+  count: number;
+  ruleInfo: {
     id: number;
     redirectUrl: string;
     countries: string[];
-    linkId: number;
-    createdAt: Date;
-    updatedAt: Date;
-  }[];
+    name?: string;
+    description?: string;
+    type?: string;
+    status?: string;
+  } | null;
+}
+
+export interface LinkAnalyticsData {
+  totalVisits: number;
+  visitsByCountry: CountryVisit[];
+  visitsByDate: DateVisit[];
+  visitsByRule?: RuleVisit[];
 }

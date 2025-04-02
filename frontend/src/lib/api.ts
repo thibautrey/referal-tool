@@ -62,6 +62,32 @@ export interface LinksResponse {
   sortOrder?: "asc" | "desc";
 }
 
+// Types pour les statistiques
+export interface RuleInfo {
+  id: number;
+  redirectUrl: string;
+  countries: string[];
+  name?: string;
+  description?: string;
+  type?: string;
+  status?: "active" | "inactive";
+}
+
+export interface VisitStats {
+  totalVisits: number;
+  visitsByCountry: { country: string; count: number }[];
+  visitsByDate: { date: string; count: number }[];
+  visitsByRule?: { ruleId: number; count: number; ruleInfo: RuleInfo | null }[];
+}
+
+export interface DashboardStats {
+  totalLinks: number;
+  totalVisits: number;
+  last24HoursVisits: number;
+  topCountries: { country: string; visits: number }[];
+  topLinks: { linkId: number; visits: number; details: ReferralLink }[];
+}
+
 // Classe pour gérer les appels API
 class Api {
   private baseUrl: string;
@@ -191,6 +217,68 @@ class Api {
 
   async deleteLink(projectId: number, id: string): Promise<ApiResponse<void>> {
     return this.delete<void>(`/links/${id}`, projectId);
+  }
+
+  // Méthode pour obtenir les statistiques de visites d'un lien spécifique
+  async getLinkStats(
+    linkId: number,
+    timeRange: string = "week",
+    startDate?: Date,
+    endDate?: Date,
+    countries?: string[]
+  ): Promise<VisitStats> {
+    let endpoint = `/analytics/visits?linkId=${linkId}&timeRange=${timeRange}`;
+
+    if (startDate) {
+      endpoint += `&startDate=${startDate.toISOString()}`;
+    }
+
+    if (endDate) {
+      endpoint += `&endDate=${endDate.toISOString()}`;
+    }
+
+    if (countries && countries.length) {
+      endpoint += `&countries=${countries.join(",")}`;
+    }
+
+    const response = await this.get<VisitStats>(endpoint);
+    return response.data;
+  }
+
+  // Méthode pour obtenir les statistiques d'un projet
+  async getProjectStats(
+    projectId: number,
+    timeRange: string = "week",
+    startDate?: Date,
+    endDate?: Date,
+    countries?: string[]
+  ): Promise<VisitStats> {
+    let endpoint = `/analytics/visits?projectId=${projectId}&timeRange=${timeRange}`;
+
+    if (startDate) {
+      endpoint += `&startDate=${startDate.toISOString()}`;
+    }
+
+    if (endDate) {
+      endpoint += `&endDate=${endDate.toISOString()}`;
+    }
+
+    if (countries && countries.length) {
+      endpoint += `&countries=${countries.join(",")}`;
+    }
+
+    const response = await this.get<VisitStats>(endpoint);
+    return response.data;
+  }
+
+  // Méthode pour obtenir les statistiques du tableau de bord
+  async getDashboardStats(projectId?: number): Promise<DashboardStats> {
+    const endpoint = projectId
+      ? `/analytics/dashboard?projectId=${projectId}`
+      : "/analytics/dashboard";
+
+    const response = await this.get<DashboardStats>(endpoint);
+    return response.data;
   }
 }
 

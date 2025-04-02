@@ -1,5 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 
+import AnalyticsPage from "./pages/AnalyticsPage"; // Importer la nouvelle page
 import { AuthProvider } from "./contexts/AuthContext";
 import HomePage from "./pages/HomePage";
 import LinksPage from "./pages/LinksPage";
@@ -26,6 +27,8 @@ function App() {
             <Route index element={<HomePage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/links" element={<LinksPage />} />
+            <Route path="/analytics" element={<AnalyticsPage />} />{" "}
+            {/* Nouvelle route */}
           </Route>
         </Route>
       </Routes>

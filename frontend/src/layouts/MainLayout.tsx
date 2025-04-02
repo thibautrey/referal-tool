@@ -1,4 +1,4 @@
-import { Home, Link, LogOut, Menu, Settings } from "lucide-react";
+import { BarChart3, Home, Link, LogOut, Menu, Settings } from "lucide-react";
 import { NavLink, Outlet } from "react-router-dom";
 import {
   Sidebar,
@@ -73,6 +73,20 @@ export default function MainLayout() {
                     >
                       <Link className="h-5 w-5" />
                       <span className="hidden lg:block">Links</span>
+                    </SidebarMenuButton>
+                  )}
+                </NavLink>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <NavLink to="/analytics">
+                  {({ isActive }) => (
+                    <SidebarMenuButton
+                      tooltip="Analytics"
+                      isActive={isActive}
+                      className="w-full justify-start gap-3 px-3 py-2"
+                    >
+                      <BarChart3 className="h-5 w-5" />
+                      <span className="hidden lg:block">Analytics</span>
                     </SidebarMenuButton>
                   )}
                 </NavLink>

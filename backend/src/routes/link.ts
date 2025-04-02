@@ -30,4 +30,7 @@ router.post("/:linkId/rules", linkController.addRule);
 router.put("/rules/:ruleId", linkController.updateRule);
 router.delete("/rules/:ruleId", linkController.deleteRule);
 
+// Nouvelle route pour les statistiques d'un lien spécifique
+router.get("/:id/stats", linkController.getLinkStats);
+
 export default router;

@@ -44,42 +44,89 @@ export const checkShortCodeAvailability = async (
 
 // Get all links for a project
 export const getLinksByProject = async (req: Request, res: Response) => {
+  console.log("[DEBUG] Entering getLinksByProject function");
   try {
     const { projectId } = req.params;
     const userId = req.user?.id;
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
-    const sortBy = (req.query.sortBy as string) || "createdAt";
+    let sortBy = (req.query.sortBy as string) || "createdAt";
     const sortOrder = (req.query.sortOrder as "asc" | "desc") || "desc";
 
+    console.log("[DEBUG] Request parameters:", {
+      projectId,
+      userId,
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+    });
+
+    // Valider le champ de tri pour éviter les erreurs de Prisma
+    const validSortFields = [
+      "id",
+      "name",
+      "baseUrl",
+      "shortCode",
+      "projectId",
+      "active",
+      "createdAt",
+      "updatedAt",
+    ];
+
+    // Si le champ de tri n'est pas valide, utiliser createdAt par défaut
+    if (!validSortFields.includes(sortBy)) {
+      console.log(
+        `[DEBUG] Invalid sort field: ${sortBy}, falling back to createdAt`
+      );
+      sortBy = "createdAt";
+    }
+
     if (!projectId) {
+      console.log("[DEBUG] Missing projectId parameter");
       return res.status(400).json({ message: "Project ID is required" });
     }
 
     // Verify project ownership
+    console.log(
+      `[DEBUG] Verifying project ownership for projectId: ${projectId}, userId: ${userId}`
+    );
     const project = await prisma.project.findFirst({
       where: {
         id: parseInt(projectId),
         userId: userId,
       },
     });
+    console.log(
+      "[DEBUG] Project query result:",
+      project ? "Found" : "Not Found"
+    );
 
     if (!project) {
+      console.log(
+        `[DEBUG] Project not found or unauthorized access. ProjectID: ${projectId}, UserID: ${userId}`
+      );
       return res
         .status(404)
         .json({ message: "Projet non trouvé ou accès non autorisé" });
     }
 
     // Get total count
+    console.log(`[DEBUG] Getting total link count for projectId: ${projectId}`);
     const total = await prisma.link.count({
       where: {
         projectId: parseInt(projectId),
       },
     });
+    console.log(`[DEBUG] Total links found: ${total}`);
 
     const totalPages = Math.ceil(total / limit);
+    console.log(`[DEBUG] Calculated total pages: ${totalPages}`);
 
     // Get paginated links with sorting
+    console.log(
+      `[DEBUG] Fetching paginated links with: page=${page}, limit=${limit}, sortBy=${sortBy}, sortOrder=${sortOrder}`
+    );
     const links = await prisma.link.findMany({
       where: {
         projectId: parseInt(projectId),
@@ -93,8 +140,9 @@ export const getLinksByProject = async (req: Request, res: Response) => {
         [sortBy]: sortOrder,
       },
     });
+    console.log(`[DEBUG] Links fetched: ${links.length}`);
 
-    res.json({
+    const response = {
       message: "Links retrieved successfully",
       data: {
         links,
@@ -103,9 +151,28 @@ export const getLinksByProject = async (req: Request, res: Response) => {
         sortBy,
         sortOrder,
       },
-    });
+    };
+    console.log("[DEBUG] Sending successful response");
+    res.json(response);
   } catch (error) {
-    res.status(500).json({ message: "Error retrieving links", error });
+    console.error("[ERROR] Error in getLinksByProject:", error);
+    console.error(
+      "[ERROR] Stack trace:",
+      error instanceof Error ? error.stack : "No stack trace"
+    );
+
+    // Log more details about the error
+    if (error instanceof Error) {
+      console.error("[ERROR] Error name:", error.name);
+      console.error("[ERROR] Error message:", error.message);
+    }
+
+    // If it's a Prisma error, it might have additional details
+    if (typeof error === "object" && error !== null && "meta" in error) {
+      console.error("[ERROR] Prisma error metadata:", error.meta);
+    }
+
+    res.status(500).json({ message: "Error retrieving links" });
   }
 };
 
@@ -402,7 +469,7 @@ export const handleRedirection = async (req: Request, res: Response) => {
 
     const link = await prisma.link.findFirst({
       where: {
-        name: path,
+        shortCode: path,
         active: true,
       },
       include: {
@@ -472,7 +539,12 @@ export const handleRedirection = async (req: Request, res: Response) => {
       return countries.includes(userCountry);
     });
 
-    const redirectUrl = matchingRule ? matchingRule.redirectUrl : link.baseUrl;
+    let redirectUrl = matchingRule ? matchingRule.redirectUrl : link.baseUrl;
+
+    // Vérifier si l'URL commence par http:// ou https://, sinon ajouter https://
+    if (!redirectUrl.match(/^https?:\/\//i)) {
+      redirectUrl = `https://${redirectUrl}`;
+    }
 
     // Asynchronously record the visit
     prisma.linkVisit
@@ -493,5 +565,183 @@ export const handleRedirection = async (req: Request, res: Response) => {
   } catch (error) {
     console.error("Redirection error:", error);
     res.status(500).json({ message: "Error handling redirection" });
+  }
+};
+
+// Obtenir les statistiques d'un lien spécifique
+export const getLinkStats = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user?.id;
+    const timeRange = (req.query.timeRange as string) || "week";
+    const startDate = req.query.startDate
+      ? new Date(req.query.startDate as string)
+      : null;
+    const endDate = req.query.endDate
+      ? new Date(req.query.endDate as string)
+      : null;
+    const countries = req.query.countries
+      ? (req.query.countries as string).split(",")
+      : null;
+
+    // Vérifier l'accès au lien
+    const link = await prisma.link.findFirst({
+      where: {
+        id: parseInt(id),
+        project: {
+          userId,
+        },
+      },
+    });
+
+    if (!link) {
+      return res
+        .status(404)
+        .json({ message: "Lien non trouvé ou accès non autorisé" });
+    }
+
+    // Construire la clause where pour les visites
+    const whereClause: any = { linkId: parseInt(id) };
+
+    // Filtrer par plage de dates
+    if (startDate || endDate) {
+      whereClause.createdAt = {};
+      if (startDate) whereClause.createdAt.gte = startDate;
+      if (endDate) whereClause.createdAt.lte = endDate;
+    } else {
+      // Définir une plage par défaut basée sur timeRange
+      const now = new Date();
+      whereClause.createdAt = { gte: new Date() };
+
+      switch (timeRange) {
+        case "day":
+          whereClause.createdAt.gte = new Date(now.setDate(now.getDate() - 1));
+          break;
+        case "week":
+          whereClause.createdAt.gte = new Date(now.setDate(now.getDate() - 7));
+          break;
+        case "month":
+          whereClause.createdAt.gte = new Date(
+            now.setMonth(now.getMonth() - 1)
+          );
+          break;
+        case "year":
+          whereClause.createdAt.gte = new Date(
+            now.setFullYear(now.getFullYear() - 1)
+          );
+          break;
+      }
+    }
+
+    // Filtrer par pays
+    if (countries && countries.length > 0) {
+      whereClause.country = { in: countries };
+    }
+
+    // Compter le nombre total de visites
+    const totalVisits = await prisma.linkVisit.count({
+      where: whereClause,
+    });
+
+    // Obtenir la répartition par pays
+    const visitsByCountry = await prisma.linkVisit.groupBy({
+      by: ["country"],
+      _count: {
+        id: true,
+      },
+      where: whereClause,
+      orderBy: {
+        _count: {
+          id: "desc",
+        },
+      },
+    });
+
+    // Obtenir la répartition par règle
+    const visitsByRule = await prisma.linkVisit.groupBy({
+      by: ["ruleId"],
+      _count: {
+        id: true,
+      },
+      where: whereClause,
+      orderBy: {
+        _count: {
+          id: "desc",
+        },
+      },
+    });
+
+    // Récupérer les détails des règles
+    const rules = await prisma.linkRule.findMany({
+      where: { linkId: parseInt(id) },
+    });
+
+    // Fusionner les statistiques avec les détails des règles
+    const ruleStats = visitsByRule.map((stat) => {
+      const ruleDetails = rules.find((r) => r.id === stat.ruleId);
+      return {
+        ruleId: stat.ruleId,
+        count: stat._count.id,
+        details: ruleDetails || null,
+      };
+    });
+
+    // Obtenir les données de séries temporelles
+    const timeSeriesQuery = `
+      SELECT
+        DATE_FORMAT(createdAt, '${
+          timeRange === "day"
+            ? "%Y-%m-%d %H:00:00"
+            : timeRange === "week"
+            ? "%Y-%m-%d"
+            : timeRange === "month"
+            ? "%Y-%m-%d"
+            : "%Y-%m"
+        }') as date,
+        COUNT(*) as count
+      FROM LinkVisit
+      WHERE linkId = ${parseInt(id)}
+        ${
+          whereClause.createdAt?.gte
+            ? `AND createdAt >= '${whereClause.createdAt.gte.toISOString()}'`
+            : ""
+        }
+        ${
+          whereClause.createdAt?.lte
+            ? `AND createdAt <= '${whereClause.createdAt.lte.toISOString()}'`
+            : ""
+        }
+        ${
+          whereClause.country?.in
+            ? `AND country IN (${whereClause.country.in
+                .map((c: string) => `'${c}'`)
+                .join(",")})`
+            : ""
+        }
+      GROUP BY date
+      ORDER BY date ASC
+    `;
+
+    const timeSeries = await prisma.$queryRawUnsafe(timeSeriesQuery);
+
+    res.json({
+      message: "Statistiques du lien récupérées avec succès",
+      data: {
+        link,
+        totalVisits,
+        visitsByCountry: visitsByCountry.map((item) => ({
+          country: item.country,
+          count: item._count.id,
+        })),
+        visitsByRule: ruleStats,
+        timeSeries,
+      },
+    });
+  } catch (error) {
+    console.error("Error retrieving link statistics:", error);
+    res.status(500).json({
+      message: "Erreur lors de la récupération des statistiques du lien",
+      error,
+    });
   }
 };

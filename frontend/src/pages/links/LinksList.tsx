@@ -1,4 +1,16 @@
 import {
+  AlertCircle,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  Copy,
+  Edit,
+  Loader2,
+  Plus,
+  Trash,
+} from "lucide-react";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -10,17 +22,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import {
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronUp,
-  Copy,
-  Edit,
-  Loader2,
-  Plus,
-  Trash,
-} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -39,12 +40,17 @@ import { toast } from "sonner";
 interface LinksListProps {
   onAddLinkClick: () => void;
   projectId: number;
+  onError?: (message: string) => void;
 }
 
 type SortOrder = "asc" | "desc";
 type SortField = "createdAt";
 
-export function LinksList({ onAddLinkClick, projectId }: LinksListProps) {
+export function LinksList({
+  onAddLinkClick,
+  projectId,
+  onError,
+}: LinksListProps) {
   const [links, setLinks] = useState<ReferralLink[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -52,6 +58,7 @@ export function LinksList({ onAddLinkClick, projectId }: LinksListProps) {
   const [currentDomain, setCurrentDomain] = useState("");
   const [sortField, setSortField] = useState<SortField>("createdAt");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+  const [errorState, setErrorState] = useState<string | null>(null);
 
   const fetchLinks = async (
     page: number,
@@ -60,14 +67,41 @@ export function LinksList({ onAddLinkClick, projectId }: LinksListProps) {
   ) => {
     try {
       setIsLoading(true);
+      setErrorState(null);
+
       const response = await api.getLinks(projectId, page, sortBy, order);
-      setLinks(response.links);
-      setTotalPages(response.totalPages);
-      setCurrentPage(response.page);
+
+      setLinks(response.links || []);
+      setTotalPages(response.totalPages || 1);
+      setCurrentPage(response.page || 1);
       setSortField((response.sortBy as SortField) || "createdAt");
       setSortOrder(response.sortOrder || "desc");
-    } catch {
-      toast.error("Unable to load links");
+    } catch (err) {
+      console.error("Error fetching links:", err);
+
+      // Format error message
+      let errorMessage = "Unable to load links";
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === "object" && err !== null) {
+        const errorObj = err as Record<string, { name?: string } | string>;
+        if (
+          typeof errorObj.error === "object" &&
+          errorObj.error?.name === "PrismaClientValidationError"
+        ) {
+          errorMessage = "Database validation error. Please contact support.";
+        } else if (typeof errorObj.message === "string") {
+          errorMessage = errorObj.message;
+        }
+      }
+
+      setErrorState(errorMessage);
+      if (onError) onError(errorMessage);
+
+      // Set default values
+      setLinks([]);
+      setTotalPages(1);
+      setCurrentPage(1);
     } finally {
       setIsLoading(false);
     }
@@ -95,7 +129,7 @@ export function LinksList({ onAddLinkClick, projectId }: LinksListProps) {
   const handleDeleteLink = async (id: string) => {
     try {
       await api.deleteLink(projectId, id);
-      setLinks(links.filter((link) => link.id !== id));
+      setLinks(links.filter((link) => link.id !== parseInt(id)));
       toast.success("Link deleted successfully");
     } catch {
       toast.error("An error occurred while deleting the link");
@@ -136,6 +170,23 @@ export function LinksList({ onAddLinkClick, projectId }: LinksListProps) {
       <Card className="w-full">
         <CardContent className="flex justify-center items-center min-h-[400px]">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (errorState) {
+    return (
+      <Card className="w-full">
+        <CardContent className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-4">
+          <div className="p-4 rounded-full bg-destructive/10">
+            <AlertCircle className="h-8 w-8 text-destructive" />
+          </div>
+          <h3 className="text-lg font-medium">Error Loading Links</h3>
+          <p className="text-muted-foreground max-w-md mx-auto">{errorState}</p>
+          <Button onClick={() => fetchLinks(1, sortField, sortOrder)}>
+            Try Again
+          </Button>
         </CardContent>
       </Card>
     );
@@ -253,7 +304,9 @@ export function LinksList({ onAddLinkClick, projectId }: LinksListProps) {
                               <AlertDialogCancel>Cancel</AlertDialogCancel>
                               <AlertDialogAction
                                 className="bg-destructive hover:bg-destructive/90"
-                                onClick={() => handleDeleteLink(link.id)}
+                                onClick={() =>
+                                  handleDeleteLink(link.id.toString())
+                                }
                               >
                                 Delete
                               </AlertDialogAction>
