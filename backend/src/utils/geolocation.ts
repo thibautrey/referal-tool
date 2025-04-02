@@ -71,8 +71,8 @@ export async function getCountryFromIp(ip: string): Promise<[string, string]> {
     await saveToCache(cacheKey, { country: countryCode, city }, 86400);
 
     return [countryCode, city];
-  } catch (error) {
-    console.error("Error getting country from IP:", error);
+  } catch (err: unknown) {
+    console.error("Error getting country from IP:", err);
     return ["unknown", "unknown"];
   }
 }

@@ -35,7 +35,7 @@ export const checkShortCodeAvailability = async (
 
     // Si existingLink est null, le code est disponible
     return res.json({ data: { available: !existingLink } });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error checking short code availability:", error);
     return res
       .status(500)
@@ -160,7 +160,7 @@ export const getLinksByProject = async (req: Request, res: Response) => {
     };
     console.log("[DEBUG] Sending successful response");
     res.json(response);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("[ERROR] Error in getLinksByProject:", error);
     console.error(
       "[ERROR] Stack trace:",
@@ -247,7 +247,7 @@ export const createLink = async (req: Request, res: Response) => {
     });
 
     return res.status(201).json(linkWithRules);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error creating link:", error);
     return res.status(500).json({ error: "Failed to create link" });
   }
@@ -278,7 +278,7 @@ export const getLinkById = async (req: Request, res: Response) => {
     }
 
     res.json({ message: "Link retrieved successfully", data: link });
-  } catch (error) {
+  } catch (error: unknown) {
     res.status(500).json({ message: "Error retrieving link", error });
   }
 };
@@ -318,7 +318,7 @@ export const updateLink = async (req: Request, res: Response) => {
     });
 
     res.json({ message: "Link updated successfully", data: updatedLink });
-  } catch (error) {
+  } catch (error: unknown) {
     res.status(500).json({ message: "Error updating link", error });
   }
 };
@@ -353,7 +353,7 @@ export const deleteLink = async (req: Request, res: Response) => {
     });
 
     res.json({ message: "Link deleted successfully" });
-  } catch (error) {
+  } catch (error: unknown) {
     res.status(500).json({ message: "Error deleting link", error });
   }
 };
@@ -389,7 +389,7 @@ export const addRule = async (req: Request, res: Response) => {
     });
 
     res.status(201).json({ message: "Rule added successfully", data: rule });
-  } catch (error) {
+  } catch (error: unknown) {
     res.status(500).json({ message: "Error adding rule", error });
   }
 };
@@ -427,7 +427,7 @@ export const updateRule = async (req: Request, res: Response) => {
     });
 
     res.json({ message: "Rule updated successfully", data: updatedRule });
-  } catch (error) {
+  } catch (error: unknown) {
     res.status(500).json({ message: "Error updating rule", error });
   }
 };
@@ -460,7 +460,7 @@ export const deleteRule = async (req: Request, res: Response) => {
     });
 
     res.json({ message: "Rule deleted successfully" });
-  } catch (error) {
+  } catch (error: unknown) {
     res.status(500).json({ message: "Error deleting rule", error });
   }
 };
@@ -587,7 +587,7 @@ export const handleRedirection = async (req: Request, res: Response) => {
       });
 
     res.redirect(301, redirectUrl);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Redirection error:", error);
     res.status(500).json({ message: "Error handling redirection" });
   }
@@ -701,6 +701,22 @@ export const getLinkStats = async (req: Request, res: Response) => {
       where: { linkId: parseInt(id) },
     });
 
+    // Add interfaces for the data structures
+    interface RuleStat {
+      ruleId: number;
+      count: number;
+      rule: {
+        id: number;
+        redirectUrl: string;
+        countries: string[];
+      } | null;
+    }
+
+    interface DateVisit {
+      date: string;
+      count: number;
+    }
+
     // Fusionner les statistiques avec les détails des règles
     const ruleStats = visitsByRule.map((stat) => {
       const ruleDetails = rules.find((r) => r.id === stat.ruleId);
@@ -762,7 +778,7 @@ export const getLinkStats = async (req: Request, res: Response) => {
         timeSeries,
       },
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error retrieving link statistics:", error);
     res.status(500).json({
       message: "Erreur lors de la récupération des statistiques du lien",
