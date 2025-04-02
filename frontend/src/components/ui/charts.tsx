@@ -54,7 +54,11 @@ export const LineChart: React.FC<LineChartProps> = ({
   showLegend = true,
 }) => {
   return (
-    <ResponsiveContainer width="100%" height={height}>
+    <ResponsiveContainer
+      width="100%"
+      height={height}
+      className="line-chart-glassmorphism"
+    >
       <RechartsLineChart
         data={data}
         margin={{ top: 5, right: 30, left: 20, bottom: 30 }}

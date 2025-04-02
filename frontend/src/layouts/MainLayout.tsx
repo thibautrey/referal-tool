@@ -34,7 +34,9 @@ export default function MainLayout() {
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="flex min-h-screen w-full overflow-hidden bg-background">
-        <Sidebar className="flex-shrink-0 border-r">
+        <Sidebar className="flex-shrink-0 border-r relative">
+          <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-secondary/10 to-background animate-gradient-slow -z-10" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,53,255,0.1),rgba(255,255,255,0))] -z-10" />
           <SidebarHeader className="flex h-16 items-center justify-between border-b px-4">
             <div className="flex items-center gap-3">
               <img
