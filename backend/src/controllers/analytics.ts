@@ -1,3 +1,4 @@
+import { LinkRule, LinkVisit } from "@prisma/client";
 import { Request, Response } from "express";
 import { getFromCache, saveToCache } from "../lib/redis";
 
@@ -128,10 +129,10 @@ export const getVisitStats = async (req: Request, res: Response) => {
           id: true,
         },
         where: whereClause,
-      })) as unknown as RuleStats[];
+      })) as unknown as LinkVisit[];
 
       // Récupérer les détails des règles pour les afficher
-      const rulesInfo = await prisma.linkRule.findMany({
+      const rulesInfo = (await prisma.linkRule.findMany({
         where: {
           linkId: parseInt(linkId as string),
         },
@@ -140,7 +141,7 @@ export const getVisitStats = async (req: Request, res: Response) => {
           redirectUrl: true,
           countries: true,
         },
-      });
+      })) as LinkRule[];
 
       // Associer les informations des règles avec les statistiques
       visitsByRule = visitsByRule.map((ruleStats) => {
