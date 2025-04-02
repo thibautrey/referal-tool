@@ -16,24 +16,23 @@ function App() {
   return (
     <AuthProvider>
       <Routes>
-        {/* Landing page à la racine */}
-        <Route path="/" element={<LandingPage />} />
-
         {/* Routes publiques (accessibles sans authentification) */}
         <Route element={<PublicRoute />}>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/app/login" element={<LoginPage />} />
+          <Route path="/app/register" element={<RegisterPage />} />
         </Route>
 
         {/* Routes protégées (nécessitent une authentification) */}
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
-            <Route path="/dashboard" element={<HomePage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/links" element={<LinksPage />} />
-            <Route path="/analytics" element={<AnalyticsPage />} />
+            <Route path="/app/dashboard" element={<HomePage />} />
+            <Route path="/app/settings" element={<SettingsPage />} />
+            <Route path="/app/links" element={<LinksPage />} />
+            <Route path="/app/analytics" element={<AnalyticsPage />} />
           </Route>
         </Route>
+
+        <Route path="/" element={<LandingPage />} />
       </Routes>
     </AuthProvider>
   );

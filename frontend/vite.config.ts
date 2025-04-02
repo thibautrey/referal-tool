@@ -6,22 +6,27 @@ import tailwindcss from "@tailwindcss/vite";
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: "/app/",
+  base: "/app",
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
   },
   build: {
-    assetsDir: "assets",
+    outDir: "dist",
+    assetsDir: "assets", // Simplifié
     rollupOptions: {
       output: {
-        // Assure que les chemins d'assets sont correctement préfixés
+        entryFileNames: `assets/[name]-[hash].js`,
+        chunkFileNames: `assets/[name]-[hash].js`,
         assetFileNames: (assetInfo) => {
           const info = (assetInfo.name ?? "").split(".");
           const ext = info[info.length - 1];
           if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(ext)) {
             return `assets/images/[name]-[hash][extname]`;
+          }
+          if (/woff2?|ttf|eot/i.test(ext)) {
+            return `assets/fonts/[name]-[hash][extname]`;
           }
           return `assets/[name]-[hash][extname]`;
         },
@@ -30,9 +35,11 @@ export default defineConfig({
   },
   server: {
     headers: {
-      // Configurer Content-Security-Policy pour autoriser les images de domaines externes
       "Content-Security-Policy":
         "default-src 'self'; img-src 'self' data: https://astronomy-store.com *.astronomy-store.com; font-src 'self' data:;",
+    },
+    proxy: {
+      "/api": "http://localhost:3001",
     },
   },
 });

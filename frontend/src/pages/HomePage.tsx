@@ -269,7 +269,7 @@ export default function HomePage() {
                 className="ml-auto glass-button"
                 asChild
               >
-                <Link to="/links">
+                <Link to="/app/links">
                   View all <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -298,7 +298,7 @@ export default function HomePage() {
                 className="ml-auto glass-button"
                 asChild
               >
-                <Link to="/analytics">
+                <Link to="/app/analytics">
                   View analytics <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
@@ -321,14 +321,14 @@ export default function HomePage() {
                 className="ring-1 ring-white/10 hover:ring-white/20"
                 asChild
               >
-                <Link to="/links?tab=add-link">Create a new link</Link>
+                <Link to="/app/links?tab=add-link">Create a new link</Link>
               </Button>
               <Button
                 variant="glass"
                 className="ring-1 ring-white/10 hover:ring-white/20"
                 asChild
               >
-                <Link to="/analytics">View statistics</Link>
+                <Link to="/app/analytics">View statistics</Link>
               </Button>
             </CardContent>
           </Card>
@@ -405,7 +405,7 @@ export default function HomePage() {
                 className="ml-auto glass-button"
                 asChild
               >
-                <Link to="/links">
+                <Link to="/app/links">
                   See all links <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>

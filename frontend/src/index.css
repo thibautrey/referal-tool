@@ -119,6 +119,31 @@
   }
 }
 
+/* Déclarations de police Figtree */
+@font-face {
+  font-family: "Figtree";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/figtree/regular.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Figtree";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("/fonts/figtree/medium.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Figtree";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/figtree/semibold.woff2") format("woff2");
+}
+
 /* Ajoutez ces styles à la fin de votre fichier CSS */
 
 /* Grille d'arrière-plan pour un effet visionOS */

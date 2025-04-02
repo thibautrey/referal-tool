@@ -45,31 +45,31 @@ export default function LandingPage() {
       {/* Header avec navigation */}
       <header className="border-b bg-background/80 backdrop-blur-sm fixed top-0 left-0 right-0 z-50">
         <div className="container flex h-16 items-center justify-between py-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 pl-6">
             <img src="/images/logo.avif" alt="Logo" className="h-8 w-auto" />
-            <span className="font-semibold text-xl">Referal Optimizer</span>
+            <span className="font-semibold text-xl">rflnk</span>
           </div>
           <nav className="hidden md:flex items-center gap-6">
             <a
               href="#features"
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
-              Fonctionnalités
+              Features
             </a>
             <a
               href="#benefits"
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
-              Avantages
+              Benefits
             </a>
             <RouterLink
-              to="/login"
+              to="/app/login"
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
-              Se connecter
+              Login
             </RouterLink>
             <Button asChild>
-              <RouterLink to="/register">S'inscrire</RouterLink>
+              <RouterLink to="/app/register">Sign Up</RouterLink>
             </Button>
           </nav>
           <div className="md:hidden">
@@ -105,22 +105,21 @@ export default function LandingPage() {
           variants={fadeIn}
         >
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-500">
-            Optimisez vos liens d'affiliation
+            Optimize Your Affiliate Links
           </h1>
           <p className="text-xl md:text-2xl mb-10 text-muted-foreground max-w-3xl mx-auto">
-            Augmentez vos revenus d'affiliation grâce à notre plateforme de
-            gestion de liens intelligente, conçue pour les influenceurs et
-            marketeurs.
+            Increase your affiliate revenue with our intelligent link management
+            platform, designed for influencers and marketers.
           </p>
           <div className="flex flex-col md:flex-row gap-4 justify-center">
             <Button size="lg" asChild>
               <RouterLink to="/register">
-                Commencer gratuitement
+                Get Started Free
                 <ArrowRight className="ml-2 h-5 w-5" />
               </RouterLink>
             </Button>
             <Button size="lg" variant="outline" asChild>
-              <RouterLink to="/login">Connexion</RouterLink>
+              <RouterLink to="/login">Login</RouterLink>
             </Button>
           </div>
         </motion.div>
@@ -138,7 +137,7 @@ export default function LandingPage() {
           <div className="bg-card/20 border rounded-xl shadow-xl overflow-hidden backdrop-blur-sm">
             <img
               src="https://placehold.co/1200x600/22272e/888888?text=Dashboard+Preview"
-              alt="Dashboard de l'application"
+              alt="Application Dashboard"
               className="w-full h-auto"
             />
           </div>
@@ -156,11 +155,11 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Fonctionnalités principales
+              Key Features
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Notre plateforme offre tous les outils nécessaires pour optimiser
-              votre stratégie d'affiliation.
+              Our platform provides all the tools you need to optimize your
+              affiliate strategy.
             </p>
           </motion.div>
 
@@ -176,25 +175,24 @@ export default function LandingPage() {
               <Card className="h-full bg-card/50 backdrop-blur-sm hover:shadow-md transition-all border-primary/10 hover:border-primary/30">
                 <CardHeader>
                   <Globe className="h-10 w-10 text-primary mb-4" />
-                  <CardTitle>Personnalisation géographique</CardTitle>
+                  <CardTitle>Geographic Customization</CardTitle>
                   <CardDescription>
-                    Adaptez vos liens en fonction de la localisation de vos
-                    visiteurs
+                    Adapt your links based on your visitors' location
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
                     <li className="flex items-start">
                       <span className="mr-2 mt-1 text-primary">✓</span>
-                      Liens courts personnalisés pour vos campagnes
+                      Custom short links for your campaigns
                     </li>
                     <li className="flex items-start">
                       <span className="mr-2 mt-1 text-primary">✓</span>
-                      Redirections différentes selon le pays
+                      Different redirections per country
                     </li>
                     <li className="flex items-start">
                       <span className="mr-2 mt-1 text-primary">✓</span>
-                      Maximisez l'impact sur chaque marché
+                      Maximize impact in each market
                     </li>
                   </ul>
                 </CardContent>
@@ -206,25 +204,24 @@ export default function LandingPage() {
               <Card className="h-full bg-card/50 backdrop-blur-sm hover:shadow-md transition-all border-primary/10 hover:border-primary/30">
                 <CardHeader>
                   <Link className="h-10 w-10 text-primary mb-4" />
-                  <CardTitle>Gestion intelligente des règles</CardTitle>
+                  <CardTitle>Intelligent Rule Management</CardTitle>
                   <CardDescription>
-                    Configurez des redirections basées sur le profil de
-                    l'utilisateur
+                    Configure redirections based on user profiles
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
                     <li className="flex items-start">
                       <span className="mr-2 mt-1 text-primary">✓</span>
-                      Règles automatiques de redirection
+                      Automatic redirection rules
                     </li>
                     <li className="flex items-start">
                       <span className="mr-2 mt-1 text-primary">✓</span>
-                      Différents liens pour un même produit
+                      Different links for the same product
                     </li>
                     <li className="flex items-start">
                       <span className="mr-2 mt-1 text-primary">✓</span>
-                      Optimisation des conversions par segment
+                      Optimize conversions by segment
                     </li>
                   </ul>
                 </CardContent>
@@ -236,24 +233,24 @@ export default function LandingPage() {
               <Card className="h-full bg-card/50 backdrop-blur-sm hover:shadow-md transition-all border-primary/10 hover:border-primary/30">
                 <CardHeader>
                   <BarChart3 className="h-10 w-10 text-primary mb-4" />
-                  <CardTitle>Analyse des performances</CardTitle>
+                  <CardTitle>Performance Analysis</CardTitle>
                   <CardDescription>
-                    Suivez en détail l'efficacité de vos campagnes
+                    Track the effectiveness of your campaigns in detail
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
                     <li className="flex items-start">
                       <span className="mr-2 mt-1 text-primary">✓</span>
-                      Statistiques détaillées des clics et conversions
+                      Detailed statistics on clicks and conversions
                     </li>
                     <li className="flex items-start">
                       <span className="mr-2 mt-1 text-primary">✓</span>
-                      Analyses par pays et par période
+                      Analyses by country and period
                     </li>
                     <li className="flex items-start">
                       <span className="mr-2 mt-1 text-primary">✓</span>
-                      Dashboard visuel avec vos meilleures performances
+                      Visual dashboard with your best performances
                     </li>
                   </ul>
                 </CardContent>
@@ -265,24 +262,24 @@ export default function LandingPage() {
               <Card className="h-full bg-card/50 backdrop-blur-sm hover:shadow-md transition-all border-primary/10 hover:border-primary/30">
                 <CardHeader>
                   <Users className="h-10 w-10 text-primary mb-4" />
-                  <CardTitle>Organisation par projets</CardTitle>
+                  <CardTitle>Project Organization</CardTitle>
                   <CardDescription>
-                    Segmentez vos campagnes pour une gestion efficace
+                    Segment your campaigns for effective management
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
                     <li className="flex items-start">
                       <span className="mr-2 mt-1 text-primary">✓</span>
-                      Projets distincts pour chaque campagne
+                      Separate projects for each campaign
                     </li>
                     <li className="flex items-start">
                       <span className="mr-2 mt-1 text-primary">✓</span>
-                      Interface intuitive de gestion
+                      Intuitive management interface
                     </li>
                     <li className="flex items-start">
                       <span className="mr-2 mt-1 text-primary">✓</span>
-                      Statistiques segmentées par projet
+                      Statistics segmented by project
                     </li>
                   </ul>
                 </CardContent>
@@ -294,24 +291,24 @@ export default function LandingPage() {
               <Card className="h-full bg-card/50 backdrop-blur-sm hover:shadow-md transition-all border-primary/10 hover:border-primary/30">
                 <CardHeader>
                   <ShieldCheck className="h-10 w-10 text-primary mb-4" />
-                  <CardTitle>Sécurité avancée</CardTitle>
+                  <CardTitle>Advanced Security</CardTitle>
                   <CardDescription>
-                    Protégez vos données et votre compte
+                    Protect your data and account
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <ul className="space-y-2">
                     <li className="flex items-start">
                       <span className="mr-2 mt-1 text-primary">✓</span>
-                      Authentification à deux facteurs (2FA)
+                      Two-factor authentication (2FA)
                     </li>
                     <li className="flex items-start">
                       <span className="mr-2 mt-1 text-primary">✓</span>
-                      Gestion sécurisée des accès
+                      Secure access management
                     </li>
                     <li className="flex items-start">
                       <span className="mr-2 mt-1 text-primary">✓</span>
-                      Codes de récupération pour accès d'urgence
+                      Recovery codes for emergency access
                     </li>
                   </ul>
                 </CardContent>
@@ -332,11 +329,11 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Avantages pour les influenceurs
+              Influencer Benefits
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Maximisez vos revenus d'affiliation avec des outils adaptés à
-              votre audience internationale.
+              Maximize your affiliate revenue with tools adapted to your
+              international audience.
             </p>
           </motion.div>
 
@@ -349,7 +346,7 @@ export default function LandingPage() {
               transition={{ duration: 0.8 }}
             >
               <h3 className="text-2xl font-bold mb-6">
-                Augmentez vos conversions
+                Increase Your Conversions
               </h3>
               <div className="space-y-6">
                 <div className="flex gap-4">
@@ -358,12 +355,11 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <h4 className="font-semibold text-lg mb-1">
-                      Adaptation aux marchés locaux
+                      Adaptation to Local Markets
                     </h4>
                     <p className="text-muted-foreground">
-                      Redirigez automatiquement vos visiteurs vers les
-                      plateformes adaptées à leur pays pour maximiser les
-                      chances de conversion.
+                      Automatically redirect your visitors to platforms suited
+                      to their country to maximize conversion chances.
                     </p>
                   </div>
                 </div>
@@ -373,11 +369,11 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <h4 className="font-semibold text-lg mb-1">
-                      Optimisation en temps réel
+                      Real-Time Optimization
                     </h4>
                     <p className="text-muted-foreground">
-                      Analysez les performances de vos liens et ajustez vos
-                      stratégies rapidement grâce aux données en temps réel.
+                      Analyze the performance of your links and quickly adjust
+                      your strategies with real-time data.
                     </p>
                   </div>
                 </div>
@@ -387,11 +383,11 @@ export default function LandingPage() {
                   </div>
                   <div>
                     <h4 className="font-semibold text-lg mb-1">
-                      Gestion simplifiée des campagnes
+                      Simplified Campaign Management
                     </h4>
                     <p className="text-muted-foreground">
-                      Une interface intuitive vous permet de gérer facilement
-                      l'ensemble de vos liens d'affiliation et projets.
+                      An intuitive interface allows you to easily manage all
+                      your affiliate links and projects.
                     </p>
                   </div>
                 </div>
@@ -407,7 +403,7 @@ export default function LandingPage() {
             >
               <img
                 src="https://placehold.co/600x400/22272e/888888?text=Analytics+Dashboard"
-                alt="Tableau de bord des analyses"
+                alt="Analytics Dashboard"
                 className="w-full h-auto"
               />
             </motion.div>
@@ -425,17 +421,17 @@ export default function LandingPage() {
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            Prêt à optimiser vos revenus d'affiliation ?
+            Ready to Optimize Your Affiliate Revenue?
           </h2>
           <p className="text-xl text-muted-foreground mb-8">
-            Rejoignez des milliers d'influenceurs qui augmentent leurs
-            conversions grâce à notre plateforme.
+            Join thousands of influencers who are increasing their conversions
+            with our platform.
           </p>
           <Button size="lg" className="px-8" asChild>
-            <RouterLink to="/register">Créer un compte gratuitement</RouterLink>
+            <RouterLink to="/register">Create Free Account</RouterLink>
           </Button>
           <p className="mt-4 text-sm text-muted-foreground">
-            Pas de carte de crédit requise • Configuration en quelques minutes
+            No credit card required • Set up in minutes
           </p>
         </motion.div>
       </section>
@@ -446,38 +442,39 @@ export default function LandingPage() {
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center gap-2 mb-6 md:mb-0">
               <img src="/images/logo.avif" alt="Logo" className="h-8 w-auto" />
-              <span className="font-semibold">Referal Optimizer</span>
+              <span className="font-semibold">rflnk</span>
             </div>
             <div className="flex flex-col md:flex-row gap-6 md:gap-12 text-center md:text-left">
               <RouterLink
                 to="/login"
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
-                Se connecter
+                Login
               </RouterLink>
               <RouterLink
                 to="/register"
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
-                S'inscrire
+                Sign Up
               </RouterLink>
               <a
                 href="#features"
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
-                Fonctionnalités
+                Features
               </a>
               <a
                 href="#benefits"
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
-                Avantages
+                Benefits
               </a>
             </div>
           </div>
           <div className="mt-8 pt-8 border-t text-center text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} Referal Optimizer. Tous droits
-            réservés.
+            &copy; {new Date().getFullYear()}{" "}
+            <a href="https://pleiades.solutions">Pleiades.solutions</a>. All
+            rights reserved.
           </div>
         </div>
       </footer>

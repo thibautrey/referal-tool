@@ -19,7 +19,7 @@ export default function PublicRoute() {
 
   // Rediriger vers le dashboard si déjà authentifié
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/app/dashboard" replace />;
   }
 
   // Afficher le contenu de la route publique

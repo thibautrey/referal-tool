@@ -32,10 +32,10 @@ app.use(
       directives: {
         defaultSrc: ["'self'"],
         scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", "data:", "https:"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        imgSrc: ["'self'", "data:", "https:", "blob:"],
         connectSrc: ["'self'"],
-        fontSrc: ["'self'", "data:"],
+        fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
         objectSrc: ["'none'"],
         mediaSrc: ["'self'"],
         frameSrc: ["'none'"],
@@ -63,7 +63,7 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
   next();
 });
 
-// Routes API
+// Routes API - should be checked first
 app.use("/api/users", userRoutes);
 app.use("/api/links", linkRoutes);
 app.use("/api/analytics", analyticsRoutes);
@@ -75,54 +75,48 @@ const frontendBuildPath = path.resolve(__dirname, "../../frontend/dist");
 express.static.mime.define({
   "application/javascript": ["js", "mjs"],
   "text/css": ["css"],
+  "font/woff2": ["woff2"],
+  "font/woff": ["woff"],
 });
 
-// Servir les fichiers statiques du frontend avec les bons types MIME
+// Route spécifique pour les assets de l'application
 app.use(
-  express.static(frontendBuildPath, {
-    setHeaders: (res, path) => {
-      if (path.endsWith(".js") || path.endsWith(".mjs")) {
-        res.setHeader("Content-Type", "application/javascript");
-      } else if (path.endsWith(".css")) {
-        res.setHeader("Content-Type", "text/css");
-      }
-    },
-  })
+  "/app/assets",
+  (req, res, next) => {
+    const ext = req.path.split(".").pop()?.toLowerCase();
+    if (ext === "js" || ext === "mjs") {
+      res.type("application/javascript");
+    } else if (ext === "css") {
+      res.type("text/css");
+    }
+    next();
+  },
+  express.static(path.join(frontendBuildPath, "assets"))
 );
 
-// Définir une route spécifique pour les assets avec les bons types MIME
-app.use(
-  "/assets",
-  express.static(path.join(frontendBuildPath, "assets"), {
-    setHeaders: (res, path) => {
-      if (path.endsWith(".js") || path.endsWith(".mjs")) {
-        res.setHeader("Content-Type", "application/javascript");
-      } else if (path.endsWith(".css")) {
-        res.setHeader("Content-Type", "text/css");
-      }
-    },
-  })
-);
+// Handle /app routes - protected frontend routes
+app.get("/app/*", (req, res) => {
+  res.sendFile(path.join(frontendBuildPath, "index.html"));
+});
 
-// Gérer les routes React pour /app/* et la racine "/"
-app.get(
-  [
-    "/",
-    "/app/*",
-    "/login",
-    "/register",
-    "/dashboard",
-    "/settings",
-    "/links",
-    "/analytics",
-  ],
-  (_req, res) => {
-    res.sendFile(path.join(frontendBuildPath, "index.html"));
+app.get("/images/*", (req, res) => {
+  res.sendFile(path.join(frontendBuildPath, req.path));
+});
+
+// Landing page route - must be exact match for /
+app.get("/", (req, res) => {
+  res.sendFile(path.join(frontendBuildPath, "index.html"));
+});
+
+// Handle redirects - this should catch any other single-segment path
+// This must come after all other routes to not interfere with /app or /api
+app.get("/:path([a-zA-Z0-9-_]+)", (req, res, next) => {
+  if (req.params.path === "app" || req.params.path === "api") {
+    next();
+    return;
   }
-);
-
-// Route de redirection pour les liens courts - doit être placée après les routes API et frontend
-app.get("/:path([a-zA-Z0-9-_]+)", handleRedirection);
+  handleRedirection(req, res);
+});
 
 // Error handling middleware avec logs détaillés
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {

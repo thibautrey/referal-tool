@@ -9,7 +9,7 @@ import { Toaster } from "./components/ui/sonner";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <BrowserRouter basename="/app">
+    <BrowserRouter>
       <ThemeProvider defaultTheme="system" enableSystem>
         <App />
         <Toaster />

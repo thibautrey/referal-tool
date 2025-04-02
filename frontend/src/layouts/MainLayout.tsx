@@ -41,18 +41,18 @@ export default function MainLayout() {
             <div className="flex items-center gap-3">
               <img
                 src="/images/logo.avif"
-                alt="Referal Optimizer Logo"
+                alt="rflnk Logo"
                 className="h-8 w-auto"
               />
               <h1 className="hidden font-semibold tracking-tight lg:block">
-                Referal Optimizer
+                rflnk
               </h1>
             </div>
           </SidebarHeader>
           <SidebarContent className="px-2">
             <SidebarMenu>
               <SidebarMenuItem>
-                <NavLink to="/dashboard" end>
+                <NavLink to="/app/dashboard" end>
                   {({ isActive }) => (
                     <SidebarMenuButton
                       tooltip="Home"
@@ -66,7 +66,7 @@ export default function MainLayout() {
                 </NavLink>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <NavLink to="/links">
+                <NavLink to="/app/links">
                   {({ isActive }) => (
                     <SidebarMenuButton
                       tooltip="Links"
@@ -80,7 +80,7 @@ export default function MainLayout() {
                 </NavLink>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <NavLink to="/analytics">
+                <NavLink to="/app/analytics">
                   {({ isActive }) => (
                     <SidebarMenuButton
                       tooltip="Analytics"
@@ -94,7 +94,7 @@ export default function MainLayout() {
                 </NavLink>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <NavLink to="/settings">
+                <NavLink to="/app/settings">
                   {({ isActive }) => (
                     <SidebarMenuButton
                       tooltip="Settings"
