@@ -17,9 +17,9 @@ export default function PublicRoute() {
     );
   }
 
-  // Rediriger vers la page d'accueil si déjà authentifié
+  // Rediriger vers le dashboard si déjà authentifié
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   // Afficher le contenu de la route publique

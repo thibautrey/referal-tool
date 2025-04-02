@@ -40,7 +40,7 @@ export default function MainLayout() {
           <SidebarHeader className="flex h-16 items-center justify-between border-b px-4">
             <div className="flex items-center gap-3">
               <img
-                src="https://astronomy-store.com/cdn/shop/files/logo-insta.png?v=1720279381&width=120"
+                src="/images/logo.avif"
                 alt="Referal Optimizer Logo"
                 className="h-8 w-auto"
               />
@@ -52,7 +52,7 @@ export default function MainLayout() {
           <SidebarContent className="px-2">
             <SidebarMenu>
               <SidebarMenuItem>
-                <NavLink to="/" end>
+                <NavLink to="/dashboard" end>
                   {({ isActive }) => (
                     <SidebarMenuButton
                       tooltip="Home"
@@ -60,7 +60,7 @@ export default function MainLayout() {
                       className="w-full justify-start gap-3 px-3 py-2"
                     >
                       <Home className="h-5 w-5" />
-                      <span className="hidden lg:block">Home</span>
+                      <span className="hidden lg:block">Dashboard</span>
                     </SidebarMenuButton>
                   )}
                 </NavLink>

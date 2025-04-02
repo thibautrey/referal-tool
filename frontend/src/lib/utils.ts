@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * Construit un chemin d'accès pour les assets en tenant compte du basePath configuré
- * @param path Chemin relatif de l'asset (ex: '/images/logo.png')
+ * @param path Chemin relatif de l'asset (ex: '/images/logo.avif')
  * @returns Le chemin complet avec le basePath correct
  */
 export function assetPath(path: string): string {

@@ -1,5 +1,4 @@
-import { Navigate, Outlet } from "react-router-dom";
-
+import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function ProtectedRoute() {
@@ -17,11 +16,11 @@ export default function ProtectedRoute() {
     );
   }
 
-  // Rediriger vers la page de connexion si non authentifié
+  // Rediriger vers la page de login si non authentifié
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
-  // Afficher le contenu de la route protégée
-  return <Outlet />;
+  // Rediriger vers le dashboard après authentification
+  return <Navigate to="/dashboard" replace />;
 }

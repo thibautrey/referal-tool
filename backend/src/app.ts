@@ -26,7 +26,23 @@ const morganFormat =
     : ":method :url :status :response-time ms - :res[content-length] - Params: :params - Query: :query - Body: :body";
 
 // Middleware
-app.use(helmet()); // Sécurité
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "https:"],
+        connectSrc: ["'self'"],
+        fontSrc: ["'self'", "data:"],
+        objectSrc: ["'none'"],
+        mediaSrc: ["'self'"],
+        frameSrc: ["'none'"],
+      },
+    },
+  })
+); // Sécurité
 app.use(morgan(morganFormat)); // Logging avancé
 app.use(cors()); // CORS
 app.use(express.json()); // Parse JSON bodies
@@ -55,18 +71,57 @@ app.use("/api/analytics", analyticsRoutes);
 // Chemin vers le build de l'application React
 const frontendBuildPath = path.resolve(__dirname, "../../frontend/dist");
 
-// Servir les fichiers statiques du frontend pour les routes commençant par /app
-app.use("/app", express.static(frontendBuildPath));
-
-// Définir une route spécifique pour les assets pour être sûr qu'ils sont bien servis
-app.use("/app/assets", express.static(path.join(frontendBuildPath, "assets")));
-
-// Toutes les routes sous /app renvoient vers index.html pour le routing côté client
-app.get("/app/*", (_req, res) => {
-  res.sendFile(path.join(frontendBuildPath, "index.html"));
+// Configurer les types MIME explicitement
+express.static.mime.define({
+  "application/javascript": ["js", "mjs"],
+  "text/css": ["css"],
 });
 
-// Catch-all route for link redirections - must be placed after API routes and frontend routes
+// Servir les fichiers statiques du frontend avec les bons types MIME
+app.use(
+  express.static(frontendBuildPath, {
+    setHeaders: (res, path) => {
+      if (path.endsWith(".js") || path.endsWith(".mjs")) {
+        res.setHeader("Content-Type", "application/javascript");
+      } else if (path.endsWith(".css")) {
+        res.setHeader("Content-Type", "text/css");
+      }
+    },
+  })
+);
+
+// Définir une route spécifique pour les assets avec les bons types MIME
+app.use(
+  "/assets",
+  express.static(path.join(frontendBuildPath, "assets"), {
+    setHeaders: (res, path) => {
+      if (path.endsWith(".js") || path.endsWith(".mjs")) {
+        res.setHeader("Content-Type", "application/javascript");
+      } else if (path.endsWith(".css")) {
+        res.setHeader("Content-Type", "text/css");
+      }
+    },
+  })
+);
+
+// Gérer les routes React pour /app/* et la racine "/"
+app.get(
+  [
+    "/",
+    "/app/*",
+    "/login",
+    "/register",
+    "/dashboard",
+    "/settings",
+    "/links",
+    "/analytics",
+  ],
+  (_req, res) => {
+    res.sendFile(path.join(frontendBuildPath, "index.html"));
+  }
+);
+
+// Route de redirection pour les liens courts - doit être placée après les routes API et frontend
 app.get("/:path([a-zA-Z0-9-_]+)", handleRedirection);
 
 // Error handling middleware avec logs détaillés

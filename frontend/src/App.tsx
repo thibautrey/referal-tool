@@ -1,8 +1,9 @@
 import { Route, Routes } from "react-router-dom";
 
-import AnalyticsPage from "./pages/AnalyticsPage"; // Importer la nouvelle page
+import AnalyticsPage from "./pages/AnalyticsPage";
 import { AuthProvider } from "./contexts/AuthContext";
 import HomePage from "./pages/HomePage";
+import LandingPage from "./pages/LandingPage"; // Import de la nouvelle page
 import LinksPage from "./pages/LinksPage";
 import LoginPage from "./pages/LoginPage";
 import MainLayout from "./layouts/MainLayout";
@@ -15,6 +16,9 @@ function App() {
   return (
     <AuthProvider>
       <Routes>
+        {/* Landing page à la racine */}
+        <Route path="/" element={<LandingPage />} />
+
         {/* Routes publiques (accessibles sans authentification) */}
         <Route element={<PublicRoute />}>
           <Route path="/login" element={<LoginPage />} />
@@ -24,11 +28,10 @@ function App() {
         {/* Routes protégées (nécessitent une authentification) */}
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
-            <Route index element={<HomePage />} />
+            <Route path="/dashboard" element={<HomePage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/links" element={<LinksPage />} />
-            <Route path="/analytics" element={<AnalyticsPage />} />{" "}
-            {/* Nouvelle route */}
+            <Route path="/analytics" element={<AnalyticsPage />} />
           </Route>
         </Route>
       </Routes>
