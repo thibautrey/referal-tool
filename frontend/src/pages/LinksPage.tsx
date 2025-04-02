@@ -7,6 +7,8 @@ import { useEffect, useState } from "react";
 import { AlertCircle } from "lucide-react";
 import { LinksList } from "./links/LinksList";
 import { ReferralLink } from "./types";
+import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSearchParams } from "react-router-dom";
@@ -18,6 +20,9 @@ interface LinkFormData {
   shortCode: string;
   rules: GeoRule[];
 }
+
+const glassCardStyle =
+  "bg-opacity-30 backdrop-blur-lg border-opacity-20 bg-gradient-to-br from-white/30 to-white/10 dark:from-gray-800/40 dark:to-gray-900/30 shadow-[0_8px_32px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.15)] transition-all duration-300";
 
 export default function LinksPage() {
   const { currentProjectId } = useAuth();
@@ -81,13 +86,17 @@ export default function LinksPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="space-y-6"
+    >
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Referral Links</h1>
       </div>
 
       {error && (
-        <Alert variant="destructive" className="mb-4">
+        <Alert variant="destructive" className={cn("mb-4", glassCardStyle)}>
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>
@@ -105,43 +114,45 @@ export default function LinksPage() {
         value={activeTab}
         onValueChange={handleTabChange}
       >
-        <TabsList>
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="all-links">All Links</TabsTrigger>
           <TabsTrigger value="add-link">Add Link</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="all-links">
-          {!currentProjectId && (
-            <Alert className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>No Project Selected</AlertTitle>
-              <AlertDescription>
-                Please select a project to view links
-              </AlertDescription>
-            </Alert>
-          )}
+        <div className="mt-6">
+          <TabsContent value="all-links">
+            {!currentProjectId && (
+              <Alert className={cn("mb-4", glassCardStyle)}>
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>No Project Selected</AlertTitle>
+                <AlertDescription>
+                  Please select a project to view links
+                </AlertDescription>
+              </Alert>
+            )}
 
-          {currentProjectId && (
-            <LinksList
-              projectId={currentProjectId}
-              onAddLinkClick={() => setActiveTab("add-link")}
-              onEditLinkClick={(link) => {
-                setActiveTab("add-link");
-                setSearchParams({
-                  tab: "add-link",
-                  mode: "edit",
-                  id: `${link.id}`,
-                });
-              }}
-              onError={(message: string) => setError(message)}
-            />
-          )}
-        </TabsContent>
+            {currentProjectId && (
+              <LinksList
+                projectId={currentProjectId}
+                onAddLinkClick={() => setActiveTab("add-link")}
+                onEditLinkClick={(link) => {
+                  setActiveTab("add-link");
+                  setSearchParams({
+                    tab: "add-link",
+                    mode: "edit",
+                    id: `${link.id}`,
+                  });
+                }}
+                onError={(message: string) => setError(message)}
+              />
+            )}
+          </TabsContent>
 
-        <TabsContent value="add-link">
-          <AddLinkForm onSubmit={handleAddLink} />
-        </TabsContent>
+          <TabsContent value="add-link">
+            <AddLinkForm onSubmit={handleAddLink} />
+          </TabsContent>
+        </div>
       </Tabs>
-    </div>
+    </motion.div>
   );
 }

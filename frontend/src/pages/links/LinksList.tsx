@@ -35,7 +35,30 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ReferralLink } from "../types";
 import { api } from "@/lib/api";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
+
+const glassCardStyle =
+  "bg-opacity-30 backdrop-blur-lg border-opacity-20 bg-gradient-to-br from-white/30 to-white/10 dark:from-gray-800/40 dark:to-gray-900/30 shadow-[0_8px_32px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.15)] transition-all duration-300";
+
+const AnimatedCard = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
 interface LinksListProps {
   onAddLinkClick: () => void;
@@ -172,67 +195,87 @@ export function LinksList({
 
   if (isLoading) {
     return (
-      <Card className="w-full">
-        <CardContent className="flex justify-center items-center min-h-[400px]">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </CardContent>
-      </Card>
+      <AnimatedCard>
+        <Card className={glassCardStyle}>
+          <CardContent className="flex justify-center items-center min-h-[400px]">
+            <Loader2 className="h-8 w-8 animate-spin text-primary/50" />
+          </CardContent>
+        </Card>
+      </AnimatedCard>
     );
   }
 
   if (errorState) {
     return (
-      <Card className="w-full">
-        <CardContent className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-4">
-          <div className="p-4 rounded-full bg-destructive/10">
-            <AlertCircle className="h-8 w-8 text-destructive" />
-          </div>
-          <h3 className="text-lg font-medium">Error Loading Links</h3>
-          <p className="text-muted-foreground max-w-md mx-auto">{errorState}</p>
-          <Button onClick={() => fetchLinks(1, sortField, sortOrder)}>
-            Try Again
-          </Button>
-        </CardContent>
-      </Card>
+      <AnimatedCard>
+        <Card className={glassCardStyle}>
+          <CardContent className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-4">
+            <div className="p-4 rounded-full bg-destructive/10 backdrop-blur-sm">
+              <AlertCircle className="h-8 w-8 text-destructive" />
+            </div>
+            <h3 className="text-lg font-medium">Error Loading Links</h3>
+            <p className="text-muted-foreground max-w-md mx-auto">
+              {errorState}
+            </p>
+            <Button
+              variant="glass"
+              className="ring-1 ring-white/10 hover:ring-white/20"
+              onClick={() => fetchLinks(1, sortField, sortOrder)}
+            >
+              Try Again
+            </Button>
+          </CardContent>
+        </Card>
+      </AnimatedCard>
     );
   }
 
   if (links?.length === 0) {
     return (
-      <Card className="w-full">
-        <CardContent className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-4">
-          <div className="p-4 rounded-full bg-muted">
-            <Plus className="h-8 w-8 text-muted-foreground" />
-          </div>
-          <h3 className="text-lg font-medium">No links</h3>
-          <p className="text-muted-foreground">
-            Start by creating your first referral link
-          </p>
-          <Button onClick={onAddLinkClick}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add link
-          </Button>
-        </CardContent>
-      </Card>
+      <AnimatedCard>
+        <Card className={glassCardStyle}>
+          <CardContent className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-4">
+            <div className="p-4 rounded-full bg-muted/30 backdrop-blur-sm">
+              <Plus className="h-8 w-8 text-primary/70" />
+            </div>
+            <h3 className="text-lg font-medium">No links</h3>
+            <p className="text-muted-foreground">
+              Start by creating your first referral link
+            </p>
+            <Button
+              variant="glass"
+              className="ring-1 ring-white/10 hover:ring-white/20"
+              onClick={onAddLinkClick}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add link
+            </Button>
+          </CardContent>
+        </Card>
+      </AnimatedCard>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <AnimatedCard className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold tracking-tight"></h2>
-        <Button onClick={onAddLinkClick}>
+        <Button
+          variant="glass"
+          className="ring-1 ring-white/10 hover:ring-white/20"
+          onClick={onAddLinkClick}
+        >
           <Plus className="h-4 w-4 mr-2" />
           Add link
         </Button>
       </div>
 
-      <Card>
+      <Card className={glassCardStyle}>
         <CardContent className="px-6 py-0">
           <div className="relative overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-transparent">
+                <TableRow className="hover:bg-transparent border-b border-white/10">
                   <TableHead className="font-semibold">Name</TableHead>
                   <TableHead className="font-semibold">Referral URL</TableHead>
                   <TableHead className="font-semibold">Short URL</TableHead>
@@ -249,8 +292,14 @@ export function LinksList({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {links?.map((link) => (
-                  <TableRow key={link.id} className="hover:bg-muted/50">
+                {links?.map((link, index) => (
+                  <motion.tr
+                    key={link.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="hover:bg-white/5 transition-colors"
+                  >
                     <TableCell className="font-medium">{link.name}</TableCell>
                     <TableCell className="truncate max-w-xs text-muted-foreground">
                       {link.baseUrl}
@@ -321,28 +370,30 @@ export function LinksList({
                         </AlertDialog>
                       </div>
                     </TableCell>
-                  </TableRow>
+                  </motion.tr>
                 ))}
               </TableBody>
             </Table>
           </div>
         </CardContent>
-        <CardFooter className="flex items-center justify-between py-4 border-t">
+        <CardFooter className="flex items-center justify-between py-4 border-t border-white/10">
           <div className="text-sm text-muted-foreground">
             Page {currentPage} of {totalPages}
           </div>
           <div className="flex items-center gap-2">
             <Button
-              variant="outline"
+              variant="glass"
               size="sm"
+              className="ring-1 ring-white/10 hover:ring-white/20"
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage <= 1}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <Button
-              variant="outline"
+              variant="glass"
               size="sm"
+              className="ring-1 ring-white/10 hover:ring-white/20"
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage >= totalPages}
             >
@@ -351,6 +402,6 @@ export function LinksList({
           </div>
         </CardFooter>
       </Card>
-    </div>
+    </AnimatedCard>
   );
 }

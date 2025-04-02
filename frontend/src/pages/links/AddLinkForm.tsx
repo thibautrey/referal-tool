@@ -75,6 +75,19 @@ const generateRandomCode = (length: number = 4): string => {
     .join("");
 };
 
+// Ajouter cette fonction après les interfaces et avant le composant
+const detectRegionFromCountries = (countries: string[]): string => {
+  for (const [region, regionCountries] of Object.entries(AVAILABLE_COUNTRIES)) {
+    if (
+      countries.length === regionCountries.length &&
+      countries.every((country) => regionCountries.includes(country))
+    ) {
+      return region;
+    }
+  }
+  return "custom";
+};
+
 export function AddLinkForm({ onSubmit, initialData }: AddLinkFormProps) {
   const [searchParams] = useSearchParams();
   const [linkName, setLinkName] = useState(initialData?.name || "");
@@ -101,16 +114,28 @@ export function AddLinkForm({ onSubmit, initialData }: AddLinkFormProps) {
           setLinkName(data.name);
           setBaseUrl(data.baseUrl);
           setShortCode(data.shortCode);
-          setGeoRules(data.rules || []); // Assurer un tableau vide par défaut
+          setGeoRules(
+            data.rules?.map((rule) => {
+              const countries =
+                typeof rule.countries === "string"
+                  ? JSON.parse(rule.countries)
+                  : rule.countries || [];
+              return {
+                redirectUrl: rule.redirectUrl,
+                region: detectRegionFromCountries(countries),
+                countries: countries,
+              };
+            }) || []
+          );
         } catch {
           toast.error("Failed to fetch link data");
-          setGeoRules([]); // Initialiser avec un tableau vide en cas d'erreur
+          setGeoRules([]);
         }
       };
 
       fetchLinkData();
     }
-  }, [id, isEditMode, initialData]); // Ajouter les dépendances manquantes
+  }, [id, isEditMode, initialData]);
 
   // Obtenir le domaine actuel au chargement du composant
   useEffect(() => {

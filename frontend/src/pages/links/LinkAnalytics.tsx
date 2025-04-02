@@ -145,151 +145,168 @@ export function LinkAnalytics() {
 
   if (links.length === 0) {
     return (
-      <div className="relative space-y-6">
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-          <Card className="w-[90%] max-w-md shadow-lg">
-            <CardHeader>
-              <CardTitle>No links available</CardTitle>
-              <CardDescription>
-                Create your first referral link to start seeing analytics
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        </div>
-        <div className="space-y-6 blur-sm">
-          {/* Placeholder content that will be blurred */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Links Performance</CardTitle>
-              <CardDescription>
-                Statistics and performance of all your referral links.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Card>
-                  <CardHeader className="pb-2"></CardHeader>
-                </Card>
-                <Card>
-                  <CardHeader className="pb-2"></CardHeader>
-                </Card>
-                <Card>
-                  <CardHeader className="pb-2"></CardHeader>
-                </Card>
-                <Card>
-                  <CardHeader className="pb-2"></CardHeader>
-                </Card>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader></CardHeader>
-            <CardContent></CardContent>
-          </Card>
-        </div>
+      <div className="space-y-6">
+        <Card className="w-[90%] max-w-md mx-auto shadow-lg">
+          <CardHeader>
+            <CardTitle>No links available</CardTitle>
+            <CardDescription>
+              Create your first referral link to start seeing analytics
+            </CardDescription>
+          </CardHeader>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Links Performance</CardTitle>
-          <CardDescription>
+    <div className="container mx-auto px-4 py-6 space-y-8">
+      <section>
+        <div className="flex flex-col gap-2 mb-6">
+          <h2 className="text-3xl font-bold tracking-tight">
+            Links Performance
+          </h2>
+          <p className="text-muted-foreground">
             Statistics and performance of all your referral links.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-8">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardDescription>Total Clicks</CardDescription>
-                  <CardTitle className="text-3xl">{totalClicks}</CardTitle>
-                </CardHeader>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardDescription>Number of Links</CardDescription>
-                  <CardTitle className="text-3xl">{links.length}</CardTitle>
-                </CardHeader>
-              </Card>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </p>
+        </div>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <Card className="shadow-md hover:shadow-lg transition-shadow">
+            <CardHeader className="pb-2">
+              <CardDescription>Total Clicks</CardDescription>
+              <CardTitle className="text-4xl font-bold">
+                {totalClicks}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          <Card className="shadow-md hover:shadow-lg transition-shadow">
+            <CardHeader className="pb-2">
+              <CardDescription>Number of Links</CardDescription>
+              <CardTitle className="text-4xl font-bold">
+                {links.length}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+        </div>
+      </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Detailed Analytics</CardTitle>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <CardDescription>
+      <section>
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-2">
+            <h2 className="text-3xl font-bold tracking-tight">
+              Detailed Analytics
+            </h2>
+            <p className="text-muted-foreground">
               View detailed performance by link and time period.
-            </CardDescription>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Select
-                value={selectedLink || "all"}
-                onValueChange={setSelectedLink}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select a link" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All links</SelectItem>
-                  {links.map((link) => (
-                    <SelectItem key={link.id} value={link.id.toString()}>
-                      {link.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={timeRange} onValueChange={setTimeRange}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Time period" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="day">Day</SelectItem>
-                  <SelectItem value="week">Week</SelectItem>
-                  <SelectItem value="month">Month</SelectItem>
-                  <SelectItem value="year">Year</SelectItem>
-                </SelectContent>
-              </Select>
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-4 p-4 bg-secondary/10 rounded-lg">
+            <Select
+              value={selectedLink || "all"}
+              onValueChange={setSelectedLink}
+            >
+              <SelectTrigger className="w-[200px] bg-background">
+                <SelectValue placeholder="Select a link" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All links</SelectItem>
+                {links.map((link) => (
+                  <SelectItem key={link.id} value={link.id.toString()}>
+                    {link.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={timeRange} onValueChange={setTimeRange}>
+              <SelectTrigger className="w-[200px] bg-background">
+                <SelectValue placeholder="Time period" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="day">Day</SelectItem>
+                <SelectItem value="week">Week</SelectItem>
+                <SelectItem value="month">Month</SelectItem>
+                <SelectItem value="year">Year</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="grid gap-6 mt-6">
+            <Skeleton className="h-[400px] w-full" />
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <Skeleton className="h-[300px] w-full" />
+              <Skeleton className="h-[300px] w-full" />
             </div>
           </div>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="space-y-4">
-              <Skeleton className="h-[300px] w-full" />
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <Skeleton className="h-[200px] w-full" />
-                <Skeleton className="h-[200px] w-full" />
-              </div>
-            </div>
-          ) : analyticsData ? (
-            <Tabs defaultValue="visits">
-              <TabsList className="mb-4">
-                <TabsTrigger value="visits">Visits</TabsTrigger>
-                <TabsTrigger value="countries">Countries</TabsTrigger>
-                {analyticsData.visitsByRule &&
-                  analyticsData.visitsByRule.length > 0 && (
-                    <TabsTrigger value="rules">Rules</TabsTrigger>
-                  )}
-              </TabsList>
+        ) : analyticsData ? (
+          <Tabs defaultValue="visits" className="mt-6">
+            <TabsList className="mb-6 w-full justify-start gap-4">
+              <TabsTrigger value="visits" className="px-6">
+                Visits
+              </TabsTrigger>
+              <TabsTrigger value="countries" className="px-6">
+                Countries
+              </TabsTrigger>
+              {analyticsData.visitsByRule &&
+                analyticsData.visitsByRule.length > 0 && (
+                  <TabsTrigger value="rules" className="px-6">
+                    Rules
+                  </TabsTrigger>
+                )}
+            </TabsList>
 
-              <TabsContent value="visits" className="space-y-4">
+            <TabsContent value="visits">
+              <Card className="shadow-md">
+                <CardHeader>
+                  <CardTitle>Visits Over Time</CardTitle>
+                </CardHeader>
+                <CardContent className="h-[400px]">
+                  <LineChart
+                    data={(analyticsData.visitsByDate || []).map((item) => ({
+                      date: new Date(item.date).toLocaleDateString(),
+                      visits: item.count,
+                    }))}
+                    index="date"
+                    categories={["visits"]}
+                    colors={["blue"]}
+                    valueFormatter={(value) => `${value} visits`}
+                    showLegend={false}
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="countries">
+              <div className="grid gap-6 lg:grid-cols-2">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Visits Over Time</CardTitle>
+                    <CardTitle>Distribution by Country</CardTitle>
                   </CardHeader>
-                  <CardContent className="h-[300px]">
-                    <LineChart
-                      data={(analyticsData.visitsByDate || []).map((item) => ({
-                        date: new Date(item.date).toLocaleDateString(),
-                        visits: item.count,
+                  <CardContent>
+                    <PieChart
+                      data={analyticsData.visitsByCountry.map((item) => ({
+                        name: item.country || "Unknown",
+                        value: item.count,
                       }))}
-                      index="date"
+                      index="name"
+                      category="value"
+                      valueFormatter={(value) => `${value} visits`}
+                    />
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Top Countries</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <BarChart
+                      data={analyticsData.visitsByCountry
+                        .slice(0, 5)
+                        .map((item) => ({
+                          country: item.country || "Unknown",
+                          visits: item.count,
+                        }))}
+                      index="country"
                       categories={["visits"]}
                       colors={["blue"]}
                       valueFormatter={(value) => `${value} visits`}
@@ -297,39 +314,25 @@ export function LinkAnalytics() {
                     />
                   </CardContent>
                 </Card>
-              </TabsContent>
+              </div>
+            </TabsContent>
 
-              <TabsContent value="countries" className="space-y-4">
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {analyticsData.visitsByRule &&
+              analyticsData.visitsByRule.length > 0 && (
+                <TabsContent value="rules">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Distribution by Country</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <PieChart
-                        data={analyticsData.visitsByCountry.map((item) => ({
-                          name: item.country || "Unknown",
-                          value: item.count,
-                        }))}
-                        index="name"
-                        category="value"
-                        valueFormatter={(value) => `${value} visits`}
-                      />
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Top Countries</CardTitle>
+                      <CardTitle>Redirection Rules Performance</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <BarChart
-                        data={analyticsData.visitsByCountry
-                          .slice(0, 5)
-                          .map((item) => ({
-                            country: item.country || "Unknown",
-                            visits: item.count,
-                          }))}
-                        index="country"
+                        data={analyticsData.visitsByRule.map((item) => ({
+                          rule: item.ruleInfo
+                            ? `Rule ${item.ruleId} (${item.ruleInfo.redirectUrl})`
+                            : `Rule ${item.ruleId}`,
+                          visits: item.count,
+                        }))}
+                        index="rule"
                         categories={["visits"]}
                         colors={["blue"]}
                         valueFormatter={(value) => `${value} visits`}
@@ -337,44 +340,17 @@ export function LinkAnalytics() {
                       />
                     </CardContent>
                   </Card>
-                </div>
-              </TabsContent>
-
-              {analyticsData.visitsByRule &&
-                analyticsData.visitsByRule.length > 0 && (
-                  <TabsContent value="rules" className="space-y-4">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Redirection Rules Performance</CardTitle>
-                      </CardHeader>
-                      <CardContent>
-                        <BarChart
-                          data={analyticsData.visitsByRule.map((item) => ({
-                            rule: item.ruleInfo
-                              ? `Rule ${item.ruleId} (${item.ruleInfo.redirectUrl})`
-                              : `Rule ${item.ruleId}`,
-                            visits: item.count,
-                          }))}
-                          index="rule"
-                          categories={["visits"]}
-                          colors={["blue"]}
-                          valueFormatter={(value) => `${value} visits`}
-                          showLegend={false}
-                        />
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                )}
-            </Tabs>
-          ) : (
-            <div className="flex h-[300px] items-center justify-center">
-              <p className="text-muted-foreground">
-                No analytics data available
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                </TabsContent>
+              )}
+          </Tabs>
+        ) : (
+          <div className="flex h-[400px] items-center justify-center bg-secondary/10 rounded-lg mt-6">
+            <p className="text-muted-foreground text-lg">
+              No analytics data available
+            </p>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
