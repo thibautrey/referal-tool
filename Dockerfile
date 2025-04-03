@@ -18,7 +18,8 @@ RUN npm run build
 FROM node:20-alpine
 WORKDIR /app
 
-# Copy backend build and dependencies
+# Copy backend source and build
+COPY --from=backend-builder /app/backend/src ./src
 COPY --from=backend-builder /app/backend/dist ./dist
 COPY --from=backend-builder /app/backend/package*.json ./
 COPY --from=backend-builder /app/backend/node_modules ./node_modules
@@ -27,4 +28,5 @@ COPY --from=backend-builder /app/backend/node_modules ./node_modules
 COPY --from=frontend-builder /app/frontend/dist ./dist/frontend/dist
 
 EXPOSE 3001
-CMD ["node", "dist/index.js"]
+# Use src/index.ts for development, dist/index.js for production
+CMD ["sh", "-c", "if [ \"$NODE_ENV\" = \"development\" ]; then npx ts-node-dev --respawn --transpile-only src/index.ts; else node dist/index.js; fi"]

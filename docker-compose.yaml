@@ -19,8 +19,9 @@ services:
     depends_on:
       - redis
     volumes:
-      - ./backend/src:/app/src
-      - ./frontend/src:/app/frontend/src
+      - ./backend/src:/app/src:ro
+      - ./frontend/src:/app/frontend/src:ro
+      - /app/dist
     networks:
       - referal_app-network
 
