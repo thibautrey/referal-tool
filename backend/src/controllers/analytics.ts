@@ -1,4 +1,3 @@
-import { Link, LinkRule, LinkVisit, Prisma } from "@prisma/client";
 import { Request, Response } from "express";
 import { getFromCache, saveToCache } from "../lib/redis";
 
@@ -131,17 +130,16 @@ export const getVisitStats = async (req: Request, res: Response) => {
       });
 
       // Récupérer les détails des règles pour les afficher
-      const rulesInfo: Pick<LinkRule, "id" | "redirectUrl" | "countries">[] =
-        await prisma.linkRule.findMany({
-          where: {
-            linkId: parseInt(linkId as string),
-          },
-          select: {
-            id: true,
-            redirectUrl: true,
-            countries: true,
-          },
-        });
+      const rulesInfo = await prisma.linkRule.findMany({
+        where: {
+          linkId: parseInt(linkId as string),
+        },
+        select: {
+          id: true,
+          redirectUrl: true,
+          countries: true,
+        },
+      });
 
       // Associer les informations des règles avec les statistiques
       visitsByRule = rawVisitsByRule.map((ruleStats) => {
@@ -224,16 +222,15 @@ async function getVisitsByTimeInterval(
     };
 
     // Récupérer toutes les visites pour la période
-    const visits: Pick<LinkVisit, "createdAt">[] =
-      await prisma.linkVisit.findMany({
-        where: whereClause,
-        select: {
-          createdAt: true,
-        },
-        orderBy: {
-          createdAt: "asc",
-        },
-      });
+    const visits = await prisma.linkVisit.findMany({
+      where: whereClause,
+      select: {
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
 
     // Préparer la structure de données pour l'agrégation
     const visitsByDate = new Map<string, number>();
@@ -334,7 +331,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     });
 
     // Obtenir les 5 pays les plus visités
-    const topCountries = (await prisma.linkVisit.groupBy({
+    const topCountries = await prisma.linkVisit.groupBy({
       by: ["country"],
       _count: {
         id: true,
@@ -346,14 +343,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         },
       },
       take: 5,
-    })) as unknown as (Prisma.PickEnumerable<
-      Prisma.LinkVisitGroupByOutputType,
-      "country"[]
-    > & {
-      _count: {
-        id: number;
-      };
-    })[];
+    });
 
     // Obtenir les 5 liens les plus visités
     const topLinks = await prisma.linkVisit.groupBy({
@@ -371,18 +361,17 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     });
 
     // Récupérer les informations détaillées sur les liens les plus visités
-    const linkDetails: Pick<Link, "id" | "name" | "shortCode" | "baseUrl">[] =
-      await prisma.link.findMany({
-        where: {
-          id: { in: topLinks.map((l) => l.linkId) },
-        },
-        select: {
-          id: true,
-          name: true,
-          shortCode: true,
-          baseUrl: true,
-        },
-      });
+    const linkDetails = await prisma.link.findMany({
+      where: {
+        id: { in: topLinks.map((l) => l.linkId) },
+      },
+      select: {
+        id: true,
+        name: true,
+        shortCode: true,
+        baseUrl: true,
+      },
+    });
 
     // Associer les détails des liens avec leurs statistiques
     const topLinksWithDetails = topLinks.map((linkStat) => {
