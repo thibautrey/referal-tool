@@ -1,4 +1,4 @@
-import { Link, LinkRule, LinkVisit } from "@prisma/client";
+import { Link, LinkRule, LinkVisit, Prisma } from "@prisma/client";
 import { Request, Response } from "express";
 import { getFromCache, saveToCache } from "../lib/redis";
 
@@ -334,7 +334,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     });
 
     // Obtenir les 5 pays les plus visités
-    const topCountries = await prisma.linkVisit.groupBy({
+    const topCountries = (await prisma.linkVisit.groupBy({
       by: ["country"],
       _count: {
         id: true,
@@ -346,7 +346,14 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         },
       },
       take: 5,
-    });
+    })) as unknown as (Prisma.PickEnumerable<
+      Prisma.LinkVisitGroupByOutputType,
+      "country"[]
+    > & {
+      _count: {
+        id: number;
+      };
+    })[];
 
     // Obtenir les 5 liens les plus visités
     const topLinks = await prisma.linkVisit.groupBy({
