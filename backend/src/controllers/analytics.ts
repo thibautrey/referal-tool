@@ -122,13 +122,20 @@ export const getVisitStats = async (req: Request, res: Response) => {
     // Si linkId est spécifié, ajouter les statistiques par règles
     let visitsByRule = null;
     if (linkId) {
-      const rawVisitsByRule = await prisma.linkVisit.groupBy({
+      const rawVisitsByRule = (await prisma.linkVisit.groupBy({
         by: ["ruleId"],
         _count: {
           id: true,
         },
         where: whereClause,
-      });
+      })) as unknown as (Prisma.PickEnumerable<
+        Prisma.LinkVisitGroupByOutputType,
+        "ruleId"[]
+      > & {
+        _count: {
+          id: number;
+        };
+      })[];
 
       // Récupérer les détails des règles pour les afficher
       const rulesInfo: Pick<LinkRule, "id" | "redirectUrl" | "countries">[] =
