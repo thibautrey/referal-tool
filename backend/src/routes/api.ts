@@ -6,7 +6,7 @@ import userRoutes from "./user";
 const router = express.Router();
 
 // Routes statut
-router.get("/status", (req: Request, res: Response) => {
+router.get("/status", (_req: Request, res: Response) => {
   res.json({ status: "API is running" });
 });
 

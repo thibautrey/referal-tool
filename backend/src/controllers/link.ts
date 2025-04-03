@@ -159,7 +159,7 @@ export const getLinksByProject = async (req: Request, res: Response) => {
       },
     };
     console.log("[DEBUG] Sending successful response");
-    res.json(response);
+    return res.json(response);
   } catch (error: unknown) {
     console.error("[ERROR] Error in getLinksByProject:", error);
     console.error(
@@ -178,7 +178,7 @@ export const getLinksByProject = async (req: Request, res: Response) => {
       console.error("[ERROR] Prisma error metadata:", error.meta);
     }
 
-    res.status(500).json({ message: "Error retrieving links" });
+    return res.status(500).json({ message: "Error retrieving links" });
   }
 };
 
@@ -277,9 +277,9 @@ export const getLinkById = async (req: Request, res: Response) => {
         .json({ message: "Lien non trouvé ou accès non autorisé" });
     }
 
-    res.json({ message: "Link retrieved successfully", data: link });
+    return res.json({ message: "Link retrieved successfully", data: link });
   } catch (error: unknown) {
-    res.status(500).json({ message: "Error retrieving link", error });
+    return res.status(500).json({ message: "Error retrieving link", error });
   }
 };
 
@@ -317,9 +317,12 @@ export const updateLink = async (req: Request, res: Response) => {
       },
     });
 
-    res.json({ message: "Link updated successfully", data: updatedLink });
+    return res.json({
+      message: "Link updated successfully",
+      data: updatedLink,
+    });
   } catch (error: unknown) {
-    res.status(500).json({ message: "Error updating link", error });
+    return res.status(500).json({ message: "Error updating link", error });
   }
 };
 
@@ -352,9 +355,9 @@ export const deleteLink = async (req: Request, res: Response) => {
       where: { id: parseInt(id) },
     });
 
-    res.json({ message: "Link deleted successfully" });
+    return res.json({ message: "Link deleted successfully" });
   } catch (error: unknown) {
-    res.status(500).json({ message: "Error deleting link", error });
+    return res.status(500).json({ message: "Error deleting link", error });
   }
 };
 
@@ -388,9 +391,11 @@ export const addRule = async (req: Request, res: Response) => {
       },
     });
 
-    res.status(201).json({ message: "Rule added successfully", data: rule });
+    return res
+      .status(201)
+      .json({ message: "Rule added successfully", data: rule });
   } catch (error: unknown) {
-    res.status(500).json({ message: "Error adding rule", error });
+    return res.status(500).json({ message: "Error adding rule", error });
   }
 };
 
@@ -426,9 +431,12 @@ export const updateRule = async (req: Request, res: Response) => {
       },
     });
 
-    res.json({ message: "Rule updated successfully", data: updatedRule });
+    return res.json({
+      message: "Rule updated successfully",
+      data: updatedRule,
+    });
   } catch (error: unknown) {
-    res.status(500).json({ message: "Error updating rule", error });
+    return res.status(500).json({ message: "Error updating rule", error });
   }
 };
 
@@ -459,9 +467,9 @@ export const deleteRule = async (req: Request, res: Response) => {
       where: { id: parseInt(ruleId) },
     });
 
-    res.json({ message: "Rule deleted successfully" });
+    return res.json({ message: "Rule deleted successfully" });
   } catch (error: unknown) {
-    res.status(500).json({ message: "Error deleting rule", error });
+    return res.status(500).json({ message: "Error deleting rule", error });
   }
 };
 
@@ -582,14 +590,14 @@ export const handleRedirection = async (req: Request, res: Response) => {
           ruleId: matchingRule?.id || null,
         },
       })
-      .catch((error) => {
+      .catch((error: Error | unknown) => {
         console.error("Error recording visit:", error);
       });
 
-    res.redirect(301, redirectUrl);
+    return res.redirect(301, redirectUrl);
   } catch (error: unknown) {
     console.error("Redirection error:", error);
-    res.status(500).json({ message: "Error handling redirection" });
+    return res.status(500).json({ message: "Error handling redirection" });
   }
 };
 
@@ -701,31 +709,19 @@ export const getLinkStats = async (req: Request, res: Response) => {
       where: { linkId: parseInt(id) },
     });
 
-    // Add interfaces for the data structures
-    interface RuleStat {
-      ruleId: number;
-      count: number;
-      rule: {
-        id: number;
-        redirectUrl: string;
-        countries: string[];
-      } | null;
-    }
-
-    interface DateVisit {
-      date: string;
-      count: number;
-    }
-
     // Fusionner les statistiques avec les détails des règles
-    const ruleStats = visitsByRule.map((stat) => {
-      const ruleDetails = rules.find((r) => r.id === stat.ruleId);
-      return {
-        ruleId: stat.ruleId,
-        count: stat._count.id,
-        details: ruleDetails || null,
-      };
-    });
+    const ruleStats = visitsByRule.map(
+      (stat: { ruleId: number | null; _count: { id: number } }) => {
+        const ruleDetails = stat.ruleId
+          ? rules.find((r: { id: number }) => r.id === stat.ruleId)
+          : null;
+        return {
+          ruleId: stat.ruleId || 0,
+          count: stat._count.id,
+          details: ruleDetails || null,
+        };
+      }
+    );
 
     // Obtenir les données de séries temporelles
     const timeSeriesQuery = `
@@ -765,22 +761,24 @@ export const getLinkStats = async (req: Request, res: Response) => {
 
     const timeSeries = await prisma.$queryRawUnsafe(timeSeriesQuery);
 
-    res.json({
+    return res.json({
       message: "Statistiques du lien récupérées avec succès",
       data: {
         link,
         totalVisits,
-        visitsByCountry: visitsByCountry.map((item) => ({
-          country: item.country,
-          count: item._count.id,
-        })),
+        visitsByCountry: visitsByCountry.map(
+          (item: { country: string; _count: { id: number } }) => ({
+            country: item.country,
+            count: item._count.id,
+          })
+        ),
         visitsByRule: ruleStats,
         timeSeries,
       },
     });
   } catch (error: unknown) {
     console.error("Error retrieving link statistics:", error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Erreur lors de la récupération des statistiques du lien",
       error,
     });

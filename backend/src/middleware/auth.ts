@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from "express";
+import { NextFunction, Request, Response } from "express";
+
 import jwt from "jsonwebtoken";
-import { ApiResponse } from "../types";
 
 // Étendre l'interface Request pour inclure l'utilisateur
 declare global {
@@ -39,6 +39,7 @@ export const authenticateJWT = (
     };
     req.user = decoded;
     next();
+    return;
   } catch (error) {
     return res.status(403).json({
       message: "Token invalide ou expiré",
@@ -50,6 +51,7 @@ export const authenticateJWT = (
 export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
   if (req.user && req.user.role === "ADMIN") {
     next();
+    return;
   } else {
     return res.status(403).json({
       message: "Accès non autorisé. Droits d'administrateur requis",

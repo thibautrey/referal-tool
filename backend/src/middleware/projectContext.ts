@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 
 export const extractProjectContext = (
   req: Request,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ) => {
   const currentProjectId = req.headers["x-default-project"];

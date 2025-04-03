@@ -171,10 +171,10 @@ export const getVisitStats = async (req: Request, res: Response) => {
     // Cache the results for 5 minutes (300 seconds)
     await saveToCache(cacheKey, stats, 300);
 
-    res.json(stats);
+    return res.json(stats);
   } catch (error) {
     console.error("Error retrieving analytics:", error);
-    res.status(500).json({
+    return res.status(500).json({
       message: "Erreur lors de la récupération des statistiques",
       error,
     });
@@ -404,10 +404,10 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     // Cache dashboard stats for 5 minutes
     await saveToCache(cacheKey, stats, 300);
 
-    res.json(stats);
+    return res.json(stats);
   } catch (error) {
     console.error("Error retrieving dashboard stats:", error);
-    res.status(500).json({
+    return res.status(500).json({
       message:
         "Erreur lors de la récupération des statistiques du tableau de bord",
       error,

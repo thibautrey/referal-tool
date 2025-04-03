@@ -95,7 +95,7 @@ app.use(
 );
 
 // Handle /app routes - protected frontend routes
-app.get("/app/*", (req, res) => {
+app.get("/app/*", (_req, res) => {
   res.sendFile(path.join(frontendBuildPath, "index.html"));
 });
 
@@ -104,7 +104,7 @@ app.get("/images/*", (req, res) => {
 });
 
 // Landing page route - must be exact match for /
-app.get("/", (req, res) => {
+app.get("/", (_req, res) => {
   res.sendFile(path.join(frontendBuildPath, "index.html"));
 });
 
@@ -119,7 +119,7 @@ app.get("/:path([a-zA-Z0-9-_]+)", (req, res, next) => {
 });
 
 // Error handling middleware avec logs détaillés
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
   const timestamp = new Date().toISOString();
   console.error(`[${timestamp}] ERROR: ${err.message}`);
   console.error(`Request: ${req.method} ${req.url}`);

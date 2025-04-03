@@ -4,7 +4,6 @@ import { ControllerFunction } from "../types";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
-import nodemailer from "nodemailer";
 import prisma from "../lib/prisma";
 import speakeasy from "speakeasy";
 
@@ -206,7 +205,7 @@ export const login: ControllerFunction = async (
 
 // Logout (côté serveur, principalement pour la gestion des jetons)
 export const logout: ControllerFunction = async (
-  req: Request,
+  _req: Request,
   res: Response
 ) => {
   // Comme nous utilisons JWT, le logout est géré côté client

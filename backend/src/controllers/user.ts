@@ -8,7 +8,7 @@ import prisma from "../lib/prisma";
  * Récupérer tous les utilisateurs
  */
 export const getUsers: ControllerFunction = async (
-  req: Request,
+  _req: Request,
   res: Response
 ) => {
   try {
