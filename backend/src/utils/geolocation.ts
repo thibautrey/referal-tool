@@ -65,7 +65,7 @@ export async function getCountryFromIp(ip: string): Promise<[string, string]> {
         update: { countryCode, city, expiresAt, updatedAt: now },
         create: { ip, countryCode, city, expiresAt },
       })
-      .catch((err) => console.error("Error updating IP cache:", err));
+      .catch((err: unknown) => console.error("Error updating IP cache:", err));
 
     // Cache the result for 24 hours (86400 seconds)
     await saveToCache(cacheKey, { country: countryCode, city }, 86400);
