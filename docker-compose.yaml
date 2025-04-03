@@ -22,7 +22,7 @@ services:
       - ./backend/src:/app/src
       - ./frontend/src:/app/frontend/src
     networks:
-      - app-network
+      - referal_app-network
 
   redis:
     image: redis:7-alpine
@@ -31,13 +31,13 @@ services:
     volumes:
       - redis-data:/data
     networks:
-      - app-network
+      - referal_app-network
 
 volumes:
   redis-data:
 
 networks:
-  app-network:
+  referal_app-network:
     driver: overlay
     attachable: true
     external: true
