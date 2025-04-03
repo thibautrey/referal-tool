@@ -1,23 +1,8 @@
-import { Link, LinkRule, LinkVisit, Prisma } from "@prisma/client";
+import { Link, LinkRule, LinkVisit } from "@prisma/client";
 import { Request, Response } from "express";
 import { getFromCache, saveToCache } from "../lib/redis";
 
 import prisma from "../lib/prisma";
-
-// Types pour les retours des requêtes groupées
-type VisitsByCountry = {
-  country: string;
-  _count: {
-    id: number;
-  };
-}[];
-
-type VisitsByRule = {
-  ruleId: number;
-  _count: {
-    id: number;
-  };
-}[];
 
 // Obtenir les statistiques de visites pour un lien ou un projet spécifique
 export const getVisitStats = async (req: Request, res: Response) => {
