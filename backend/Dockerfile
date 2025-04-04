@@ -15,7 +15,8 @@ COPY prisma ./prisma
 
 # Install dependencies with specific approach for native modules
 RUN npm ci --omit=dev --ignore-scripts && \
-    npm install bcrypt --build-from-source
+    npm install bcrypt --build-from-source && \
+    npx prisma generate
 
 # Copy source code
 COPY . .
