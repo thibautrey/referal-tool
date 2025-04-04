@@ -12,6 +12,7 @@ WORKDIR /app/backend
 COPY backend/package*.json ./
 COPY backend/prisma ./prisma
 RUN npm install
+RUN npx prisma generate
 COPY backend/ .
 RUN npm run build
 
@@ -26,4 +27,4 @@ COPY --from=backend-builder /app/backend/prisma ./prisma
 
 EXPOSE 3001
 # Use src/index.ts for development, dist/index.js for production
-CMD ["sh", "-c", "cd /app && sleep 10 && npx prisma generate && npx prisma migrate deploy && node backend/dist/app.js"]
+CMD ["sh", "-c", "cd /app && sleep 1 && node backend/dist/app.js"]
