@@ -142,9 +142,9 @@ export const getVisitStats = async (req: Request, res: Response) => {
       });
 
       // Associer les informations des règles avec les statistiques
-      visitsByRule = rawVisitsByRule.map((ruleStats) => {
+      visitsByRule = rawVisitsByRule.map((ruleStats: RuleStats) => {
         const ruleInfo =
-          rulesInfo.find((r) => r.id === ruleStats.ruleId) || null;
+          rulesInfo.find((r: RuleInfo) => r.id === ruleStats.ruleId) || null;
         return {
           ruleId: ruleStats.ruleId,
           count: ruleStats._count.id,
@@ -157,7 +157,7 @@ export const getVisitStats = async (req: Request, res: Response) => {
       message: "Statistiques récupérées avec succès",
       data: {
         totalVisits,
-        visitsByCountry: visitsByCountry.map((item) => ({
+        visitsByCountry: visitsByCountry.map((item: CountryVisit) => ({
           country: item.country,
           count: item._count.id,
         })),
@@ -236,7 +236,7 @@ async function getVisitsByTimeInterval(
     const visitsByDate = new Map<string, number>();
 
     // Formater et agréger les dates selon le timeRange
-    visits.forEach((visit) => {
+    visits.forEach((visit: LinkVisit) => {
       const date = formatDateByTimeRange(visit.createdAt, timeRange);
       visitsByDate.set(date, (visitsByDate.get(date) || 0) + 1);
     });
@@ -374,8 +374,10 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     });
 
     // Associer les détails des liens avec leurs statistiques
-    const topLinksWithDetails = topLinks.map((linkStat) => {
-      const details = linkDetails.find((l) => l.id === linkStat.linkId);
+    const topLinksWithDetails = topLinks.map((linkStat: LinkStat) => {
+      const details = linkDetails.find(
+        (l: LinkDetail) => l.id === linkStat.linkId
+      );
       return {
         linkId: linkStat.linkId,
         visits: linkStat._count.id,
@@ -412,3 +414,41 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     });
   }
 };
+
+interface RuleStats {
+  ruleId: number | null;
+  _count: {
+    id: number;
+  };
+}
+
+interface RuleInfo {
+  id: number;
+  redirectUrl: string;
+  countries: string;
+}
+
+interface CountryVisit {
+  country: string;
+  _count: {
+    id: number;
+  };
+}
+
+interface LinkVisit {
+  createdAt: Date;
+}
+
+interface LinkStat {
+  linkId: number;
+  _count: {
+    id: number;
+  };
+}
+
+interface LinkDetail {
+  id: number;
+  name: string;
+  shortCode: string;
+  baseUrl: string;
+}
