@@ -28,4 +28,4 @@ COPY --from=backend-builder /app/backend/node_modules ./node_modules
 
 EXPOSE 3001
 
-CMD ["sh", "-c", "cd /app && sleep 1 && node dist/app.js"]
+CMD ["sh", "-c", "cd /app && sleep 1 && node backend/dist/app.js"]
