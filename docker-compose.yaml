@@ -20,15 +20,11 @@ services:
       - ./backend/src:/app/src:ro
       - ./frontend/src:/app/frontend/src:ro
       - /app/dist
-    networks:
-      - referal_app-network
 
   redis:
     image: redis:7-alpine
     volumes:
       - redis-data:/data
-    networks:
-      - referal_app-network
 
 volumes:
   redis-data:
