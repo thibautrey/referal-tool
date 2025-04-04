@@ -14,8 +14,6 @@ services:
       - ENVIRONMENT=${ENVIRONMENT:-production}
       - REDIS_URL=redis://redis:6379
       - JWT_SECRET=${JWT_SECRET}
-    ports:
-      - "7840:3001"
     depends_on:
       - redis
     volumes:
@@ -34,9 +32,3 @@ services:
 
 volumes:
   redis-data:
-
-networks:
-  referal_app-network:
-    driver: overlay
-    attachable: true
-    external: true
