@@ -363,7 +363,7 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     // Récupérer les informations détaillées sur les liens les plus visités
     const linkDetails = await prisma.link.findMany({
       where: {
-        id: { in: topLinks.map((l) => l.linkId) },
+        id: { in: topLinks.map((l: { linkId: number }) => l.linkId) },
       },
       select: {
         id: true,
@@ -389,10 +389,12 @@ export const getDashboardStats = async (req: Request, res: Response) => {
         totalLinks,
         totalVisits,
         last24HoursVisits,
-        topCountries: topCountries.map((c) => ({
-          country: c.country,
-          visits: c._count.id,
-        })),
+        topCountries: topCountries.map(
+          (c: { country: string; _count: { id: number } }) => ({
+            country: c.country,
+            visits: c._count.id,
+          })
+        ),
         topLinks: topLinksWithDetails,
       },
     };
