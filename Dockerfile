@@ -17,14 +17,15 @@ COPY backend/ .
 RUN npm run build
 
 # Production image
-FROM backend-builder
+FROM node:20-alpine
 WORKDIR /app
 
 # Copy frontend build and backend dist
-COPY --from=frontend-builder /app/frontend/dist ./dist/frontend
-COPY --from=backend-builder /app/backend/dist ./dist/backend
+COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
+COPY --from=backend-builder /app/backend/dist ./dist
 COPY --from=backend-builder /app/backend/prisma ./prisma
+COPY --from=backend-builder /app/backend/node_modules ./node_modules
 
 EXPOSE 3001
-# Use src/index.ts for development, dist/index.js for production
-CMD ["sh", "-c", "cd /app && sleep 1 && node backend/dist/app.js"]
+
+CMD ["sh", "-c", "cd /app && sleep 1 && node dist/app.js"]
