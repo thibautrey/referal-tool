@@ -10,23 +10,20 @@ RUN npm run build
 FROM node:20-alpine as backend-builder
 WORKDIR /app/backend
 COPY backend/package*.json ./
+COPY backend/prisma ./prisma
 RUN npm install
 COPY backend/ .
 RUN npm run build
 
 # Production image
-FROM node:20-alpine
+FROM backend-builder
 WORKDIR /app
 
-# Copy backend source and build
-COPY --from=backend-builder /app/backend/src ./src
-COPY --from=backend-builder /app/backend/dist ./dist
-COPY --from=backend-builder /app/backend/package*.json ./
-COPY --from=backend-builder /app/backend/node_modules ./node_modules
-
-# Copy frontend build
-COPY --from=frontend-builder /app/frontend/dist ./dist/frontend/dist
+# Copy frontend build and backend dist
+COPY --from=frontend-builder /app/frontend/dist ./dist/frontend
+COPY --from=backend-builder /app/backend/dist ./dist/backend
+COPY --from=backend-builder /app/backend/prisma ./prisma
 
 EXPOSE 3001
 # Use src/index.ts for development, dist/index.js for production
-CMD ["sh", "-c", "if [ \"$NODE_ENV\" = \"development\" ]; then npx ts-node-dev --respawn --transpile-only src/index.ts; else node dist/index.js; fi"]
+CMD ["sh", "-c", "cd /app && sleep 10 && npx prisma generate && npx prisma migrate deploy && node backend/dist/app.js"]
