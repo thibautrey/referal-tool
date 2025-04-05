@@ -22,10 +22,10 @@ WORKDIR /app
 
 # Copy frontend build and backend dist
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
-COPY --from=backend-builder /app/backend/dist ./dist
+COPY --from=backend-builder /app/backend/dist ./backend/dist
+COPY --from=backend-builder /app/backend/node_modules ./backend/dist/node_modules
 COPY --from=backend-builder /app/backend/prisma ./prisma
-COPY --from=backend-builder /app/backend/node_modules ./node_modules
 
 EXPOSE 3001
 
-CMD ["sh", "-c", "ls -la /app/dist && pwd && node /app/dist/app.js"]
+CMD ["sh", "-c", "ls -la backend/dist && pwd && node backend/dist/app.js"]
