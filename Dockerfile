@@ -28,4 +28,4 @@ COPY --from=backend-builder /app/backend/node_modules ./node_modules
 
 EXPOSE 3001
 
-CMD ["sh", "-c", "ls -la && node /dist/app.js"]
+CMD ["sh", "-c", "ls -la && node ./dist/app.js"]
