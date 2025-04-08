@@ -14,6 +14,13 @@ COPY backend/prisma ./prisma
 RUN npm install
 RUN npx prisma generate
 COPY backend/ .
+ARG REACT_APP_ENV=production
+ARG REACT_APP_API_URL=https://rflnk.com/api
+ARG NODE_ENV=production
+
+ENV REACT_APP_ENV=${REACT_APP_ENV}
+ENV REACT_APP_API_URL=${REACT_APP_API_URL}
+ENV NODE_ENV=${NODE_ENV}
 RUN npm run build
 
 # Production image

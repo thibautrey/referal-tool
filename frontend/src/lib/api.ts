@@ -1,9 +1,9 @@
-// Simple wrapper pour fetch avec gestion des tokens d'authentification
+// Simple wrapper for fetch with authentication token management
 
 import { GeoRule } from "@/pages/links/AddLinkForm";
 import { ReferralLink } from "@/pages/types";
 
-// Configuration des URLs d'API par environnement
+// API URL configuration by environment
 const API_URLS = {
   development: "http://localhost:3001/api",
   test: "http://test-api.example.com/api",
@@ -11,49 +11,49 @@ const API_URLS = {
   production: "https://rflnk.com/api",
 };
 
-// Récupère l'environnement depuis les variables REACT_APP_*
-// Note: Dans un environnement frontend, seules les variables préfixées par REACT_APP_ sont accessibles
+// Get environment from REACT_APP_* variables
+// Note: In frontend environments, only variables prefixed with REACT_APP_ are accessible
 const ENVIRONMENT =
   (typeof process !== "undefined" && process.env?.REACT_APP_ENV) ||
   "development";
 
-// URL par défaut en cas de problème
+// Default API URL in case of issues
 const DEFAULT_API_URL = "http://localhost:3001/api";
 
-// Sélectionne l'URL de base en fonction de l'environnement
-// Priorité: URL spécifique dans .env > URL d'environnement prédéfinie > URL par défaut
+// Select base URL according to environment
+// Priority: Specific URL in .env > Predefined environment URL > Default URL
 const API_BASE_URL =
   (typeof process !== "undefined" && process.env?.REACT_APP_API_URL) ||
   API_URLS[ENVIRONMENT as keyof typeof API_URLS] ||
   DEFAULT_API_URL;
 
-// Log d'information (en développement uniquement)
+// Log information (only in development)
 if (ENVIRONMENT === "development") {
-  console.log(`API configurée sur: ${API_BASE_URL}`);
+  console.log(`API configured on: ${API_BASE_URL}`);
 }
 
-// Type pour les options des requêtes
+// Type for request options
 interface RequestOptions {
   method: string;
   headers: Record<string, string>;
   body?: string;
 }
 
-// Type pour la réponse
+// Type for the response
 export interface ApiResponse<T = unknown> {
   data: T;
   message: string;
   status: number;
 }
 
-// Type pour les erreurs API
+// Type for API errors
 export interface ApiError {
   status?: number;
   message?: string;
   data?: unknown;
 }
 
-// Type pour la réponse de l'API des liens
+// Type for the response of the links API
 export interface LinksResponse {
   links: ReferralLink[];
   total: number;
@@ -63,7 +63,7 @@ export interface LinksResponse {
   sortOrder?: "asc" | "desc";
 }
 
-// Types pour les statistiques
+// Types for statistics
 export interface RuleInfo {
   id: number;
   redirectUrl: string;
@@ -89,7 +89,7 @@ export interface DashboardStats {
   topLinks: { linkId: number; visits: number; details: ReferralLink }[];
 }
 
-// Classe pour gérer les appels API
+// Class to manage API calls
 class Api {
   private baseUrl: string;
   private headers: Record<string, string>;
@@ -101,24 +101,24 @@ class Api {
     };
   }
 
-  // Méthode pour définir le header d'autorisation
+  // Method to set the authorization header
   setAuthHeader(token: string): void {
     this.headers["Authorization"] = `Bearer ${token}`;
   }
 
-  // Méthode pour supprimer le header d'autorisation
+  // Method to remove the authorization header
   removeAuthHeader(): void {
     delete this.headers["Authorization"];
   }
 
-  // Méthode privée pour construire l'URL complète
+  // Private method to build the full URL
   private buildUrl(endpoint: string): string {
     return `${this.baseUrl}${
       endpoint.startsWith("/") ? endpoint : `/${endpoint}`
     }`;
   }
 
-  // Méthode générique pour les requêtes
+  // Generic method for requests
   private async request<T>(
     endpoint: string,
     method: string,
@@ -154,7 +154,7 @@ class Api {
         throw {
           status: response.status,
           data: responseData,
-          message: responseData.message || "Une erreur est survenue",
+          message: responseData.message || "An error occurred",
         };
       }
 
@@ -170,13 +170,13 @@ class Api {
       }
       throw {
         status: 500,
-        message: (error as Error).message || "Erreur réseau",
+        message: (error as Error).message || "Network error",
         data: null,
       };
     }
   }
 
-  // Méthodes publiques pour les différents types de requêtes
+  // Public methods for different types of requests
   async get<T>(endpoint: string): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, "GET");
   }
@@ -220,7 +220,7 @@ class Api {
     return this.delete<void>(`/links/${id}`, projectId);
   }
 
-  // Méthode pour obtenir les statistiques de visites d'un lien spécifique
+  // Method to get visit statistics for a specific link
   async getLinkStats(
     linkId: number,
     timeRange: string = "week",
@@ -246,7 +246,7 @@ class Api {
     return response.data;
   }
 
-  // Méthode pour obtenir les statistiques d'un projet
+  // Method to get visit statistics for a project
   async getProjectStats(
     projectId: number,
     timeRange: string = "week",
@@ -272,7 +272,7 @@ class Api {
     return response.data;
   }
 
-  // Méthode pour obtenir les statistiques du tableau de bord
+  // Method to get dashboard statistics
   async getDashboardStats(projectId?: number): Promise<DashboardStats> {
     const endpoint = projectId
       ? `/analytics/dashboard?projectId=${projectId}`
@@ -282,7 +282,7 @@ class Api {
     return response.data;
   }
 
-  // Méthode pour mettre à jour un lien
+  // Method to update a link
   async updateLink(
     linkId: number,
     data: {

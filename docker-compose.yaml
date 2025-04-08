@@ -6,15 +6,18 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - REACT_APP_ENV=${REACT_APP_ENV:-production}
+        - REACT_APP_API_URL=${REACT_APP_API_URL:-https://rflnk.com/api}
+        - NODE_ENV=${NODE_ENV:-production}
     environment:
-      - NODE_ENV=${NODE_ENV:-development}
+      - NODE_ENV=${NODE_ENV:-production}
       - PORT=${PORT:-3001}
       - DATABASE_URL=${DATABASE_URL}
       - DEV=${DEV:-false}
       - ENVIRONMENT=${ENVIRONMENT:-production}
       - REDIS_URL=${REDIS_URL}
       - JWT_SECRET=${JWT_SECRET}
-      - REACT_APP_ENV=${REACT_APP_ENV:-development}
     # depends_on:
     #   - redis
     volumes:
