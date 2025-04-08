@@ -18,7 +18,7 @@ const ENVIRONMENT =
   "development";
 
 // Default API URL in case of issues
-const DEFAULT_API_URL = "http://localhost:3001/api";
+const DEFAULT_API_URL = "/api";
 
 // Select base URL according to environment
 // Priority: Specific URL in .env > Predefined environment URL > Default URL
