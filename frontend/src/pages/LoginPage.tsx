@@ -197,7 +197,7 @@ export default function LoginPage() {
             <p className="text-sm text-muted-foreground">
               Don't have an account yet?
             </p>
-            <Link to="/register" className="w-full">
+            <Link to="/app/register" className="w-full">
               <Button
                 variant="outline"
                 className="w-full border-primary hover:bg-primary/10"

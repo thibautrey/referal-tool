@@ -8,7 +8,7 @@ const API_URLS = {
   development: "http://localhost:3001/api",
   test: "http://test-api.example.com/api",
   staging: "https://staging-api.example.com/api",
-  production: "https://api.example.com/api",
+  production: "https://rflnk.com/api",
 };
 
 // Récupère l'environnement depuis les variables REACT_APP_*
