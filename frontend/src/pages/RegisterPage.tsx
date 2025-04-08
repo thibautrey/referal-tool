@@ -57,7 +57,7 @@ export default function RegisterPage() {
     try {
       await signup(values.email, values.password);
       toast.success("Account created successfully");
-      navigate("/login");
+      navigate("/app/login");
     } catch (error: unknown) {
       const err = error as Error;
       toast.error(err.message || "Failed to create account");
@@ -179,7 +179,7 @@ export default function RegisterPage() {
             <p className="text-sm text-muted-foreground">
               Already have an account?
             </p>
-            <Link to="/login" className="w-full">
+            <Link to="/app/login" className="w-full">
               <Button
                 variant="outline"
                 className="w-full border-primary hover:bg-primary/10"

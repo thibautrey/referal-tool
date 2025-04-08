@@ -148,7 +148,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       removeDefaultProject();
       localStorage.removeItem("currentProjectId");
       toast.success("Logout successful");
-      navigate("/login");
+      navigate("/app/login");
     } catch (error) {
       console.error("Error during logout:", error);
       toast.error("Error during logout");

@@ -119,7 +119,7 @@ export default function LandingPage() {
               </RouterLink>
             </Button>
             <Button size="lg" variant="outline" asChild>
-              <RouterLink to="/login">Login</RouterLink>
+              <RouterLink to="/app/login">Login</RouterLink>
             </Button>
           </div>
         </motion.div>
@@ -446,7 +446,7 @@ export default function LandingPage() {
             </div>
             <div className="flex flex-col md:flex-row gap-6 md:gap-12 text-center md:text-left">
               <RouterLink
-                to="/login"
+                to="/app/login"
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 Login
