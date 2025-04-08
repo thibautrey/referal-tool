@@ -20,12 +20,20 @@ RUN npm run build
 FROM node:20-alpine
 WORKDIR /app
 
-# Copy frontend build and backend dist
+# Copy frontend build
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
-COPY --from=backend-builder /app/backend/dist ./backend/dist
-COPY --from=backend-builder /app/backend/node_modules ./backend/dist/node_modules
-COPY --from=backend-builder /app/backend/prisma ./prisma
 
+# Copy backend package files and install dependencies in the final image
+COPY backend/package*.json ./backend/
+COPY backend/prisma ./backend/prisma
+WORKDIR /app/backend
+RUN npm install --omit=dev
+RUN npx prisma generate
+
+# Copy compiled backend code
+COPY --from=backend-builder /app/backend/dist ./dist
+
+WORKDIR /app
 EXPOSE 3001
 
-CMD ["sh", "-c", "ls -la backend/dist && pwd && node backend/dist/app.js"]
+CMD ["node", "backend/dist/app.js"]
