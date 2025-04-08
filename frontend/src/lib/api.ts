@@ -3,34 +3,8 @@
 import { GeoRule } from "@/pages/links/AddLinkForm";
 import { ReferralLink } from "@/pages/types";
 
-// API URL configuration by environment
-const API_URLS = {
-  development: "http://localhost:3001/api",
-  test: "http://test-api.example.com/api",
-  staging: "https://staging-api.example.com/api",
-  production: "https://rflnk.com/api",
-};
-
-// Get environment from REACT_APP_* variables
-// Note: In frontend environments, only variables prefixed with REACT_APP_ are accessible
-const ENVIRONMENT =
-  (typeof process !== "undefined" && process.env?.REACT_APP_ENV) ||
-  "development";
-
-// Default API URL in case of issues
-const DEFAULT_API_URL = "/api";
-
-// Select base URL according to environment
-// Priority: Specific URL in .env > Predefined environment URL > Default URL
-const API_BASE_URL =
-  (typeof process !== "undefined" && process.env?.REACT_APP_API_URL) ||
-  API_URLS[ENVIRONMENT as keyof typeof API_URLS] ||
-  DEFAULT_API_URL;
-
-// Log information (only in development)
-if (ENVIRONMENT === "development") {
-  console.log(`API configured on: ${API_BASE_URL}`);
-}
+// API URL is always at /api under the same domain
+const API_BASE_URL = "/api";
 
 // Type for request options
 interface RequestOptions {
