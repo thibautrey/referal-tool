@@ -6,9 +6,8 @@ import prisma from "../lib/prisma";
 // Obtenir les statistiques de visites pour un lien ou un projet spécifique
 export const getVisitStats = async (req: Request, res: Response) => {
   const projectId = req.currentProjectId;
-  const cacheKey = `visits:${projectId}`;
+  const cacheKey = `visits:${projectId || "all"}`;
 
-  // Try to get from cache first
   const cachedStats = await getFromCache(cacheKey);
   if (cachedStats) {
     return res.json(cachedStats);
@@ -28,32 +27,16 @@ export const getVisitStats = async (req: Request, res: Response) => {
       ? (req.query.countries as string).split(",")
       : null;
 
-    // Valider que l'utilisateur a accès au projet spécifié
-    if (projectId) {
-      const project = await prisma.project.findFirst({
-        where: {
-          id: parseInt(projectId as string),
-          userId,
-        },
-      });
-
-      if (!project) {
-        return res
-          .status(404)
-          .json({ message: "Projet non trouvé ou accès non autorisé" });
-      }
-    }
-
     // Construire la condition where pour Prisma
     const whereClause: any = {};
 
-    // Filtrer par projet ou lien spécifique
+    // Filtrer par projet, lien spécifique ou tous les projets de l'utilisateur
     if (linkId) {
       whereClause.linkId = parseInt(linkId as string);
     } else if (projectId) {
       whereClause.link = { projectId: parseInt(projectId as string) };
     } else {
-      // Si ni projectId ni linkId n'est fourni, récupérer tous les liens de l'utilisateur
+      // Si aucun projectId n'est fourni, récupérer les statistiques de tous les projets de l'utilisateur
       whereClause.link = { project: { userId } };
     }
 
@@ -293,22 +276,6 @@ export const getDashboardStats = async (req: Request, res: Response) => {
 
   try {
     const userId = req.user?.id;
-
-    // Vérifier l'accès au projet
-    if (projectId) {
-      const project = await prisma.project.findFirst({
-        where: {
-          id: Number(projectId),
-          userId,
-        },
-      });
-
-      if (!project) {
-        return res
-          .status(404)
-          .json({ message: "Projet non trouvé ou accès non autorisé" });
-      }
-    }
 
     // Construire la clause where commune
     const baseWhereClause = projectId
