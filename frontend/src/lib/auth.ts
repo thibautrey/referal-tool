@@ -174,3 +174,25 @@ export const getDefaultProject = (): number | null => {
 export const removeDefaultProject = (): void => {
   localStorage.removeItem("default_project");
 };
+
+// Password recovery functions
+export const forgotPassword = async (email: string): Promise<void> => {
+  try {
+    await api.post("/users/forgot-password", { email });
+  } catch (error) {
+    // We intentionally don't throw errors here to prevent email enumeration
+    console.error("Error in forgot password:", error);
+  }
+};
+
+export const resetPassword = async (
+  token: string,
+  password: string
+): Promise<void> => {
+  try {
+    await api.post("/users/reset-password", { token, password });
+  } catch (error) {
+    console.error("Error in reset password:", error);
+    throw error;
+  }
+};

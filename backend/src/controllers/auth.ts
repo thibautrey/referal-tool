@@ -6,6 +6,7 @@ import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import prisma from "../lib/prisma";
 import speakeasy from "speakeasy";
+import { sendEmail } from "../utils/email";
 
 interface ApiResponse {
   message: string;
@@ -485,8 +486,8 @@ export const forgotPassword: ControllerFunction = async (
     });
 
     if (!user) {
-      res.status(404).json({
-        message: "Aucun compte associé à cet email",
+      res.status(500).json({
+        message: "Error while requesting password reset",
       });
       return;
     }
@@ -499,43 +500,33 @@ export const forgotPassword: ControllerFunction = async (
       { expiresIn: "1h" }
     );
 
-    // Stocker le token (dans une vraie application, vous devriez stocker ce token en base de données)
-    // Pour simplifier, nous envoyons simplement le token dans la réponse
-    // Dans une application réelle, vous enverriez un email avec un lien contenant ce token
-
-    // Exemple de code pour envoyer un email (commenté car mock)
-    /*
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: parseInt(process.env.EMAIL_PORT || '587'),
-      secure: process.env.EMAIL_SECURE === 'true',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
-
-    await transporter.sendMail({
-      from: process.env.EMAIL_FROM,
+    // Send email with Resend
+    const emailSent = await sendEmail({
       to: user.email,
-      subject: "Réinitialisation de mot de passe",
+      subject: "Password Reset Request",
       html: `
-        <p>Vous avez demandé une réinitialisation de mot de passe.</p>
-        <p>Cliquez sur le lien suivant pour réinitialiser votre mot de passe :</p>
-        <a href="${process.env.APP_URL}/reset-password?token=${resetToken}">Réinitialiser mon mot de passe</a>
+        <p>You requested a password reset.</p>
+        <p>Click the link below to reset your password:</p>
+        <a href="${process.env.APP_URL}/app/reset-password?token=${resetToken}">Reset my password</a>
       `,
     });
-    */
+
+    if (!emailSent) {
+      res.status(500).json({
+        message: "Failed to send reset instructions",
+      });
+      return;
+    }
 
     res.json({
-      message: "Instructions de réinitialisation envoyées à votre email",
-      // Pour les besoins de développement uniquement, envoyer le token dans la réponse
+      message: "Reset instructions sent to your email",
+      // For development purposes only, sending token in response
       data: { resetToken },
     });
     return;
   } catch (error) {
     res.status(500).json({
-      message: "Erreur lors de la demande de réinitialisation",
+      message: "Error while requesting password reset",
       error,
     });
     return;

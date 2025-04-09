@@ -17,8 +17,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Link as RouterLink } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useAuth } from "@/contexts/AuthContext";
-import { ContainerScroll } from "@/components/ui/container-scroll-animation";
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -42,8 +40,6 @@ const staggerContainer = {
 };
 
 export default function LandingPage() {
-  const { isAuthenticated } = useAuth();
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/90">
       {/* Header avec navigation */}
@@ -66,23 +62,15 @@ export default function LandingPage() {
             >
               Benefits
             </a>
-            {isAuthenticated ? (
-              <Button asChild>
-                <RouterLink to="/app/dashboard">Go to app</RouterLink>
-              </Button>
-            ) : (
-              <>
-                <RouterLink
-                  to="/app/login"
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Login
-                </RouterLink>
-                <Button asChild>
-                  <RouterLink to="/app/register">Sign Up</RouterLink>
-                </Button>
-              </>
-            )}
+            <RouterLink
+              to="/app/login"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Login
+            </RouterLink>
+            <Button asChild>
+              <RouterLink to="/app/register">Sign Up</RouterLink>
+            </Button>
           </nav>
           <div className="md:hidden">
             <Button variant="ghost" size="icon">
@@ -108,30 +96,41 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* Hero Section with Scroll Animation */}
-      <ContainerScroll
-        titleComponent={
-          <div className="container mx-auto text-center max-w-4xl px-4">
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-500">
-              Optimize Your Affiliate Links
-            </h1>
-            <p className="text-xl md:text-2xl mb-10 text-muted-foreground max-w-3xl mx-auto">
-              Increase your affiliate revenue with our intelligent link
-              management platform, designed for influencers and marketers.
-            </p>
-            <div className="flex flex-col md:flex-row gap-4 justify-center">
-              <Button size="lg" asChild>
-                <RouterLink to="/app/register">
-                  Get Started Free
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </RouterLink>
-              </Button>
-              <Button size="lg" variant="outline" asChild>
-                <RouterLink to="/app/login">Login</RouterLink>
-              </Button>
-            </div>
+      {/* Hero Section */}
+      <section className="pt-24 md:pt-32 pb-16 md:pb-24 px-4">
+        <motion.div
+          className="container mx-auto text-center max-w-4xl"
+          initial="hidden"
+          animate="visible"
+          variants={fadeIn}
+        >
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-500">
+            Optimize Your Affiliate Links
+          </h1>
+          <p className="text-xl md:text-2xl mb-10 text-muted-foreground max-w-3xl mx-auto">
+            Increase your affiliate revenue with our intelligent link management
+            platform, designed for influencers and marketers.
+          </p>
+          <div className="flex flex-col md:flex-row gap-4 justify-center">
+            <Button size="lg" asChild>
+              <RouterLink to="/app/register">
+                Get Started Free
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </RouterLink>
+            </Button>
+            <Button size="lg" variant="outline" asChild>
+              <RouterLink to="/app/login">Login</RouterLink>
+            </Button>
           </div>
-        }
+        </motion.div>
+      </section>
+
+      {/* Image de démonstration */}
+      <motion.div
+        className="container mx-auto px-4 mb-20"
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4, duration: 0.8 }}
       >
         <div className="relative mx-auto max-w-5xl">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-background rounded-xl blur-3xl -z-10" />
@@ -143,7 +142,7 @@ export default function LandingPage() {
             />
           </div>
         </div>
-      </ContainerScroll>
+      </motion.div>
 
       {/* Features Section */}
       <section id="features" className="py-20 px-4 bg-muted/30">
