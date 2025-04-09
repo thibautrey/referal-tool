@@ -113,6 +113,7 @@ export const login: ControllerFunction = async (
       return;
     }
 
+    let newProjectCreated;
     // Vérifier si l'utilisateur a au moins un projet
     if (user.projects.length === 0) {
       // Créer un projet par défaut
@@ -120,6 +121,12 @@ export const login: ControllerFunction = async (
         data: {
           name: "Mon premier projet",
           description: "Projet créé automatiquement",
+          userId: user.id,
+        },
+      });
+
+      newProjectCreated = await prisma.project.findFirst({
+        where: {
           userId: user.id,
         },
       });
@@ -176,7 +183,7 @@ export const login: ControllerFunction = async (
     );
 
     const defaultProjectId =
-      user.projects.length > 0 ? user.projects[0].id : null;
+      user.projects.length > 0 ? user.projects[0].id : newProjectCreated!.id;
 
     const response: ApiResponse = {
       message: "Connexion réussie",
