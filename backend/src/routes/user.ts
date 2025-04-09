@@ -33,4 +33,7 @@ router.post("/verify-otp", authenticateJWT, authController.verifyOTP);
 router.post("/disable-otp", authenticateJWT, authController.disableOTP);
 router.get("/backup-codes", authenticateJWT, authController.getBackupCodes);
 
+// Routes tips
+router.post("/tips/seen", authenticateJWT, userController.markTipAsSeen);
+
 export default router;

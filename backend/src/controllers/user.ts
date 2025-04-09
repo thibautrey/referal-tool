@@ -278,3 +278,36 @@ export const getCurrentUser = async (req: any, res: any) => {
     });
   }
 };
+
+/**
+ * Marquer un conseil comme vu
+ */
+export const markTipAsSeen = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const { tipId } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { seenTips: true }
+    });
+
+    const seenTips = user?.seenTips ? JSON.parse(user.seenTips) : [];
+    if (!seenTips.includes(tipId)) {
+      seenTips.push(tipId);
+    }
+
+    await prisma.user.update({
+      where: { id: userId },
+      data: { seenTips: JSON.stringify(seenTips) }
+    });
+
+    res.json({ message: "Tip marked as seen", data: { seenTips } });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating seen tips" });
+  }
+};

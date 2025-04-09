@@ -22,6 +22,7 @@ model User {
     otpSecret      String? // Clé secrète pour l'OTP (nullable car optionnel)
     otpVerified    Boolean   @default(false) // Indique si l'OTP a été vérifié
     otpBackupCodes String? // Pour stocker les codes de secours (JSON formaté)
+    seenTips       String? // Store seen tips IDs as JSON array
     projects       Project[]
     createdAt      DateTime  @default(now())
     updatedAt      DateTime  @updatedAt

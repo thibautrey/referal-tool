@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { ProjectSelector } from "@/components/project-selector";
 import { UserInfoAndLogout } from "@/components/layout/UserInfoAndLogout";
 import { SidebarMenuItems } from "@/components/layout/SidebarMenuItems";
+import { News } from "@/components/layout/Sidebarnews";
 
 export default function MainLayout() {
   const [isMounted, setIsMounted] = useState(false);
@@ -32,7 +33,7 @@ export default function MainLayout() {
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="flex min-h-screen w-full overflow-hidden bg-background">
-        <Sidebar className="flex-shrink-0 border-r relative">
+        <Sidebar className="flex-shrink-0 border-r fixed h-screen lg:w-[250px]">
           <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-secondary/10 to-background animate-gradient-slow -z-10" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,53,255,0.1),rgba(255,255,255,0))] -z-10" />
           <SidebarHeader className="flex flex-col gap-2 border-b px-4 py-4">
@@ -54,6 +55,7 @@ export default function MainLayout() {
             <SidebarMenuItems />
           </SidebarContent>
           <SidebarFooter className="border-t">
+            <News />
             <UserInfoAndLogout />
           </SidebarFooter>
         </Sidebar>
@@ -67,7 +69,7 @@ export default function MainLayout() {
             </Button>
           </header>
           <main className="flex-1 overflow-auto p-6">
-            <div className="mx-auto max-w-7xl">
+            <div className="w-full">
               <Outlet />
             </div>
           </main>
