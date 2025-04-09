@@ -113,7 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         setCurrentProjectId(userInfo.defaultProjectId);
       }
       toast.success("Login successful");
-      navigate("/");
+      navigate("/app/dashboard");
     } catch (error: unknown) {
       const err = error as { status: number; data?: { requireOtp?: boolean } };
       if (err.status === 400 && err.data?.requireOtp) {

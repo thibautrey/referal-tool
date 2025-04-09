@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Link as RouterLink } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -40,6 +41,8 @@ const staggerContainer = {
 };
 
 export default function LandingPage() {
+  const { isAuthenticated } = useAuth();
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/90">
       {/* Header avec navigation */}
@@ -62,15 +65,23 @@ export default function LandingPage() {
             >
               Benefits
             </a>
-            <RouterLink
-              to="/app/login"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Login
-            </RouterLink>
-            <Button asChild>
-              <RouterLink to="/app/register">Sign Up</RouterLink>
-            </Button>
+            {isAuthenticated ? (
+              <Button asChild>
+                <RouterLink to="/app/dashboard">Go to app</RouterLink>
+              </Button>
+            ) : (
+              <>
+                <RouterLink
+                  to="/app/login"
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Login
+                </RouterLink>
+                <Button asChild>
+                  <RouterLink to="/app/register">Sign Up</RouterLink>
+                </Button>
+              </>
+            )}
           </nav>
           <div className="md:hidden">
             <Button variant="ghost" size="icon">
@@ -136,7 +147,7 @@ export default function LandingPage() {
           <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-background rounded-xl blur-3xl -z-10" />
           <div className="bg-card/20 border rounded-xl shadow-xl overflow-hidden backdrop-blur-sm">
             <img
-              src="https://placehold.co/1200x600/22272e/888888?text=Dashboard+Preview"
+              src="/images/dashboard.png"
               alt="Application Dashboard"
               className="w-full h-auto"
             />
@@ -402,7 +413,7 @@ export default function LandingPage() {
               transition={{ duration: 0.8 }}
             >
               <img
-                src="https://placehold.co/600x400/22272e/888888?text=Analytics+Dashboard"
+                src="/images/analytics.png"
                 alt="Analytics Dashboard"
                 className="w-full h-auto"
               />
