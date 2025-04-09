@@ -13,6 +13,7 @@ export interface DeviceRule {
 }
 
 export interface LinkFormData {
+  id?: number;
   name: string;
   baseUrl: string;
   shortCode: string;

@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { AVAILABLE_COUNTRIES, COUNTRY_OPTIONS } from "../Countries";
 import {
   Command,
   CommandEmpty,
@@ -7,8 +7,6 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -16,9 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
 import { useState } from "react";
-import { AVAILABLE_COUNTRIES, COUNTRY_OPTIONS } from "../Countries";
 
 export interface GeoRule {
   redirectUrl: string;
@@ -169,26 +170,30 @@ export function GeoTargeting({ rules, onRulesChange }: GeoTargetingProps) {
                   onValueChange={setSearchTerm}
                   className="px-2 py-1"
                 />
-                <CommandList>
-                  <CommandEmpty>No results found.</CommandEmpty>
-                  <CommandGroup>
-                    {getFilteredCountryOptions(rule.countries).map((option) => (
-                      <CommandItem
-                        key={option.value}
-                        onSelect={() => {
-                          setSearchTerm("");
-                          const newCountries = [
-                            ...rule.countries,
-                            option.value,
-                          ];
-                          handleCountryChange(newCountries, rule, index);
-                        }}
-                      >
-                        {option.label}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
+                {searchTerm.length > 0 && (
+                  <CommandList className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md border bg-popover shadow-md z-50">
+                    <CommandEmpty>No results found.</CommandEmpty>
+                    <CommandGroup>
+                      {getFilteredCountryOptions(rule.countries).map(
+                        (option) => (
+                          <CommandItem
+                            key={option.value}
+                            onSelect={() => {
+                              setSearchTerm("");
+                              const newCountries = [
+                                ...rule.countries,
+                                option.value,
+                              ];
+                              handleCountryChange(newCountries, rule, index);
+                            }}
+                          >
+                            {option.label}
+                          </CommandItem>
+                        )
+                      )}
+                    </CommandGroup>
+                  </CommandList>
+                )}
               </Command>
             </div>
           )}

@@ -15,7 +15,6 @@ router.get("/:id", linkController.getLinkById);
 router.post("/", linkController.createLink);
 router.put("/:id", linkController.updateLink);
 router.delete("/:id", linkController.deleteLink);
-router.get("/:id/can-delete", linkController.canDeleteLink);
 
 // Link validation
 router.get(

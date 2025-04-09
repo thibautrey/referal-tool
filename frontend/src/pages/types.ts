@@ -1,3 +1,5 @@
+import { GeoRule } from "./links/AddLinkForm/types";
+
 export interface ReferralLink {
   id: number;
   name: string;
@@ -9,6 +11,7 @@ export interface ReferralLink {
   conversionRate?: number;
   createdAt: string;
   updatedAt: string;
+  rules: GeoRule[];
   _count?: {
     LinkVisit?: number;
   };

@@ -1,10 +1,13 @@
-import { AddLinkForm, GeoRule } from "./links/AddLinkForm";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ApiResponse, api } from "@/lib/api";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useEffect, useState } from "react";
+import { ChevronRight, Home, Plus, Save } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
+import { AddLinkForm } from "./links/AddLinkForm";
 import { AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ButtonColorful } from "@/components/ui/button-colorful";
+import { LinkFormData } from "./links/types";
 import { LinksList } from "./links/LinksList";
 import { ReferralLink } from "./types";
 import { cn } from "@/lib/utils";
@@ -13,20 +16,8 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSearchParams } from "react-router-dom";
 
-interface LinkFormData {
-  id?: number;
-  name: string;
-  baseUrl: string;
-  shortCode: string;
-  rules: GeoRule[];
-  tags?: string[];
-  comments?: string;
-  qrCode?: boolean;
-  advanced?: {
-    conversionTracking: boolean;
-    passwordProtection: string;
-    expirationDate?: Date;
-  };
+interface AddLinkFormRef {
+  getFormData: () => LinkFormData;
 }
 
 const glassCardStyle =
@@ -34,23 +25,46 @@ const glassCardStyle =
 
 export default function LinksPage() {
   const { currentProjectId } = useAuth();
-  const [activeTab, setActiveTab] = useState("all-links");
+  const [view, setView] = useState<"list" | "form">("list");
+  const [editingLink, setEditingLink] = useState<ReferralLink | null>(null);
   const [links, setLinks] = useState<ReferralLink[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
+  const formRef = useRef<AddLinkFormRef>(null);
 
-  // Détecter le paramètre 'tab' dans l'URL au chargement
+  // Detect URL parameters on load
   useEffect(() => {
-    const tabParam = searchParams.get("tab");
-    if (tabParam && (tabParam === "all-links" || tabParam === "add-link")) {
-      setActiveTab(tabParam);
+    const mode = searchParams.get("mode");
+    const id = searchParams.get("id");
+
+    if (mode === "edit" && id) {
+      setView("form");
+      // We'll set the editingLink when we have the data
+    } else if (mode === "add") {
+      setView("form");
+      setEditingLink(null);
+    } else {
+      setView("list");
+      setEditingLink(null);
     }
   }, [searchParams]);
 
-  // Mettre à jour l'URL quand l'onglet actif change
-  const handleTabChange = (value: string) => {
-    setActiveTab(value);
-    setSearchParams({ tab: value });
+  const navigateToList = () => {
+    setView("list");
+    setEditingLink(null);
+    setSearchParams({});
+  };
+
+  const navigateToAddForm = () => {
+    setView("form");
+    setEditingLink(null);
+    setSearchParams({ mode: "add" });
+  };
+
+  const navigateToEditForm = (link: ReferralLink) => {
+    setView("form");
+    setEditingLink(link);
+    setSearchParams({ mode: "edit", id: `${link.id}` });
   };
 
   const handleAddLink = async (formData: LinkFormData) => {
@@ -64,40 +78,57 @@ export default function LinksPage() {
           redirectUrl: rule.redirectUrl,
           countries: rule.countries,
         })),
-        tags: formData.tags,
-        comments: formData.comments,
-        qrCode: formData.qrCode,
-        advanced: formData.advanced,
+        deviceRules: formData.deviceRules,
       };
 
       if (formData.id) {
         response = await api.updateLink(formData.id, linkData);
-        if (!response?.data) {
-          throw new Error("Invalid response from server");
-        }
+      } else {
+        response = await api.createLink(currentProjectId!, linkData);
+      }
+
+      if (!response?.data) {
+        throw new Error("Invalid response from server");
+      }
+
+      // Parse the countries JSON string in rules if needed
+      const processedResponse = {
+        ...response.data,
+        rules: response.data.rules.map((rule) => ({
+          ...rule,
+          countries:
+            typeof rule.countries === "string"
+              ? JSON.parse(rule.countries)
+              : rule.countries,
+        })),
+      };
+
+      if (formData.id) {
         setLinks(
           links.map((link) =>
-            link.id === formData.id && response.data ? response.data : link
+            link.id === formData.id ? processedResponse : link
           )
         );
         toast.success("Link updated successfully");
       } else {
-        response = await api.createLink(currentProjectId!, linkData);
-        if (!response?.data) {
-          throw new Error("Invalid response from server");
-        }
-        setLinks([...links, response.data]);
+        setLinks([...links, processedResponse]);
         toast.success("Link created successfully");
       }
 
-      setActiveTab("all-links");
-      setSearchParams({ tab: "all-links" });
+      navigateToList();
     } catch (err) {
       console.error("Error saving link:", err);
       const errorMessage =
         err instanceof Error ? err.message : "Failed to save link";
       toast.error(errorMessage);
     }
+  };
+
+  const handleFormSubmit = async () => {
+    if (!formRef.current) return;
+
+    const formData = formRef.current.getFormData();
+    await handleAddLink(formData);
   };
 
   return (
@@ -107,7 +138,62 @@ export default function LinksPage() {
       className="space-y-6"
     >
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold tracking-tight">Referral Links</h1>
+        <h1 className="text-3xl font-bold tracking-tight">
+          {view === "list"
+            ? "Referral Links"
+            : editingLink
+            ? "Edit Link"
+            : "Create Link"}
+        </h1>
+      </div>
+
+      <div className="flex justify-between items-center">
+        <nav className="flex items-center space-x-4" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+            {view === "form" && (
+              <li className="inline-flex items-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={navigateToList}
+                  className="inline-flex items-center"
+                >
+                  <Home className="w-4 h-4 mr-2" />
+                  Referral Links
+                </Button>
+              </li>
+            )}
+
+            {view === "form" && (
+              <>
+                <li>
+                  <div className="flex items-center">
+                    <ChevronRight className="w-4 h-4 text-gray-400" />
+                    <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">
+                      {editingLink ? "Edit Link" : "Create Link"}
+                    </span>
+                  </div>
+                </li>
+              </>
+            )}
+          </ol>
+        </nav>
+
+        {view === "form" && (
+          <ButtonColorful onClick={handleFormSubmit}>
+            {editingLink ? (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                Save Changes
+              </>
+            ) : (
+              <>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Link
+              </>
+            )}
+          </ButtonColorful>
+        )}
       </div>
 
       {error && (
@@ -123,21 +209,9 @@ export default function LinksPage() {
         </Alert>
       )}
 
-      <Tabs
-        defaultValue="all-links"
-        className="w-full"
-        value={activeTab}
-        onValueChange={handleTabChange}
-      >
-        <div className="flex justify-between items-center mb-6">
-          <TabsList className="grid w-[400px] grid-cols-2">
-            <TabsTrigger value="all-links">All Links</TabsTrigger>
-            <TabsTrigger value="add-link">Create Link</TabsTrigger>
-          </TabsList>
-        </div>
-
-        <div className="mt-6">
-          <TabsContent value="all-links" className="space-y-6">
+      <div className="mt-6">
+        {view === "list" ? (
+          <>
             {!currentProjectId && (
               <Alert className={cn("mb-4", glassCardStyle)}>
                 <AlertCircle className="h-4 w-4" />
@@ -151,25 +225,16 @@ export default function LinksPage() {
             {currentProjectId && (
               <LinksList
                 projectId={currentProjectId}
-                onAddLinkClick={() => setActiveTab("add-link")}
-                onEditLinkClick={(link) => {
-                  setActiveTab("add-link");
-                  setSearchParams({
-                    tab: "add-link",
-                    mode: "edit",
-                    id: `${link.id}`,
-                  });
-                }}
+                onAddLinkClick={navigateToAddForm}
+                onEditLinkClick={navigateToEditForm}
                 onError={(message: string) => setError(message)}
               />
             )}
-          </TabsContent>
-
-          <TabsContent value="add-link">
-            <AddLinkForm onSubmit={handleAddLink} />
-          </TabsContent>
-        </div>
-      </Tabs>
+          </>
+        ) : (
+          <AddLinkForm ref={formRef} onSubmit={handleAddLink} />
+        )}
+      </div>
     </motion.div>
   );
 }

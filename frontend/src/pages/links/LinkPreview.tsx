@@ -10,7 +10,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { COUNTRY_OPTIONS } from "./Countries";
-import type { DeviceRule } from "./AddLinkForm/DeviceTargeting";
+import { DeviceRule } from "./types";
 import type { GeoRule } from "./AddLinkForm/GeoTargeting";
 import { LinkCard } from "@/components/ui/link-card";
 import QRCode from "react-qr-code";

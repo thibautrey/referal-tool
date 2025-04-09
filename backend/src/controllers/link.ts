@@ -314,7 +314,7 @@ export const getLinkById = async (req: Request, res: Response) => {
 export const updateLink = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, baseUrl, active } = req.body;
+    const { name, baseUrl, active, rules, deviceRules } = req.body;
     const userId = req.user?.id;
 
     const link = await prisma.link.findFirst({
@@ -329,9 +329,10 @@ export const updateLink = async (req: Request, res: Response) => {
     if (!link) {
       return res
         .status(404)
-        .json({ message: "Lien non trouvé ou accès non autorisé" });
+        .json({ message: "Link not found or unauthorized access" });
     }
 
+    // Update link basic information
     const updatedLink = await prisma.link.update({
       where: { id: parseInt(id) },
       data: {
@@ -339,14 +340,59 @@ export const updateLink = async (req: Request, res: Response) => {
         baseUrl,
         active,
       },
+    });
+
+    // Update rules if provided
+    if (rules && Array.isArray(rules)) {
+      // Delete existing rules
+      await prisma.linkRule.deleteMany({
+        where: { linkId: parseInt(id) },
+      });
+
+      // Create new rules
+      for (const rule of rules) {
+        await prisma.linkRule.create({
+          data: {
+            redirectUrl: rule.redirectUrl,
+            countries: JSON.stringify(rule.countries),
+            linkId: parseInt(id),
+          },
+        });
+      }
+    }
+
+    // Update device rules if provided
+    if (deviceRules && Array.isArray(deviceRules)) {
+      // Delete existing device rules
+      await prisma.deviceRule.deleteMany({
+        where: { linkId: parseInt(id) },
+      });
+
+      // Create new device rules
+      for (const rule of deviceRules) {
+        await prisma.deviceRule.create({
+          data: {
+            redirectUrl: rule.redirectUrl,
+            deviceType: rule.deviceType,
+            devices: JSON.stringify(rule.devices || []),
+            linkId: parseInt(id),
+          },
+        });
+      }
+    }
+
+    // Get the updated link with all its rules
+    const linkWithRules = await prisma.link.findUnique({
+      where: { id: parseInt(id) },
       include: {
         rules: true,
+        deviceRules: true,
       },
     });
 
     return res.json({
       message: "Link updated successfully",
-      data: updatedLink,
+      data: linkWithRules,
     });
   } catch (error: unknown) {
     return res.status(500).json({ message: "Error updating link", error });
