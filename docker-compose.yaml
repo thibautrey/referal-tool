@@ -12,6 +12,7 @@ services:
         - REACT_APP_ENV=${REACT_APP_ENV:-production}
         - REACT_APP_API_URL=${REACT_APP_API_URL:-https://rflnk.com/api}
         - NODE_ENV=${NODE_ENV:-production}
+        - APP_URL=${APP_URL:-https://rflnk.com}
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - PORT=${PORT:-3001}
@@ -21,6 +22,7 @@ services:
       - REDIS_URL=${REDIS_URL}
       - JWT_SECRET=${JWT_SECRET}
       - RESEND=${RESEND}
+      - APP_URL=${APP_URL:-https://rflnk.com}
     # depends_on:
     #   - redis
     volumes:

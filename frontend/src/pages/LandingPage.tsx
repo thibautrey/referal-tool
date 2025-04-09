@@ -5,6 +5,7 @@ import {
   Link,
   ShieldCheck,
   Users,
+  Info,
 } from "lucide-react";
 import {
   Card,
@@ -61,6 +62,12 @@ export default function LandingPage() {
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               Benefits
+            </a>
+            <a
+              href="#pricing"
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Pricing
             </a>
             <RouterLink
               to="/app/login"
@@ -406,6 +413,154 @@ export default function LandingPage() {
                 alt="Analytics Dashboard"
                 className="w-full h-auto"
               />
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className="py-20 px-4 bg-muted/30">
+        <div className="container mx-auto">
+          <motion.div
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Simple Pricing
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Start for free with our basic plan. Enhance your experience with
+              optional add-ons.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {/* Free Plan */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="lg:col-span-1"
+            >
+              <Card className="h-full bg-card/50 backdrop-blur-sm hover:shadow-md transition-all border-primary/10 hover:border-primary/30">
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between">
+                    <div>
+                      <CardTitle>Free</CardTitle>
+                      <CardDescription>
+                        Get started with no commitment
+                      </CardDescription>
+                    </div>
+                    <div className="text-3xl font-bold text-primary">$0</div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <ul className="space-y-2">
+                    <li className="flex items-start">
+                      <span className="mr-2 mt-1 text-primary">✓</span>
+                      Unlimited short links
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2 mt-1 text-primary">✓</span>
+                      Geographic customization
+                    </li>
+                    <li className="flex items-start">
+                      <span className="mr-2 mt-1 text-primary">✓</span>
+                      Performance analytics
+                    </li>
+                    <li className="flex items-start text-muted-foreground group relative">
+                      <Info className="w-4 h-4 mr-2 mt-1" />
+                      5% traffic redirects to our links
+                      <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                        A small portion of traffic will be redirected to our
+                        promotional links
+                      </div>
+                    </li>
+                    <li className="flex items-start text-muted-foreground group relative">
+                      <Info className="w-4 h-4 mr-2 mt-1" />
+                      No dedicated support
+                      <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                        Support through community forums and documentation
+                      </div>
+                    </li>
+                  </ul>
+
+                  <Button className="w-full" asChild>
+                    <RouterLink to="/app/register">Get Started</RouterLink>
+                  </Button>
+
+                  <p className="text-xs text-center text-muted-foreground mt-2">
+                    No credit card required
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Add-ons */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="lg:col-span-3"
+            >
+              <Card className="h-full bg-card/50 backdrop-blur-sm hover:shadow-md transition-all border-primary/10 hover:border-primary/30">
+                <CardHeader>
+                  <CardTitle>Optional Add-ons</CardTitle>
+                  <CardDescription>
+                    Enhance your experience with these premium features
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Custom Domain */}
+                    <div className="p-4 border rounded-lg bg-background/50">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-semibold">Custom Domain</h3>
+                        <span className="text-primary font-bold">$10/mo</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Use your own domain for short links
+                      </p>
+                      {/* <Button variant="outline" className="w-full" asChild>
+                        <RouterLink to="/app/register">Add to plan</RouterLink>
+                      </Button> */}
+                    </div>
+
+                    {/* No Redirects */}
+                    <div className="p-4 border rounded-lg bg-background/50">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-semibold">No Redirects</h3>
+                        <span className="text-primary font-bold">$10/mo</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Remove the 5% redirect to our links
+                      </p>
+                      {/* <Button variant="outline" className="w-full" asChild>
+                        <RouterLink to="/app/register">Add to plan</RouterLink>
+                      </Button> */}
+                    </div>
+
+                    {/* Customer Support */}
+                    <div className="p-4 border rounded-lg bg-background/50">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-semibold">Customer Support</h3>
+                        <span className="text-primary font-bold">$50/mo</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Get priority support from our team
+                      </p>
+                      {/* <Button variant="outline" className="w-full" asChild>
+                        <RouterLink to="/app/register">Add to plan</RouterLink>
+                      </Button> */}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </motion.div>
           </div>
         </div>
