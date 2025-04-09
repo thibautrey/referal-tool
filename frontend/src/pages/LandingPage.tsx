@@ -113,7 +113,7 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col md:flex-row gap-4 justify-center">
             <Button size="lg" asChild>
-              <RouterLink to="/register">
+              <RouterLink to="/app/register">
                 Get Started Free
                 <ArrowRight className="ml-2 h-5 w-5" />
               </RouterLink>
@@ -428,7 +428,7 @@ export default function LandingPage() {
             with our platform.
           </p>
           <Button size="lg" className="px-8" asChild>
-            <RouterLink to="/register">Create Free Account</RouterLink>
+            <RouterLink to="/app/register">Create Free Account</RouterLink>
           </Button>
           <p className="mt-4 text-sm text-muted-foreground">
             No credit card required • Set up in minutes
