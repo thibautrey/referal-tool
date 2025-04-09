@@ -183,7 +183,8 @@ export const getVisitStats = async (req: Request, res: Response) => {
 async function getVisitsByTimeInterval(
   projectId: number | null = null,
   linkId: number | null = null,
-  timeRange: string = "week"
+  timeRange: string = "week",
+  userId?: string
 ): Promise<Array<{ date: string; count: number }>> {
   try {
     // Construire la clause where pour filtrer les visites
@@ -193,6 +194,12 @@ async function getVisitsByTimeInterval(
       whereClause.linkId = linkId;
     } else if (projectId) {
       whereClause.link = { projectId };
+    } else if (userId) {
+      whereClause.link = {
+        project: {
+          userId: userId,
+        },
+      };
     }
 
     // Déterminer la plage de dates à analyser

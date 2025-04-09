@@ -3,12 +3,14 @@ import * as linkController from "../controllers/link";
 import { authenticateJWT } from "../middleware/auth";
 import express from "express";
 import { extractProjectContext } from "../middleware/projectContext";
+import { validateProjectAccess } from "../middleware/projectAccess";
 
 const router = express.Router();
 
-// All routes require authentication and project context
+// All routes require authentication, project context and access validation
 router.use(authenticateJWT);
 router.use(extractProjectContext);
+router.use(validateProjectAccess);
 
 // Link CRUD operations
 router.get("/project", linkController.getLinksByProject);
