@@ -14,6 +14,16 @@ const generateRandomCode = (length: number = 4): string => {
   return result;
 };
 
+// Helper function to get user agent and device type
+const getUserAgent = (
+  req: Request
+): { deviceType: string; userAgent: string } => {
+  const userAgent = req.headers["user-agent"] || "";
+  if (/mobile/i.test(userAgent)) return { deviceType: "mobile", userAgent };
+  if (/tablet/i.test(userAgent)) return { deviceType: "tablet", userAgent };
+  return { deviceType: "desktop", userAgent };
+};
+
 // Vérifier si un code court est disponible
 export const checkShortCodeAvailability = async (
   req: Request,
@@ -185,7 +195,7 @@ export const getLinksByProject = async (req: Request, res: Response) => {
 // Créer un nouveau lien avec un code court
 export const createLink = async (req: Request, res: Response) => {
   try {
-    const { name, baseUrl, shortCode, rules } = req.body;
+    const { name, baseUrl, shortCode, rules, deviceRules } = req.body;
     const projectId = parseInt(
       req.params.projectId || (req.headers["x-project-id"] as string)
     );
@@ -240,10 +250,27 @@ export const createLink = async (req: Request, res: Response) => {
       }
     }
 
+    // Ajouter les règles de périphérique si fournies
+    if (deviceRules && Array.isArray(deviceRules)) {
+      for (const rule of deviceRules) {
+        await prisma.deviceRule.create({
+          data: {
+            redirectUrl: rule.redirectUrl,
+            deviceType: rule.deviceType,
+            devices: JSON.stringify(rule.devices),
+            linkId: link.id,
+          },
+        });
+      }
+    }
+
     // Récupérer le lien avec ses règles
     const linkWithRules = await prisma.link.findUnique({
       where: { id: link.id },
-      include: { rules: true },
+      include: {
+        rules: true,
+        deviceRules: true,
+      },
     });
 
     return res.status(201).json(linkWithRules);
@@ -478,6 +505,7 @@ export const handleRedirection = async (req: Request, res: Response) => {
   try {
     const path = req.params.path;
     const ip = req.ip || "0.0.0.0";
+    const { deviceType, userAgent } = getUserAgent(req);
 
     // Check cache for link data first
     const linkCacheKey = `link:${path}`;
@@ -494,6 +522,7 @@ export const handleRedirection = async (req: Request, res: Response) => {
         },
         include: {
           rules: true,
+          deviceRules: true,
         },
       });
 
@@ -560,19 +589,38 @@ export const handleRedirection = async (req: Request, res: Response) => {
 
     const [userCountry, userCity] = await getCountryFromIp(ip);
 
-    // Find matching rule for user's country
-    interface Rule {
+    // First check device rules
+    interface DeviceRule {
+      id: number;
+      deviceType: "mobile" | "tablet" | "desktop" | "all";
+      redirectUrl: string;
+    }
+
+    const matchingDeviceRule: DeviceRule | null = link.deviceRules.find(
+      (rule: DeviceRule) => {
+        if (rule.deviceType === "all") return true;
+        return rule.deviceType === deviceType;
+      }
+    );
+
+    // Then check geo rules if no device rule matched
+    interface GeoRule {
       id: number;
       countries: string;
       redirectUrl: string;
     }
 
-    const matchingRule: Rule | undefined = link.rules.find((rule: Rule) => {
-      const countries: string[] = JSON.parse(rule.countries);
-      return countries.includes(userCountry);
-    });
+    const matchingGeoRule: GeoRule | null = !matchingDeviceRule
+      ? link.rules.find((rule: GeoRule) => {
+          const countries: string[] = JSON.parse(rule.countries);
+          return countries.includes(userCountry);
+        })
+      : null;
 
-    let redirectUrl = matchingRule ? matchingRule.redirectUrl : link.baseUrl;
+    let redirectUrl =
+      matchingDeviceRule?.redirectUrl ||
+      matchingGeoRule?.redirectUrl ||
+      link.baseUrl;
 
     // Vérifier si l'URL commence par http:// ou https://, sinon ajouter https://
     if (!redirectUrl.match(/^https?:\/\//i)) {
@@ -587,7 +635,10 @@ export const handleRedirection = async (req: Request, res: Response) => {
           ip,
           country: userCountry,
           city: userCity,
-          ruleId: matchingRule?.id || null,
+          ruleId: matchingGeoRule?.id || null,
+          deviceRuleId: matchingDeviceRule?.id || null,
+          userAgent,
+          deviceType,
         },
       })
       .catch((error: Error | unknown) => {
@@ -730,10 +781,10 @@ export const getLinkStats = async (req: Request, res: Response) => {
           timeRange === "day"
             ? "%Y-%m-%d %H:00:00"
             : timeRange === "week"
-            ? "%Y-%m-%d"
-            : timeRange === "month"
-            ? "%Y-%m-%d"
-            : "%Y-%m"
+              ? "%Y-%m-%d"
+              : timeRange === "month"
+                ? "%Y-%m-%d"
+                : "%Y-%m"
         }') as date,
         COUNT(*) as count
       FROM LinkVisit

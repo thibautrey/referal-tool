@@ -273,6 +273,7 @@ class Api {
   ): Promise<ApiResponse<Project>> {
     return this.put<Project, typeof data>(`/projects/${projectId}`, data);
   }
+
   async updateLink(
     linkId: number,
     data: {
@@ -290,6 +291,27 @@ class Api {
       })),
     };
     return this.put<ReferralLink>(`/links/${linkId}`, transformedData);
+  }
+
+  async createLink(
+    projectId: number,
+    data: {
+      name: string;
+      baseUrl: string;
+      shortCode: string;
+      rules: GeoRule[];
+    }
+  ): Promise<ApiResponse<ReferralLink>> {
+    const transformedData = {
+      name: data.name,
+      baseUrl: data.baseUrl,
+      shortCode: data.shortCode,
+      rules: data.rules.map((rule) => ({
+        redirectUrl: rule.redirectUrl,
+        countries: rule.countries,
+      })),
+    };
+    return this.post<ReferralLink>("/links", transformedData, projectId);
   }
 
   async getProjects(): Promise<ApiResponse<Project[]>> {

@@ -2,10 +2,14 @@ import {
   ArrowRight,
   BarChart3,
   Globe,
-  Link,
-  ShieldCheck,
-  Users,
   Info,
+  Target,
+  Smartphone,
+  Lock,
+  Clock,
+  AppWindow,
+  Gauge,
+  FilterX,
 } from "lucide-react";
 import {
   Card,
@@ -14,10 +18,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 import { Button } from "@/components/ui/button";
 import { Link as RouterLink } from "react-router-dom";
 import { motion } from "framer-motion";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+// import { BackgroundGradientAnimation } from "@/components/ui/background-gradient";
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -40,6 +53,37 @@ const staggerContainer = {
   },
 };
 
+const Feature = ({
+  title,
+  description,
+  icon: Icon,
+}: {
+  title: string;
+  description: string;
+  icon: React.ComponentType<{ className?: string }>;
+  index: number;
+}) => {
+  return (
+    <motion.div
+      variants={fadeIn}
+      className={cn(
+        "group/feature relative p-6 transition-all",
+        "bg-card/50 backdrop-blur-sm hover:shadow-md border border-primary/5 hover:border-primary/30 rounded-lg",
+        "hover:bg-card/70"
+      )}
+    >
+      <div className="absolute left-0 top-1/2 h-8 w-1 rounded-tr-full rounded-br-full bg-primary/30 group-hover/feature:h-16 transition-all -translate-y-1/2" />
+      <div className="mb-4 text-primary">
+        <Icon className="h-8 w-8" />
+      </div>
+      <h3 className="font-semibold text-lg mb-2 group-hover/feature:translate-x-2 transition-transform">
+        {title}
+      </h3>
+      <p className="text-muted-foreground text-sm">{description}</p>
+    </motion.div>
+  );
+};
+
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/90">
@@ -49,6 +93,24 @@ export default function LandingPage() {
           <div className="flex items-center gap-2 pl-6">
             <img src="/images/logo.avif" alt="Logo" className="h-8 w-auto" />
             <span className="font-semibold text-xl">rflnk</span>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Badge
+                    variant="secondary"
+                    className="text-xs font-normal bg-secondary/30"
+                  >
+                    alpha
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>
+                    This is an alpha version. Some features may not be available
+                    yet or might be unstable. We appreciate your feedback!
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
           <nav className="hidden md:flex items-center gap-6">
             <a
@@ -104,6 +166,7 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
+      {/* <BackgroundGradientAnimation> */}
       <section className="pt-24 md:pt-32 pb-16 md:pb-24 px-4">
         <motion.div
           className="container mx-auto text-center max-w-4xl"
@@ -114,7 +177,7 @@ export default function LandingPage() {
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-500">
             Optimize Your Affiliate Links
           </h1>
-          <p className="text-xl md:text-2xl mb-10 text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-xl md:text-2xl mb-10 text-black max-w-3xl mx-auto">
             Increase your affiliate revenue with our intelligent link management
             platform, designed for influencers and marketers.
           </p>
@@ -131,8 +194,6 @@ export default function LandingPage() {
           </div>
         </motion.div>
       </section>
-
-      {/* Image de démonstration */}
       <motion.div
         className="container mx-auto px-4 mb-20"
         initial={{ opacity: 0, y: 40 }}
@@ -150,6 +211,7 @@ export default function LandingPage() {
           </div>
         </div>
       </motion.div>
+      {/* </BackgroundGradientAnimation> */}
 
       {/* Features Section */}
       <section id="features" className="py-20 px-4 bg-muted/30">
@@ -162,165 +224,75 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
           >
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Key Features
+              Powerful Features for Creators
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Our platform provides all the tools you need to optimize your
-              affiliate strategy.
+              Everything you need to optimize your affiliate strategy and boost
+              your revenue.
             </p>
           </motion.div>
 
           <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
             variants={staggerContainer}
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
           >
-            {/* Feature 1 */}
-            <motion.div variants={fadeIn}>
-              <Card className="h-full bg-card/50 backdrop-blur-sm hover:shadow-md transition-all border-primary/10 hover:border-primary/30">
-                <CardHeader>
-                  <Globe className="h-10 w-10 text-primary mb-4" />
-                  <CardTitle>Geographic Customization</CardTitle>
-                  <CardDescription>
-                    Adapt your links based on your visitors' location
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    <li className="flex items-start">
-                      <span className="mr-2 mt-1 text-primary">✓</span>
-                      Custom short links for your campaigns
-                    </li>
-                    <li className="flex items-start">
-                      <span className="mr-2 mt-1 text-primary">✓</span>
-                      Different redirections per country
-                    </li>
-                    <li className="flex items-start">
-                      <span className="mr-2 mt-1 text-primary">✓</span>
-                      Maximize impact in each market
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Feature 2 */}
-            <motion.div variants={fadeIn}>
-              <Card className="h-full bg-card/50 backdrop-blur-sm hover:shadow-md transition-all border-primary/10 hover:border-primary/30">
-                <CardHeader>
-                  <Link className="h-10 w-10 text-primary mb-4" />
-                  <CardTitle>Intelligent Rule Management</CardTitle>
-                  <CardDescription>
-                    Configure redirections based on user profiles
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    <li className="flex items-start">
-                      <span className="mr-2 mt-1 text-primary">✓</span>
-                      Automatic redirection rules
-                    </li>
-                    <li className="flex items-start">
-                      <span className="mr-2 mt-1 text-primary">✓</span>
-                      Different links for the same product
-                    </li>
-                    <li className="flex items-start">
-                      <span className="mr-2 mt-1 text-primary">✓</span>
-                      Optimize conversions by segment
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Feature 3 */}
-            <motion.div variants={fadeIn}>
-              <Card className="h-full bg-card/50 backdrop-blur-sm hover:shadow-md transition-all border-primary/10 hover:border-primary/30">
-                <CardHeader>
-                  <BarChart3 className="h-10 w-10 text-primary mb-4" />
-                  <CardTitle>Performance Analysis</CardTitle>
-                  <CardDescription>
-                    Track the effectiveness of your campaigns in detail
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    <li className="flex items-start">
-                      <span className="mr-2 mt-1 text-primary">✓</span>
-                      Detailed statistics on clicks and conversions
-                    </li>
-                    <li className="flex items-start">
-                      <span className="mr-2 mt-1 text-primary">✓</span>
-                      Analyses by country and period
-                    </li>
-                    <li className="flex items-start">
-                      <span className="mr-2 mt-1 text-primary">✓</span>
-                      Visual dashboard with your best performances
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Feature 4 */}
-            <motion.div variants={fadeIn}>
-              <Card className="h-full bg-card/50 backdrop-blur-sm hover:shadow-md transition-all border-primary/10 hover:border-primary/30">
-                <CardHeader>
-                  <Users className="h-10 w-10 text-primary mb-4" />
-                  <CardTitle>Project Organization</CardTitle>
-                  <CardDescription>
-                    Segment your campaigns for effective management
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    <li className="flex items-start">
-                      <span className="mr-2 mt-1 text-primary">✓</span>
-                      Separate projects for each campaign
-                    </li>
-                    <li className="flex items-start">
-                      <span className="mr-2 mt-1 text-primary">✓</span>
-                      Intuitive management interface
-                    </li>
-                    <li className="flex items-start">
-                      <span className="mr-2 mt-1 text-primary">✓</span>
-                      Statistics segmented by project
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Feature 5 */}
-            <motion.div variants={fadeIn}>
-              <Card className="h-full bg-card/50 backdrop-blur-sm hover:shadow-md transition-all border-primary/10 hover:border-primary/30">
-                <CardHeader>
-                  <ShieldCheck className="h-10 w-10 text-primary mb-4" />
-                  <CardTitle>Advanced Security</CardTitle>
-                  <CardDescription>
-                    Protect your data and account
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    <li className="flex items-start">
-                      <span className="mr-2 mt-1 text-primary">✓</span>
-                      Two-factor authentication (2FA)
-                    </li>
-                    <li className="flex items-start">
-                      <span className="mr-2 mt-1 text-primary">✓</span>
-                      Secure access management
-                    </li>
-                    <li className="flex items-start">
-                      <span className="mr-2 mt-1 text-primary">✓</span>
-                      Recovery codes for emergency access
-                    </li>
-                  </ul>
-                </CardContent>
-              </Card>
-            </motion.div>
+            <Feature
+              icon={Globe}
+              title="Smart Geographic Routing"
+              description="Automatically direct users to country-specific stores or content based on their location"
+              index={0}
+            />
+            <Feature
+              icon={Target}
+              title="Advanced Targeting"
+              description="Create custom rules based on location, device, time, and more"
+              index={1}
+            />
+            <Feature
+              icon={Smartphone}
+              title="Deep Linking"
+              description="Send mobile users directly to apps, desktop users to web versions"
+              index={2}
+            />
+            <Feature
+              icon={Lock}
+              title="Link Protection"
+              description="Set passwords, expiration dates, and IP restrictions for your links"
+              index={3}
+            />
+            <Feature
+              icon={Clock}
+              title="Smart Scheduling"
+              description="Schedule links to activate or deactivate automatically"
+              index={4}
+            />
+            <Feature
+              icon={AppWindow}
+              title="Multi-Platform Support"
+              description="Works with major platforms like Amazon, Shopify, and more"
+              index={5}
+            />
+            <Feature
+              icon={Gauge}
+              title="Real-Time Analytics"
+              description="Track clicks, locations, devices, and conversion rates"
+              index={6}
+            />
+            <Feature
+              icon={FilterX}
+              title="No Traffic Limits"
+              description="Handle unlimited clicks with no throttling or restrictions"
+              index={7}
+            />
+            <Feature
+              icon={BarChart3}
+              title="Performance Insights"
+              description="Get detailed analytics and reports to optimize your campaigns"
+              index={8}
+            />
           </motion.div>
         </div>
       </section>
@@ -460,24 +432,77 @@ export default function LandingPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <ul className="space-y-2">
-                    <li className="flex items-start">
+                    <li className="flex items-start group relative">
                       <span className="mr-2 mt-1 text-primary">✓</span>
                       Unlimited short links
+                      <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                        Create as many short links as you need without any
+                        limitations
+                      </div>
                     </li>
                     <li className="flex items-start">
+                      <span className="mr-2 mt-1 text-primary">✓</span>
+                      Unlimited clicks
+                    </li>
+                    <li className="flex items-start group relative">
                       <span className="mr-2 mt-1 text-primary">✓</span>
                       Geographic customization
+                      <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                        Route users to different URLs based on their location
+                      </div>
                     </li>
-                    <li className="flex items-start">
+                    <li className="flex items-start group relative">
+                      <span className="mr-2 mt-1 text-primary">✓</span>
+                      Device tagging
+                      <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                        Redirect users depending on their device type or browser
+                      </div>
+                    </li>
+                    <li className="flex items-start group relative">
+                      <span className="mr-2 mt-1 text-primary">✓</span>
+                      Password protection
+                      <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                        Secure your links with custom passwords
+                      </div>
+                    </li>
+                    <li className="flex items-start group relative">
+                      <span className="mr-2 mt-1 text-primary">✓</span>
+                      Link expiration and scheduling
+                      <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                        Set links to automatically expire after a specific date
+                        or schedule redirections to start working at a certain
+                        time
+                      </div>
+                    </li>
+                    <li className="flex items-start group relative">
+                      <span className="mr-2 mt-1 text-primary">✓</span>
+                      Deeplinks support
+                      <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                        Create links that open specific screens in mobile apps
+                      </div>
+                    </li>
+                    <li className="flex items-start group relative">
                       <span className="mr-2 mt-1 text-primary">✓</span>
                       Performance analytics
+                      <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                        Track clicks, conversions and other key metrics
+                      </div>
+                    </li>
+                    <li className="flex items-start group relative">
+                      <span className="mr-2 mt-1 text-primary">✓</span>1 year
+                      analytics retention
+                      <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                        Access your analytics data for up to one year
+                      </div>
                     </li>
                     <li className="flex items-start text-muted-foreground group relative">
                       <Info className="w-4 h-4 mr-2 mt-1" />
                       5% traffic redirects to our links
                       <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                        A small portion of traffic will be redirected to our
-                        promotional links
+                        For 5% of clicks on major retail links (Amazon,
+                        Walmart), we'll add our affiliate code. Your links will
+                        work exactly the same, and all other links remain
+                        untouched.
                       </div>
                     </li>
                     <li className="flex items-start text-muted-foreground group relative">
@@ -518,7 +543,7 @@ export default function LandingPage() {
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Custom Domain */}
-                    <div className="p-4 border rounded-lg bg-background/50">
+                    <div className="p-4 border rounded-lg bg-background/50 group relative">
                       <div className="flex justify-between items-start mb-2">
                         <h3 className="font-semibold">Custom Domain</h3>
                         <span className="text-primary font-bold">$10/mo</span>
@@ -526,9 +551,10 @@ export default function LandingPage() {
                       <p className="text-sm text-muted-foreground mb-4">
                         Use your own domain for short links
                       </p>
-                      {/* <Button variant="outline" className="w-full" asChild>
-                        <RouterLink to="/app/register">Add to plan</RouterLink>
-                      </Button> */}
+                      <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                        Replace our domain with your own branded domain for a
+                        professional look
+                      </div>
                     </div>
 
                     {/* No Redirects */}
@@ -557,6 +583,21 @@ export default function LandingPage() {
                       {/* <Button variant="outline" className="w-full" asChild>
                         <RouterLink to="/app/register">Add to plan</RouterLink>
                       </Button> */}
+                    </div>
+
+                    {/* Analytics Retention */}
+                    <div className="p-4 border rounded-lg bg-background/50 group relative">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="font-semibold">Extended Analytics</h3>
+                        <span className="text-primary font-bold">$20/year</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Keep your analytics data beyond the first year
+                      </p>
+                      <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                        Access historical data older than one year for long-term
+                        analysis
+                      </div>
                     </div>
                   </div>
                 </CardContent>

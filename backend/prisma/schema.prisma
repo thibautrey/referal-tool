@@ -42,17 +42,18 @@ model Project {
 }
 
 model Link {
-    id        Int         @id @default(autoincrement())
-    name      String
-    baseUrl   String
-    shortCode String      @unique // Code court unique pour l'URL
-    project   Project     @relation(fields: [projectId], references: [id])
-    projectId Int
-    rules     LinkRule[]
-    active    Boolean     @default(true)
-    createdAt DateTime    @default(now())
-    updatedAt DateTime    @updatedAt
-    LinkVisit LinkVisit[]
+    id          Int          @id @default(autoincrement())
+    name        String
+    baseUrl     String
+    shortCode   String       @unique // Code court unique pour l'URL
+    project     Project      @relation(fields: [projectId], references: [id])
+    projectId   Int
+    rules       LinkRule[]
+    deviceRules DeviceRule[] // Add this line
+    active      Boolean      @default(true)
+    createdAt   DateTime     @default(now())
+    updatedAt   DateTime     @updatedAt
+    LinkVisit   LinkVisit[]
 
     @@index([projectId])
 }
@@ -61,6 +62,21 @@ model LinkRule {
     id          Int         @id @default(autoincrement())
     redirectUrl String
     countries   String // Stocké en JSON comme liste de codes pays
+    link        Link        @relation(fields: [linkId], references: [id])
+    linkId      Int
+    createdAt   DateTime    @default(now())
+    updatedAt   DateTime    @updatedAt
+    LinkVisit   LinkVisit[]
+
+    @@index([linkId])
+}
+
+// Add this new model
+model DeviceRule {
+    id          Int         @id @default(autoincrement())
+    redirectUrl String
+    deviceType  String // "mobile", "desktop", "tablet", "all"
+    devices     String // JSON string of specific devices
     link        Link        @relation(fields: [linkId], references: [id])
     linkId      Int
     createdAt   DateTime    @default(now())
@@ -82,19 +98,24 @@ model IpCountryCache {
 }
 
 model LinkVisit {
-    id        Int       @id @default(autoincrement())
-    link      Link      @relation(fields: [linkId], references: [id])
-    linkId    Int
-    ip        String?
-    country   String
-    city      String?
-    rule      LinkRule? @relation(fields: [ruleId], references: [id])
-    ruleId    Int?
-    createdAt DateTime  @default(now())
+    id           Int         @id @default(autoincrement())
+    link         Link        @relation(fields: [linkId], references: [id])
+    linkId       Int
+    ip           String?
+    country      String
+    city         String?
+    rule         LinkRule?   @relation(fields: [ruleId], references: [id])
+    ruleId       Int?
+    deviceRule   DeviceRule? @relation(fields: [deviceRuleId], references: [id]) // Add this line
+    deviceRuleId Int? // Add this line
+    userAgent    String? // Add this line
+    deviceType   String? // Add this line
+    createdAt    DateTime    @default(now())
 
     @@index([linkId])
     @@index([ip])
     @@index([ruleId])
+    @@index([deviceRuleId])
 }
 
 enum Role {

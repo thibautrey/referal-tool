@@ -26,7 +26,8 @@ export function News() {
 
   return tips.length || showCompleted ? (
     <div
-      className="group overflow-hidden px-3 pb-3 pt-8"
+      className="group overflow-hidden px-3 pb-3 pt-8 transition-[height] duration-300"
+      style={{ height: cardCount === 0 && !showCompleted ? "0px" : "auto" }}
       data-active={cardCount !== 0}
     >
       <div className="relative size-full">
@@ -73,7 +74,7 @@ export function News() {
             style={{ "--offset": "10px" } as React.CSSProperties}
           >
             <div className="animate-fade-in absolute inset-0 rounded-lg border border-neutral-300 [animation-delay:2.3s] [animation-direction:reverse] [animation-duration:0.2s]" />
-            <AnimatedLogo className="w-1/3" />
+            {/* <AnimatedLogo className="w-1/3" /> */}
             <span className="animate-fade-in text-xs font-medium text-muted-foreground [animation-delay:2.3s] [animation-direction:reverse] [animation-duration:0.2s]">
               You're all caught up!
             </span>
@@ -264,60 +265,85 @@ function NewsCard({
   );
 }
 
-function AnimatedLogo(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      viewBox="0 0 48 21"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="text-muted-foreground"
-      {...props}
-    >
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M12 1H15V12.9332C15.0001 12.9465 15.0002 12.9598 15.0003 12.9731C15.0003 12.982 15.0003 12.991 15.0003 13C15.0003 13.0223 15.0002 13.0445 15 13.0668V20H12V18.7455C10.8662 19.5362 9.48733 20 8.00016 20C4.13408 20 1 16.866 1 13C1 9.13401 4.13408 6 8.00016 6C9.48733 6 10.8662 6.46375 12 7.25452V1ZM8 16.9998C10.2091 16.9998 12 15.209 12 12.9999C12 10.7908 10.2091 9 8 9C5.79086 9 4 10.7908 4 12.9999C4 15.209 5.79086 16.9998 8 16.9998Z"
-        stroke="currentColor"
-        stroke-dasharray="63"
-        stroke-linecap="round"
-      >
-        <animate
-          attributeName="stroke-dashoffset"
-          dur="2500ms"
-          values="63;0;0;0;63"
-          fill="freeze"
-        />
-      </path>
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M17 6H20V13V13C20 14.0608 20.4215 15.0782 21.1716 15.8283C21.9217 16.5784 22.9391 16.9998 24 16.9998C25.0609 16.9998 26.0783 16.5784 26.8284 15.8283C27.5785 15.0782 28 14.0608 28 13C28 13 28 13 28 13V6H31V13H31.0003C31.0003 13.9192 30.8192 14.8295 30.4675 15.6788C30.1157 16.5281 29.6 17.2997 28.95 17.9497C28.3 18.5997 27.5283 19.1154 26.679 19.4671C25.8297 19.8189 24.9194 20 24.0002 20C23.0809 20 22.1706 19.8189 21.3213 19.4671C20.472 19.1154 19.7003 18.5997 19.0503 17.9497C18.4003 17.2997 17.8846 16.5281 17.5329 15.6788C17.1811 14.8295 17 13.9192 17 13V13V6Z"
-        stroke="currentColor"
-        stroke-dasharray="69"
-        stroke-linecap="round"
-      >
-        <animate
-          attributeName="stroke-dashoffset"
-          dur="2500ms"
-          values="69;0;0;0;69"
-          fill="freeze"
-        />
-      </path>
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M33 1H36V7.25474C37.1339 6.46383 38.5128 6 40.0002 6C43.8662 6 47.0003 9.13401 47.0003 13C47.0003 16.866 43.8662 20 40.0002 20C36.1341 20 33 16.866 33 13V1ZM40 16.9998C42.2091 16.9998 44 15.209 44 12.9999C44 10.7908 42.2091 9 40 9C37.7909 9 36 10.7908 36 12.9999C36 15.209 37.7909 16.9998 40 16.9998Z"
-        stroke="currentColor"
-        stroke-dasharray="60"
-        stroke-linecap="round"
-      >
-        <animate
-          attributeName="stroke-dashoffset"
-          dur="2500ms"
-          values="-60;0;0;0;-60"
-          fill="freeze"
-        />
-      </path>
-    </svg>
-  );
-}
+// function AnimatedLogo(props: React.SVGProps<SVGSVGElement>) {
+//   return (
+//     <svg
+//       viewBox="0 0 60 21"
+//       fill="none"
+//       xmlns="http://www.w3.org/2000/svg"
+//       className="text-muted-foreground"
+//       {...props}
+//     >
+//       {/* r */}
+//       <path
+//         d="M12 6h-3v14h3v-5c1.5 1 3 1.5 4.5 1.5 4 0 7-3 7-6.5S17.5 3.5 13.5 3.5c-1.5 0-3 .5-4.5 1.5V6z"
+//         stroke="currentColor"
+//         strokeDasharray="45"
+//         strokeLinecap="round"
+//       >
+//         <animate
+//           attributeName="stroke-dashoffset"
+//           dur="2500ms"
+//           values="45;0;0;0;45"
+//           fill="freeze"
+//         />
+//       </path>
+//       {/* f */}
+//       <path
+//         d="M24 3.5h-3v14h3v-6h4v-3h-4v-5"
+//         stroke="currentColor"
+//         strokeDasharray="30"
+//         strokeLinecap="round"
+//       >
+//         <animate
+//           attributeName="stroke-dashoffset"
+//           dur="2500ms"
+//           values="30;0;0;0;30"
+//           fill="freeze"
+//         />
+//       </path>
+//       {/* l */}
+//       <path
+//         d="M31 3.5h3v14h-3z"
+//         stroke="currentColor"
+//         strokeDasharray="20"
+//         strokeLinecap="round"
+//       >
+//         <animate
+//           attributeName="stroke-dashoffset"
+//           dur="2500ms"
+//           values="20;0;0;0;20"
+//           fill="freeze"
+//         />
+//       </path>
+//       {/* n */}
+//       <path
+//         d="M38 17.5h3v-8s0-3 3-3 3 3 3 3v8h3v-8s-.5-5-6-5-6 5-6 5v8z"
+//         stroke="currentColor"
+//         strokeDasharray="40"
+//         strokeLinecap="round"
+//       >
+//         <animate
+//           attributeName="stroke-dashoffset"
+//           dur="2500ms"
+//           values="40;0;0;0;40"
+//           fill="freeze"
+//         />
+//       </path>
+//       {/* k */}
+//       <path
+//         d="M53 3.5h3v14h-3M53 10.5l6 7M53 10.5l6-7"
+//         stroke="currentColor"
+//         strokeDasharray="35"
+//         strokeLinecap="round"
+//       >
+//         <animate
+//           attributeName="stroke-dashoffset"
+//           dur="2500ms"
+//           values="35;0;0;0;35"
+//           fill="freeze"
+//         />
+//       </path>
+//     </svg>
+//   );
+// }

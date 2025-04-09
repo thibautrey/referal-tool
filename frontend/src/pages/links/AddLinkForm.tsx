@@ -1,36 +1,26 @@
-import { AVAILABLE_COUNTRIES, COUNTRY_OPTIONS } from "./Countries";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-// Import Command components for searchable select
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import { Plus, RefreshCw, Save } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useEffect, useRef, useState } from "react";
+  Calendar,
+  Clock,
+  Globe,
+  Link as LinkIcon,
+  Lock,
+  Plus,
+  Save,
+  Smartphone,
+} from "lucide-react";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { DeviceRule, LinkFormData } from "./types";
+import { useCallback, useEffect, useState } from "react";
 
+import { AVAILABLE_COUNTRIES } from "./Countries";
+import { BasicSettings } from "./AddLinkForm/BasicSettings";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { LinkFormData } from "./types";
+import { DeviceTargeting } from "./AddLinkForm/DeviceTargeting";
+import { ExpandableTabs } from "@/components/ui/expandable-tabs";
+import { GeoTargeting } from "./AddLinkForm/GeoTargeting";
+import { LinkPreview } from "./LinkPreview";
 import { api } from "@/lib/api";
+import { generateRandomCode } from "./AddLinkForm/utils";
 import { toast } from "sonner";
 import { useSearchParams } from "react-router-dom";
 
@@ -52,30 +42,6 @@ interface AddLinkFormProps {
   mode?: "add" | "edit";
 }
 
-// Fonction pour générer un code aléatoire avec des lettres et des chiffres
-const generateRandomCode = (length: number = 4): string => {
-  const letters = "abcdefghijklmnopqrstuvwxyz";
-  const numbers = "0123456789";
-  const chars = letters + numbers;
-
-  // S'assurer qu'il y a au moins un chiffre dans le code
-  let result = "";
-  // Ajouter un chiffre aléatoire
-  result += numbers.charAt(Math.floor(Math.random() * numbers.length));
-
-  // Remplir le reste du code avec des caractères aléatoires
-  for (let i = 1; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-
-  // Mélanger les caractères pour que le chiffre ne soit pas toujours au début
-  return result
-    .split("")
-    .sort(() => Math.random() - 0.5)
-    .join("");
-};
-
-// Ajouter cette fonction après les interfaces et avant le composant
 const detectRegionFromCountries = (countries: string[]): string => {
   for (const [region, regionCountries] of Object.entries(AVAILABLE_COUNTRIES)) {
     if (
@@ -95,15 +61,58 @@ export function AddLinkForm({ onSubmit, initialData }: AddLinkFormProps) {
   const [shortCode, setShortCode] = useState(
     initialData?.shortCode || generateRandomCode()
   );
-  const [geoRules, setGeoRules] = useState<GeoRule[]>(initialData?.rules || []);
+  const [geoRules, setGeoRules] = useState<GeoRule[]>(() => {
+    if (initialData?.rules) {
+      return initialData.rules.map((rule) => ({
+        redirectUrl: rule.redirectUrl,
+        region: rule.region || detectRegionFromCountries(rule.countries),
+        countries: rule.countries,
+      }));
+    }
+    return [];
+  });
+  const [deviceRules, setDeviceRules] = useState<DeviceRule[]>([]);
   const [isShortCodeAvailable, setIsShortCodeAvailable] = useState(true);
   const [isCheckingShortCode, setIsCheckingShortCode] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
   const [currentDomain, setCurrentDomain] = useState("");
-  const shortCodeInputRef = useRef<HTMLInputElement>(null);
+  const [activeTab, setActiveTab] = useState<number | null>(null);
+  const [isLinkPreviewLoading, setIsLinkPreviewLoading] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string>("");
 
   const isEditMode = searchParams.get("mode") === "edit";
   const id = Number(searchParams.get("id"));
+
+  const isValidUrl = (url: string) => {
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const handleUrlChange = useCallback((newUrl: string) => {
+    setIsLinkPreviewLoading(true);
+    const debounceTimer = setTimeout(() => {
+      if (isValidUrl(newUrl)) {
+        setIsLinkPreviewLoading(false);
+      }
+    }, 500);
+    return () => clearTimeout(debounceTimer);
+  }, []);
+
+  useEffect(() => {
+    handleUrlChange(baseUrl);
+  }, [baseUrl, handleUrlChange]);
+
+  useEffect(() => {
+    const validRules = [...geoRules, ...deviceRules];
+    validRules.forEach((rule) => {
+      if (rule.redirectUrl) {
+        handleUrlChange(rule.redirectUrl);
+      }
+    });
+  }, [geoRules, deviceRules, handleUrlChange]);
 
   useEffect(() => {
     if (isEditMode && !initialData) {
@@ -114,19 +123,33 @@ export function AddLinkForm({ onSubmit, initialData }: AddLinkFormProps) {
           setLinkName(data.name);
           setBaseUrl(data.baseUrl);
           setShortCode(data.shortCode);
-          setGeoRules(
-            data.rules?.map((rule) => {
-              const countries =
-                typeof rule.countries === "string"
-                  ? JSON.parse(rule.countries)
-                  : rule.countries || [];
-              return {
+
+          // Handle rules properly
+          if (data.rules && Array.isArray(data.rules)) {
+            setGeoRules(
+              data.rules.map((rule) => ({
                 redirectUrl: rule.redirectUrl,
-                region: detectRegionFromCountries(countries),
-                countries: countries,
-              };
-            }) || []
-          );
+                region:
+                  rule.region || detectRegionFromCountries(rule.countries),
+                countries: Array.isArray(rule.countries)
+                  ? rule.countries
+                  : typeof rule.countries === "string"
+                  ? JSON.parse(rule.countries)
+                  : [],
+              }))
+            );
+          }
+
+          // Handle device rules if they exist
+          if (data.deviceRules && Array.isArray(data.deviceRules)) {
+            setDeviceRules(
+              data.deviceRules.map((rule) => ({
+                redirectUrl: rule.redirectUrl,
+                deviceType: rule.deviceType || "all",
+                devices: rule.devices || [],
+              }))
+            );
+          }
         } catch {
           toast.error("Failed to fetch link data");
           setGeoRules([]);
@@ -137,12 +160,10 @@ export function AddLinkForm({ onSubmit, initialData }: AddLinkFormProps) {
     }
   }, [id, isEditMode, initialData]);
 
-  // Obtenir le domaine actuel au chargement du composant
   useEffect(() => {
     setCurrentDomain(window.location.host);
   }, []);
 
-  // Trouver un code court disponible au chargement du composant
   useEffect(() => {
     if (isEditMode) return;
 
@@ -150,7 +171,7 @@ export function AddLinkForm({ onSubmit, initialData }: AddLinkFormProps) {
       let isAvailable = false;
       let newCode = shortCode;
       let attempts = 0;
-      const maxAttempts = 10; // Limiter le nombre de tentatives
+      const maxAttempts = 10;
 
       while (!isAvailable && attempts < maxAttempts) {
         attempts++;
@@ -170,7 +191,6 @@ export function AddLinkForm({ onSubmit, initialData }: AddLinkFormProps) {
             newCode = generateRandomCode();
           }
         } catch {
-          // En cas d'erreur, générer un nouveau code
           newCode = generateRandomCode();
         }
       }
@@ -181,9 +201,8 @@ export function AddLinkForm({ onSubmit, initialData }: AddLinkFormProps) {
     };
 
     findAvailableShortCode();
-  }, []); // Exécuter uniquement au montage du composant
+  }, []);
 
-  // Vérifier la disponibilité du code court lors des changements manuels
   useEffect(() => {
     if (isEditMode) return;
 
@@ -209,54 +228,13 @@ export function AddLinkForm({ onSubmit, initialData }: AddLinkFormProps) {
 
     const debounceTimer = setTimeout(checkShortCodeAvailability, 500);
     return () => clearTimeout(debounceTimer);
-  }, [shortCode]);
+  }, [shortCode, isEditMode]);
 
-  const regenerateShortCode = () => {
-    setShortCode(generateRandomCode());
-  };
-
-  const handleAddGeoRule = (rule: GeoRule) => {
-    const ruleIndex = geoRules.findIndex(
-      (r) =>
-        rule === r ||
-        (rule.region === r.region && rule.redirectUrl === r.redirectUrl)
-    );
-
-    if (ruleIndex !== -1) {
-      const updatedRules = [...geoRules];
-      updatedRules[ruleIndex] = rule;
-      setGeoRules(updatedRules);
-    } else {
-      setGeoRules([...geoRules, rule]);
+  useEffect(() => {
+    if (baseUrl) {
+      setPreviewUrl(baseUrl);
     }
-  };
-
-  const handleRemoveGeoRule = (index: number) => {
-    setGeoRules(geoRules.filter((_, idx) => idx !== index));
-  };
-
-  const handleRegionChange = (value: string, rule: GeoRule, index: number) => {
-    let countries: string[] = [];
-    if (value !== "custom") {
-      countries =
-        AVAILABLE_COUNTRIES[value as keyof typeof AVAILABLE_COUNTRIES] || [];
-    }
-    const updatedRule = { ...rule, region: value, countries };
-    const updatedRules = [...geoRules];
-    updatedRules[index] = updatedRule;
-    setGeoRules(updatedRules);
-  };
-
-  const handleCountryChange = (
-    countries: string[],
-    rule: GeoRule,
-    index: number
-  ) => {
-    const updatedRule = { ...rule, countries };
-    const updatedRules = [...geoRules];
-    updatedRules[index] = updatedRule;
-    setGeoRules(updatedRules);
-  };
+  }, [baseUrl]);
 
   const handleSubmit = () => {
     if (!baseUrl.trim() || !linkName.trim()) {
@@ -269,268 +247,137 @@ export function AddLinkForm({ onSubmit, initialData }: AddLinkFormProps) {
       return;
     }
 
-    const validRules = geoRules?.filter(
-      (rule) => rule.redirectUrl.trim() && rule.countries.length > 0
-    );
+    // Filter and format geo rules
+    const validGeoRules = geoRules
+      .filter((rule) => rule.redirectUrl.trim())
+      .map((rule) => ({
+        redirectUrl: rule.redirectUrl.trim(),
+        region: rule.region,
+        countries: rule.countries,
+      }));
 
-    // Ajouter l'ID pour la mise à jour
+    // Filter and format device rules
+    const validDeviceRules = deviceRules
+      .filter((rule) => rule.redirectUrl.trim())
+      .map((rule) => ({
+        redirectUrl: rule.redirectUrl.trim(),
+        deviceType: rule.deviceType,
+        devices: rule.devices,
+      }));
+
     const data = {
       name: linkName,
       baseUrl: baseUrl,
       shortCode: shortCode,
-      rules: validRules,
+      rules: validGeoRules,
+      deviceRules: validDeviceRules,
       ...(isEditMode && { id }),
     };
 
     onSubmit(data);
   };
 
-  // Filter country options based on the search term and remove already selected ones
-  const getFilteredCountryOptions = (selected: string[]) =>
-    COUNTRY_OPTIONS.filter(
-      (option) =>
-        !selected.includes(option.value) &&
-        option.label.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+  const tabs = [
+    { title: "Geo Targeting", icon: Globe },
+    { title: "Device", icon: Smartphone },
+    { title: "Time Expire", icon: Clock },
+    { title: "Time Start", icon: Calendar },
+    { title: "Pass Protection", icon: Lock },
+    { title: "UTM", icon: LinkIcon },
+  ];
+
+  const renderTabContent = () => {
+    if (activeTab === null) return null;
+
+    switch (activeTab) {
+      case 0:
+        return <GeoTargeting rules={geoRules} onRulesChange={setGeoRules} />;
+      case 1:
+        return (
+          <DeviceTargeting rules={deviceRules} onRulesChange={setDeviceRules} />
+        );
+      case 2:
+        return (
+          <div className="p-4 border rounded">
+            <p className="text-muted-foreground">Time expiry coming soon</p>
+          </div>
+        );
+      case 3:
+        return (
+          <div className="p-4 border rounded">
+            <p className="text-muted-foreground">Time start coming soon</p>
+          </div>
+        );
+      case 4:
+        return (
+          <div className="p-4 border rounded">
+            <p className="text-muted-foreground">Pass protection coming soon</p>
+          </div>
+        );
+      case 5:
+        return (
+          <div className="p-4 border rounded">
+            <p className="text-muted-foreground">UTM parameters coming soon</p>
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{isEditMode ? "Edit Link" : "Add New Link"}</CardTitle>
-        <CardDescription>
-          {isEditMode
-            ? "Update your referral link settings."
-            : "Create a new referral link to share with your community."}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="linkName">Link Name</Label>
-          <Input
-            id="linkName"
-            placeholder="My Link"
-            value={linkName}
-            onChange={(e) => setLinkName(e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="baseUrl">Base URL</Label>
-          <Input
-            id="baseUrl"
-            placeholder="https://example.com/ref?id=your-id"
-            value={baseUrl}
-            onChange={(e) => setBaseUrl(e.target.value)}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="shortCode">Short Code</Label>
-          {isEditMode ? (
-            <div className="flex items-center border rounded-md px-3 py-2 bg-muted">
-              <span className="text-muted-foreground">{currentDomain}/</span>
-              <span className="font-medium">{shortCode}</span>
-            </div>
-          ) : (
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <div
-                  className={`flex items-center border rounded-md pr-0 overflow-hidden ${
-                    !isShortCodeAvailable ? "border-red-500" : "border-input"
-                  }`}
-                >
-                  <span className="bg-muted px-3 py-2 text-muted-foreground text-sm">
-                    {currentDomain}/
-                  </span>
-                  <input
-                    ref={shortCodeInputRef}
-                    id="shortCode"
-                    value={shortCode}
-                    onChange={(e) => setShortCode(e.target.value.toLowerCase())}
-                    className="flex-1 bg-transparent px-3 py-2 text-sm outline-none"
-                    placeholder="code"
-                  />
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={regenerateShortCode}
-                title="Generate new code"
-              >
-                <RefreshCw className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
-          {!isShortCodeAvailable && (
-            <p className="text-sm text-red-500 mt-1">
-              This short code is already taken. Please choose a different one.
-            </p>
-          )}
-          {isCheckingShortCode && (
-            <p className="text-sm text-muted-foreground mt-1">
-              Checking availability...
-            </p>
-          )}
-        </div>
+    <div className="grid grid-cols-3 gap-6">
+      <div className="col-span-2">
+        <Card>
+          <CardContent className="space-y-6">
+            <BasicSettings
+              linkName={linkName}
+              baseUrl={baseUrl}
+              shortCode={shortCode}
+              isEditMode={isEditMode}
+              currentDomain={currentDomain}
+              isShortCodeAvailable={isShortCodeAvailable}
+              isCheckingShortCode={isCheckingShortCode}
+              onLinkNameChange={setLinkName}
+              onBaseUrlChange={setBaseUrl}
+              onShortCodeChange={setShortCode}
+            />
 
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Label>Geo-based Redirections</Label>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                handleAddGeoRule({
-                  redirectUrl: "",
-                  region: "",
-                  countries: [],
-                });
-              }}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Rule
-            </Button>
-          </div>
-
-          {geoRules.map((rule, index) => (
-            <div key={index} className="space-y-2 p-4 border rounded-lg">
-              <div className="flex items-center gap-4">
-                <Select
-                  value={rule.region}
-                  onValueChange={(value) =>
-                    handleRegionChange(value, rule, index)
-                  }
-                >
-                  <SelectTrigger className="w-[200px]">
-                    <SelectValue placeholder="Select region" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="europe">European Union</SelectItem>
-                    <SelectItem value="northAmerica">North America</SelectItem>
-                    <SelectItem value="asia">Asia</SelectItem>
-                    <SelectItem value="middleEast">Middle East</SelectItem>
-                    <SelectItem value="africa">Africa</SelectItem>
-                    <SelectItem value="southAmerica">South America</SelectItem>
-                    <SelectItem value="oceania">Oceania</SelectItem>
-                    <SelectItem value="custom">Custom Countries</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleRemoveGeoRule(index)}
-                >
-                  Remove
-                </Button>
-              </div>
-
-              <Input
-                placeholder="Alternative URL for this region"
-                value={rule.redirectUrl}
-                onChange={(e) => {
-                  const updatedRule = { ...rule, redirectUrl: e.target.value };
-                  const updatedRules = [...geoRules];
-                  updatedRules[index] = updatedRule;
-                  setGeoRules(updatedRules);
-                }}
+            <div className="space-y-4">
+              <ExpandableTabs
+                tabs={tabs}
+                activeColor="text-primary"
+                onChange={setActiveTab}
               />
-
-              {rule.region === "custom" && (
-                <div className="mt-2">
-                  <Label>Selected Countries</Label>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {rule.countries.map((country) => {
-                      const countryOption = COUNTRY_OPTIONS.find(
-                        (opt) => opt.value === country
-                      );
-                      return (
-                        <div
-                          key={country}
-                          className="flex items-center bg-secondary px-2 py-1 rounded"
-                        >
-                          {countryOption ? countryOption.label : country}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-4 w-4 p-0 ml-2"
-                            onClick={() => {
-                              const newCountries = rule?.countries?.filter(
-                                (c) => c !== country
-                              );
-                              handleCountryChange(newCountries, rule, index);
-                            }}
-                          >
-                            ×
-                          </Button>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <Label>Add Countries</Label>
-                  <Command className="rounded-md border shadow-sm mt-2">
-                    <CommandInput
-                      placeholder="Search for a country..."
-                      value={searchTerm}
-                      onValueChange={setSearchTerm}
-                      className="px-2 py-1"
-                    />
-                    <CommandList>
-                      <CommandEmpty>No results found.</CommandEmpty>
-                      <CommandGroup>
-                        {getFilteredCountryOptions(rule.countries).map(
-                          (option) => (
-                            <CommandItem
-                              key={option.value}
-                              onSelect={() => {
-                                setSearchTerm("");
-                                const newCountries = [
-                                  ...rule.countries,
-                                  option.value,
-                                ];
-                                handleCountryChange(newCountries, rule, index);
-                              }}
-                            >
-                              {option.label}
-                            </CommandItem>
-                          )
-                        )}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </div>
-              )}
-
-              {rule.region !== "custom" && rule.countries.length > 0 && (
-                <div className="text-sm text-muted-foreground mt-2">
-                  Applies to:{" "}
-                  {rule.countries
-                    .map(
-                      (countryCode) =>
-                        COUNTRY_OPTIONS.find((c) => c.value === countryCode)
-                          ?.label
-                    )
-                    .join(", ")}
-                </div>
-              )}
+              {renderTabContent()}
             </div>
-          ))}
-        </div>
-      </CardContent>
-      <CardFooter>
-        <Button onClick={handleSubmit}>
-          {isEditMode ? (
-            <>
-              <Save className="h-4 w-4 mr-2" />
-              Save Changes
-            </>
-          ) : (
-            <>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Link
-            </>
-          )}
-        </Button>
-      </CardFooter>
-    </Card>
+          </CardContent>
+          <CardFooter>
+            <Button onClick={handleSubmit}>
+              {isEditMode ? (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Changes
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Link
+                </>
+              )}
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+      <div className="col-span-1">
+        <LinkPreview
+          linkUrl={previewUrl}
+          geoRules={geoRules}
+          deviceRules={deviceRules}
+          isLoading={isLinkPreviewLoading}
+          onLoad={() => setIsLinkPreviewLoading(false)}
+        />
+      </div>
+    </div>
   );
 }

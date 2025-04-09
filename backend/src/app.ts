@@ -10,6 +10,7 @@ import morgan from "morgan";
 import path from "path";
 import userRoutes from "./routes/user";
 import projectRoutes from "./routes/project";
+import metadataRoutes from "./routes/metadata";
 
 // Configuration
 dotenv.config();
@@ -68,6 +69,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/links", linkRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/projects", projectRoutes);
+app.use("/api/metadata", metadataRoutes);
 
 // Chemin vers le build de l'application React
 const frontendBuildPath = path.resolve(__dirname, "../../frontend/dist");

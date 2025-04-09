@@ -19,6 +19,14 @@ interface LinkFormData {
   baseUrl: string;
   shortCode: string;
   rules: GeoRule[];
+  tags?: string[];
+  comments?: string;
+  qrCode?: boolean;
+  advanced?: {
+    conversionTracking: boolean;
+    passwordProtection: string;
+    expirationDate?: Date;
+  };
 }
 
 const glassCardStyle =
@@ -47,7 +55,6 @@ export default function LinksPage() {
 
   const handleAddLink = async (formData: LinkFormData) => {
     try {
-      console.log(formData);
       let response: ApiResponse<ReferralLink>;
       const linkData = {
         name: formData.name,
@@ -57,20 +64,28 @@ export default function LinksPage() {
           redirectUrl: rule.redirectUrl,
           countries: rule.countries,
         })),
+        tags: formData.tags,
+        comments: formData.comments,
+        qrCode: formData.qrCode,
+        advanced: formData.advanced,
       };
 
       if (formData.id) {
         response = await api.updateLink(formData.id, linkData);
+        if (!response?.data) {
+          throw new Error("Invalid response from server");
+        }
         setLinks(
-          links.map((link) => (link.id === formData.id ? response.data : link))
+          links.map((link) =>
+            link.id === formData.id && response.data ? response.data : link
+          )
         );
         toast.success("Link updated successfully");
       } else {
-        response = await api.post<ReferralLink>(
-          "/links/project",
-          linkData,
-          currentProjectId
-        );
+        response = await api.createLink(currentProjectId!, linkData);
+        if (!response?.data) {
+          throw new Error("Invalid response from server");
+        }
         setLinks([...links, response.data]);
         toast.success("Link created successfully");
       }
@@ -114,13 +129,15 @@ export default function LinksPage() {
         value={activeTab}
         onValueChange={handleTabChange}
       >
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="all-links">All Links</TabsTrigger>
-          <TabsTrigger value="add-link">Add Link</TabsTrigger>
-        </TabsList>
+        <div className="flex justify-between items-center mb-6">
+          <TabsList className="grid w-[400px] grid-cols-2">
+            <TabsTrigger value="all-links">All Links</TabsTrigger>
+            <TabsTrigger value="add-link">Create Link</TabsTrigger>
+          </TabsList>
+        </div>
 
         <div className="mt-6">
-          <TabsContent value="all-links">
+          <TabsContent value="all-links" className="space-y-6">
             {!currentProjectId && (
               <Alert className={cn("mb-4", glassCardStyle)}>
                 <AlertCircle className="h-4 w-4" />
