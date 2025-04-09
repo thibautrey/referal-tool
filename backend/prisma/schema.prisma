@@ -46,10 +46,10 @@ model Link {
     name        String
     baseUrl     String
     shortCode   String       @unique // Code court unique pour l'URL
-    project     Project      @relation(fields: [projectId], references: [id])
+    project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
     projectId   Int
     rules       LinkRule[]
-    deviceRules DeviceRule[] // Add this line
+    deviceRules DeviceRule[]
     active      Boolean      @default(true)
     createdAt   DateTime     @default(now())
     updatedAt   DateTime     @updatedAt
@@ -62,7 +62,7 @@ model LinkRule {
     id          Int         @id @default(autoincrement())
     redirectUrl String
     countries   String // Stocké en JSON comme liste de codes pays
-    link        Link        @relation(fields: [linkId], references: [id])
+    link        Link        @relation(fields: [linkId], references: [id], onDelete: Cascade)
     linkId      Int
     createdAt   DateTime    @default(now())
     updatedAt   DateTime    @updatedAt
@@ -71,13 +71,12 @@ model LinkRule {
     @@index([linkId])
 }
 
-// Add this new model
 model DeviceRule {
     id          Int         @id @default(autoincrement())
     redirectUrl String
     deviceType  String // "mobile", "desktop", "tablet", "all"
     devices     String // JSON string of specific devices
-    link        Link        @relation(fields: [linkId], references: [id])
+    link        Link        @relation(fields: [linkId], references: [id], onDelete: Cascade)
     linkId      Int
     createdAt   DateTime    @default(now())
     updatedAt   DateTime    @updatedAt
@@ -99,17 +98,17 @@ model IpCountryCache {
 
 model LinkVisit {
     id           Int         @id @default(autoincrement())
-    link         Link        @relation(fields: [linkId], references: [id])
+    link         Link        @relation(fields: [linkId], references: [id], onDelete: Cascade)
     linkId       Int
     ip           String?
     country      String
     city         String?
-    rule         LinkRule?   @relation(fields: [ruleId], references: [id])
+    rule         LinkRule?   @relation(fields: [ruleId], references: [id], onDelete: SetNull)
     ruleId       Int?
-    deviceRule   DeviceRule? @relation(fields: [deviceRuleId], references: [id]) // Add this line
-    deviceRuleId Int? // Add this line
-    userAgent    String? // Add this line
-    deviceType   String? // Add this line
+    deviceRule   DeviceRule? @relation(fields: [deviceRuleId], references: [id], onDelete: SetNull)
+    deviceRuleId Int?
+    userAgent    String?
+    deviceType   String?
     createdAt    DateTime    @default(now())
 
     @@index([linkId])
