@@ -119,7 +119,7 @@ export const login: ControllerFunction = async (
       // Créer un projet par défaut
       await prisma.project.create({
         data: {
-          name: "Mon premier projet",
+          name: "My project",
           description: "Projet créé automatiquement",
           userId: user.id,
         },

@@ -1,14 +1,11 @@
-import { BarChart3, Home, Link, LogOut, Menu, Settings } from "lucide-react";
-import { NavLink, Outlet } from "react-router-dom";
+import { Menu } from "lucide-react";
+import { Outlet } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
   SidebarInset,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
@@ -16,11 +13,12 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 // import { ThemeToggle } from "@/components/ThemeToggle";
-import { useAuth } from "@/contexts/AuthContext";
+import { ProjectSelector } from "@/components/project-selector";
+import { UserInfoAndLogout } from "@/components/layout/UserInfoAndLogout";
+import { SidebarMenuItems } from "@/components/layout/SidebarMenuItems";
 
 export default function MainLayout() {
   const [isMounted, setIsMounted] = useState(false);
-  const { user, logout } = useAuth();
 
   // Prevent hydration errors with server-side rendering differences
   useEffect(() => {
@@ -37,96 +35,26 @@ export default function MainLayout() {
         <Sidebar className="flex-shrink-0 border-r relative">
           <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-secondary/10 to-background animate-gradient-slow -z-10" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,53,255,0.1),rgba(255,255,255,0))] -z-10" />
-          <SidebarHeader className="flex h-16 items-center justify-between border-b px-4">
-            <div className="flex items-center gap-3">
-              <img
-                src="/images/logo.avif"
-                alt="rflnk Logo"
-                className="h-8 w-auto"
-              />
-              <h1 className="hidden font-semibold tracking-tight lg:block">
-                rflnk
-              </h1>
+          <SidebarHeader className="flex flex-col gap-2 border-b px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <img
+                  src="/images/logo.avif"
+                  alt="rflnk Logo"
+                  className="h-8 w-auto"
+                />
+                <h1 className="hidden font-semibold tracking-tight lg:block">
+                  rflnk
+                </h1>
+              </div>
             </div>
+            <ProjectSelector />
           </SidebarHeader>
           <SidebarContent className="px-2">
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <NavLink to="/app/dashboard" end>
-                  {({ isActive }) => (
-                    <SidebarMenuButton
-                      tooltip="Home"
-                      isActive={isActive}
-                      className="w-full justify-start gap-3 px-3 py-2"
-                    >
-                      <Home className="h-5 w-5" />
-                      <span className="hidden lg:block">Dashboard</span>
-                    </SidebarMenuButton>
-                  )}
-                </NavLink>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <NavLink to="/app/links">
-                  {({ isActive }) => (
-                    <SidebarMenuButton
-                      tooltip="Links"
-                      isActive={isActive}
-                      className="w-full justify-start gap-3 px-3 py-2"
-                    >
-                      <Link className="h-5 w-5" />
-                      <span className="hidden lg:block">Links</span>
-                    </SidebarMenuButton>
-                  )}
-                </NavLink>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <NavLink to="/app/analytics">
-                  {({ isActive }) => (
-                    <SidebarMenuButton
-                      tooltip="Analytics"
-                      isActive={isActive}
-                      className="w-full justify-start gap-3 px-3 py-2"
-                    >
-                      <BarChart3 className="h-5 w-5" />
-                      <span className="hidden lg:block">Analytics</span>
-                    </SidebarMenuButton>
-                  )}
-                </NavLink>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <NavLink to="/app/settings">
-                  {({ isActive }) => (
-                    <SidebarMenuButton
-                      tooltip="Settings"
-                      isActive={isActive}
-                      className="w-full justify-start gap-3 px-3 py-2"
-                    >
-                      <Settings className="h-5 w-5" />
-                      <span className="hidden lg:block">Settings</span>
-                    </SidebarMenuButton>
-                  )}
-                </NavLink>
-              </SidebarMenuItem>
-            </SidebarMenu>
+            <SidebarMenuItems />
           </SidebarContent>
           <SidebarFooter className="border-t">
-            <div className="flex flex-col gap-2 p-4">
-              {user && (
-                <div className="text-sm text-muted-foreground px-2 mb-2">
-                  <span className="hidden lg:inline">Welcome </span>
-                  <span className="font-medium">{user.email}</span>
-                </div>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                className="justify-start gap-3"
-                onClick={() => logout()}
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="hidden lg:block">Logout</span>
-              </Button>
-            </div>
+            <UserInfoAndLogout />
           </SidebarFooter>
         </Sidebar>
         <SidebarInset className="flex w-full flex-col">

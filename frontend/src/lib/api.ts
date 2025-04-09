@@ -63,6 +63,13 @@ export interface DashboardStats {
   topLinks: { linkId: number; visits: number; details: ReferralLink }[];
 }
 
+export interface Project {
+  id: number;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Class to manage API calls
 class Api {
   private baseUrl: string;
@@ -185,7 +192,7 @@ class Api {
     limit: number = 10
   ): Promise<LinksResponse> {
     const response = await this.get<LinksResponse>(
-      `/links/project/${projectId}?page=${page}&limit=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`
+      `/projects/${projectId}/links?page=${page}&limit=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`
     );
     return response.data;
   }
@@ -256,7 +263,16 @@ class Api {
     return response.data;
   }
 
-  // Method to update a link
+  // Method to update a project
+  async updateProject(
+    projectId: number,
+    data: {
+      name?: string;
+      description?: string;
+    }
+  ): Promise<ApiResponse<Project>> {
+    return this.put<Project, typeof data>(`/projects/${projectId}`, data);
+  }
   async updateLink(
     linkId: number,
     data: {
@@ -274,6 +290,10 @@ class Api {
       })),
     };
     return this.put<ReferralLink>(`/links/${linkId}`, transformedData);
+  }
+
+  async getProjects(): Promise<ApiResponse<Project[]>> {
+    return this.get<Project[]>("/projects");
   }
 }
 

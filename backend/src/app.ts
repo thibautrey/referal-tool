@@ -8,8 +8,8 @@ import helmet from "helmet";
 import linkRoutes from "./routes/link";
 import morgan from "morgan";
 import path from "path";
-// Import routes
 import userRoutes from "./routes/user";
+import projectRoutes from "./routes/project";
 
 // Configuration
 dotenv.config();
@@ -67,6 +67,7 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
 app.use("/api/users", userRoutes);
 app.use("/api/links", linkRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/projects", projectRoutes);
 
 // Chemin vers le build de l'application React
 const frontendBuildPath = path.resolve(__dirname, "../../frontend/dist");

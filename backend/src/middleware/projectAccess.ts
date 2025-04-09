@@ -9,7 +9,10 @@ export const validateProjectAccess = async (
   try {
     const userId = req.user?.id;
     const projectId =
-      req.currentProjectId || req.params.projectId || req.query.projectId;
+      req.currentProjectId ||
+      req.params.projectId ||
+      req.query.projectId ||
+      req.headers["X-Project-ID"];
 
     if (!projectId) {
       return next();

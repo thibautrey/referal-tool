@@ -6,7 +6,22 @@ import prisma from "../lib/prisma";
 // Obtenir les statistiques de visites pour un lien ou un projet spécifique
 export const getVisitStats = async (req: Request, res: Response) => {
   const projectId = req.currentProjectId;
-  const cacheKey = `visits:${projectId || "all"}`;
+  const userId = req.user?.id;
+
+  // Security check: ensure we have either a project ID or a user ID
+  if (!projectId && !userId) {
+    return res.json({
+      message: "No data available",
+      data: {
+        totalVisits: 0,
+        visitsByCountry: [],
+        visitsByDate: [],
+        visitsByRule: null,
+      },
+    });
+  }
+
+  const cacheKey = `visits:${projectId || userId}`;
 
   const cachedStats = await getFromCache(cacheKey);
   if (cachedStats) {
@@ -14,7 +29,6 @@ export const getVisitStats = async (req: Request, res: Response) => {
   }
 
   try {
-    const userId = req.user?.id;
     const { linkId } = req.query;
     const timeRange = (req.query.timeRange as string) || "week"; // day, week, month, year
     const startDate = req.query.startDate
@@ -27,16 +41,20 @@ export const getVisitStats = async (req: Request, res: Response) => {
       ? (req.query.countries as string).split(",")
       : null;
 
-    // Construire la condition where pour Prisma
+    // Construire la condition where pour Prisma avec sécurité améliorée
     const whereClause: any = {};
 
-    // Filtrer par projet, lien spécifique ou tous les projets de l'utilisateur
     if (linkId) {
+      // Si on a un linkId, on vérifie qu'il appartient au bon projet/utilisateur
       whereClause.linkId = parseInt(linkId as string);
+      whereClause.link = projectId
+        ? { projectId: parseInt(projectId as string) }
+        : { project: { userId } };
     } else if (projectId) {
+      // Filtrer par projet spécifique
       whereClause.link = { projectId: parseInt(projectId as string) };
     } else {
-      // Si aucun projectId n'est fourni, récupérer les statistiques de tous les projets de l'utilisateur
+      // Filtrer par tous les projets de l'utilisateur
       whereClause.link = { project: { userId } };
     }
 
