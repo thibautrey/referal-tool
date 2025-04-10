@@ -11,6 +11,7 @@ import { COUNTRY_OPTIONS } from "./Countries";
 import { DeviceRule } from "./types";
 import type { GeoRule } from "./AddLinkForm/GeoTargeting";
 import { LinkCard } from "@/components/ui/link-card";
+import { detectRegionFromCountries } from "./utils";
 
 interface LinkPreviewProps {
   linkUrl?: string;
@@ -38,7 +39,7 @@ const isValidGeoRule = (rule: GeoRule): boolean => {
   return (
     !!rule.redirectUrl &&
     rule.countries.length > 0 &&
-    (rule.region === "custom" || !!rule.region)
+    (rule.region === "custom" || !!detectRegionFromCountries(rule.countries))
   );
 };
 
@@ -98,7 +99,9 @@ export const LinkPreview = ({
               {validGeoRules.map((rule, i) => (
                 <div key={i} className="space-y-2">
                   <div className="text-sm space-y-1">
-                    {rule.region === "custom" ? (
+                    {!rule.region ||
+                    rule.region === "custom" ||
+                    !detectRegionFromCountries(rule.countries) ? (
                       <>
                         <div className="font-medium">Custom Countries:</div>
                         <div className="text-muted-foreground font-mono text-xs">
@@ -109,7 +112,9 @@ export const LinkPreview = ({
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger className="font-medium">
-                            {getRegionName(rule.region || "")}
+                            {getRegionName(
+                              detectRegionFromCountries(rule.countries)
+                            )}
                           </TooltipTrigger>
                           <TooltipContent>
                             <p className="font-mono text-xs">

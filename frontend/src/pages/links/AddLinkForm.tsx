@@ -16,7 +16,6 @@ import {
   useState,
 } from "react";
 
-import { AVAILABLE_COUNTRIES } from "./Countries";
 import { BasicSettings } from "./AddLinkForm/BasicSettings";
 import { DeviceTargeting } from "./AddLinkForm/DeviceTargeting";
 import { ExpandableTabs } from "@/components/ui/expandable-tabs";
@@ -26,6 +25,7 @@ import { api } from "@/lib/api";
 import { generateRandomCode } from "./AddLinkForm/utils";
 import { toast } from "sonner";
 import { useSearchParams } from "react-router-dom";
+import { detectRegionFromCountries } from "./utils";
 
 export interface GeoRule {
   redirectUrl: string;
@@ -49,18 +49,6 @@ export interface AddLinkFormRef {
   getFormData: () => LinkFormData;
 }
 
-const detectRegionFromCountries = (countries: string[]): string => {
-  for (const [region, regionCountries] of Object.entries(AVAILABLE_COUNTRIES)) {
-    if (
-      countries.length === regionCountries.length &&
-      countries.every((country) => regionCountries.includes(country))
-    ) {
-      return region;
-    }
-  }
-  return "custom";
-};
-
 export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
   ({ initialData }, ref) => {
     const [searchParams] = useSearchParams();
@@ -71,11 +59,14 @@ export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
     );
     const [geoRules, setGeoRules] = useState<GeoRule[]>(() => {
       if (initialData?.rules) {
-        return initialData.rules.map((rule) => ({
-          redirectUrl: rule.redirectUrl,
-          region: rule.region || detectRegionFromCountries(rule.countries),
-          countries: rule.countries,
-        }));
+        return initialData.rules.map((rule) => {
+          const region = detectRegionFromCountries(rule.countries);
+          return {
+            redirectUrl: rule.redirectUrl,
+            region,
+            countries: rule.countries,
+          };
+        });
       }
       return [];
     });
@@ -134,18 +125,23 @@ export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
 
             // Handle rules properly
             if (data.rules && Array.isArray(data.rules)) {
-              setGeoRules(
-                data.rules.map((rule) => ({
+              const parsedRules = data.rules.map((rule) => {
+                const countries = Array.isArray(rule.countries)
+                  ? rule.countries
+                  : typeof rule.countries === "string"
+                  ? JSON.parse(rule.countries)
+                  : [];
+
+                const region = detectRegionFromCountries(countries);
+
+                return {
                   redirectUrl: rule.redirectUrl,
-                  region:
-                    rule.region || detectRegionFromCountries(rule.countries),
-                  countries: Array.isArray(rule.countries)
-                    ? rule.countries
-                    : typeof rule.countries === "string"
-                    ? JSON.parse(rule.countries)
-                    : [],
-                }))
-              );
+                  region,
+                  countries: countries,
+                };
+              });
+
+              setGeoRules(parsedRules);
             }
 
             // Handle device rules if they exist

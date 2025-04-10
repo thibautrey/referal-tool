@@ -1,4 +1,5 @@
 import { AVAILABLE_COUNTRIES, COUNTRY_OPTIONS } from "../Countries";
+import { detectRegionFromCountries } from "../utils";
 import {
   Command,
   CommandEmpty,
@@ -55,7 +56,11 @@ export function GeoTargeting({ rules, onRulesChange }: GeoTargetingProps) {
     if (value !== "custom") {
       countries =
         AVAILABLE_COUNTRIES[value as keyof typeof AVAILABLE_COUNTRIES] || [];
+    } else if (rule.countries.length > 0) {
+      // Preserve countries if switching to custom mode
+      countries = rule.countries;
     }
+
     const updatedRule = { ...rule, region: value, countries };
     const updatedRules = [...rules];
     updatedRules[index] = updatedRule;
@@ -67,7 +72,11 @@ export function GeoTargeting({ rules, onRulesChange }: GeoTargetingProps) {
     rule: GeoRule,
     index: number
   ) => {
-    const updatedRule = { ...rule, countries };
+    const updatedRule = {
+      ...rule,
+      countries,
+      region: detectRegionFromCountries(countries),
+    };
     const updatedRules = [...rules];
     updatedRules[index] = updatedRule;
     onRulesChange(updatedRules);
@@ -93,7 +102,7 @@ export function GeoTargeting({ rules, onRulesChange }: GeoTargetingProps) {
         <div key={index} className="space-y-2 p-4 border rounded-lg">
           <div className="flex items-center gap-4 justify-between">
             <Select
-              value={rule.region}
+              value={rule.region || detectRegionFromCountries(rule.countries)}
               onValueChange={(value) => handleRegionChange(value, rule, index)}
             >
               <SelectTrigger className="w-[200px]">
@@ -130,7 +139,7 @@ export function GeoTargeting({ rules, onRulesChange }: GeoTargetingProps) {
             }}
           />
 
-          {rule.region === "custom" && (
+          {(rule.region === "custom" || !rule.region) && (
             <div className="mt-2">
               <Label>Selected Countries</Label>
               <div className="flex flex-wrap gap-2 mb-4">
@@ -198,17 +207,20 @@ export function GeoTargeting({ rules, onRulesChange }: GeoTargetingProps) {
             </div>
           )}
 
-          {rule.region !== "custom" && rule.countries.length > 0 && (
-            <div className="text-sm text-muted-foreground mt-2">
-              Applies to:{" "}
-              {rule.countries
-                .map(
-                  (countryCode) =>
-                    COUNTRY_OPTIONS.find((c) => c.value === countryCode)?.label
-                )
-                .join(", ")}
-            </div>
-          )}
+          {rule.region !== "custom" &&
+            rule.region &&
+            rule.countries.length > 0 && (
+              <div className="text-sm text-muted-foreground mt-2">
+                Applies to:{" "}
+                {rule.countries
+                  .map(
+                    (countryCode) =>
+                      COUNTRY_OPTIONS.find((c) => c.value === countryCode)
+                        ?.label
+                  )
+                  .join(", ")}
+              </div>
+            )}
         </div>
       ))}
     </div>
