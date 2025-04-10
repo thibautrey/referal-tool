@@ -1,14 +1,16 @@
 import * as cheerio from "cheerio";
-
 import { Request, Response } from "express";
-
 import { URL } from "url";
 import { decode } from "he";
 import proxyChain from "proxy-chain";
 import { sanitizeUrl } from "@braintree/sanitize-url";
 import validator from "validator";
+import metascraper from "metascraper";
+import metascraperTitle from "metascraper-title";
+import metascraperDescription from "metascraper-description";
+import metascraperImage from "metascraper-image";
+import metascraperLogo from "metascraper-logo";
 
-const MAX_BODY_SIZE = 1024 * 1024; // 1MB limit
 const TIMEOUT = 5000; // 5 seconds timeout
 const ALLOWED_PROTOCOLS = ["http:", "https:"];
 const MAX_METADATA_LENGTH = 1000; // Maximum length for metadata fields
@@ -70,6 +72,13 @@ function validateAndSanitizeImageUrl(
   if (!imageUrl) return null;
 
   try {
+    // Vérifier si c'est un data URI d'image
+    if (imageUrl.startsWith("data:image/")) {
+      const isValidDataUri =
+        /^data:image\/(jpeg|jpg|gif|png|webp|svg\+xml);base64,/i.test(imageUrl);
+      return isValidDataUri ? imageUrl : null;
+    }
+
     // Handle relative URLs
     const absoluteUrl = new URL(imageUrl, baseUrl).toString();
     const sanitizedUrl = sanitizeUrl(absoluteUrl);
@@ -84,9 +93,13 @@ function validateAndSanitizeImageUrl(
       return null;
     }
 
+    // Extract the path without query parameters
+    const urlObj = new URL(sanitizedUrl);
+    const pathWithoutQuery = urlObj.pathname;
+
     // Validate file extension
     const hasValidExtension = VALID_IMAGE_EXTENSIONS.some((ext) =>
-      sanitizedUrl.toLowerCase().endsWith(ext)
+      pathWithoutQuery.toLowerCase().endsWith(ext)
     );
     if (!hasValidExtension) return null;
 
@@ -117,6 +130,14 @@ function findBestImage($: cheerio.CheerioAPI, baseUrl: string): string | null {
 
   return possibleFavicons.find((icon) => icon) || null;
 }
+
+// Initialize metascraper with plugins
+const scraper = metascraper([
+  metascraperTitle(),
+  metascraperDescription(),
+  metascraperImage(),
+  metascraperLogo(),
+]);
 
 export const getMetadata = async (req: Request, res: Response) => {
   try {
@@ -154,25 +175,15 @@ export const getMetadata = async (req: Request, res: Response) => {
       return res.status(400).json({ error: "Invalid URL format" });
     }
 
-    // Fetch with timeout, size limit, and security headers
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), TIMEOUT);
 
-    // Get a working proxy
     const proxyUrl = await getWorkingProxy();
-
-    // Configure fetch options with proxy if available
     const fetchOptions: RequestInit = {
       signal: controller.signal,
       headers: {
-        Accept: "text/html",
         "User-Agent": "Mozilla/5.0 (compatible; ReferalTool/1.0)",
-        "Sec-Fetch-Dest": "document",
-        "Sec-Fetch-Mode": "navigate",
-        "Sec-Fetch-Site": "none",
       },
-      redirect: "follow",
-      referrerPolicy: "no-referrer",
     };
 
     if (proxyUrl) {
@@ -181,62 +192,35 @@ export const getMetadata = async (req: Request, res: Response) => {
     }
 
     const response = await fetch(sanitizedUrl, fetchOptions);
-
     clearTimeout(timeoutId);
 
     if (!response.ok) {
       throw new Error("Failed to fetch URL");
     }
 
-    const contentType = response.headers.get("content-type");
-    if (!contentType?.includes("text/html")) {
-      return res.status(400).json({ error: "URL must point to an HTML page" });
-    }
+    const html = await response.text();
+    const metadata = await scraper({ html, url: sanitizedUrl });
 
-    const text = await response.text();
-    const $ = cheerio.load(text, {
-      scriptingEnabled: false,
-      xml: false,
-    });
-
-    // Remove potentially dangerous elements before parsing
-    $("script").remove();
-    $("style").remove();
-    $("iframe").remove();
-    $("object").remove();
-    $("embed").remove();
-
-    const originalImageUrl = validateAndSanitizeImageUrl(
-      findBestImage($, sanitizedUrl),
-      sanitizedUrl
-    );
-
-    const metadata = {
-      title: sanitizeMetadataField(
-        ($("title").first().text() ||
-          $('meta[property="og:title"]').attr("content") ||
-          $('meta[name="twitter:title"]').attr("content")) ??
-          null
-      ),
-      description: sanitizeMetadataField(
-        ($('meta[name="description"]').attr("content") ||
-          $('meta[property="og:description"]').attr("content") ||
-          $('meta[name="twitter:description"]').attr("content")) ??
-          null
-      ),
-      image: originalImageUrl
-        ? `/api/metadata/proxy-image?url=${encodeURIComponent(originalImageUrl)}`
-        : null,
-    };
-
-    // Ensure we have at least some valid data
-    if (!metadata.title && !metadata.description && !metadata.image) {
+    if (
+      !metadata.title &&
+      !metadata.description &&
+      !metadata.logo &&
+      !metadata.image
+    ) {
       return res.status(404).json({ error: "No valid metadata found" });
     }
+    const imageUrl =
+      metadata.logo || metadata.image
+        ? `/api/metadata/proxy-image?url=${encodeURIComponent(metadata.logo || metadata.image || "")}`
+        : null;
 
     return res.json({
       success: true,
-      data: metadata,
+      data: {
+        title: sanitizeMetadataField(metadata.title ?? null),
+        description: sanitizeMetadataField(metadata.description ?? null),
+        image: imageUrl,
+      },
     });
   } catch (error: unknown) {
     if (error instanceof Error && error.name === "AbortError") {
