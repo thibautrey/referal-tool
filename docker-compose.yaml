@@ -13,6 +13,7 @@ services:
         - REACT_APP_API_URL=${REACT_APP_API_URL:-https://rflnk.com/api}
         - NODE_ENV=${NODE_ENV:-production}
         - APP_URL=${APP_URL:-https://rflnk.com}
+        - ILA_LICENSE_KEY=${ILA_LICENSE_KEY}
     environment:
       - NODE_ENV=${NODE_ENV:-production}
       - PORT=${PORT:-3001}
@@ -24,16 +25,22 @@ services:
       - RESEND=${RESEND}
       - APP_URL=${APP_URL:-https://rflnk.com}
       - PROXIES_URL=${PROXIES_URL}
+      - ILA_DATA_DIR=/app/data
+      - ILA_TMP_DATA_DIR=/app/tmp
+      - ILA_LICENSE_KEY=${ILA_LICENSE_KEY}
     # depends_on:
     #   - redis
     volumes:
       - ./backend/src:/app/src:ro
       - ./frontend/src:/app/frontend/src:ro
       - /app/dist
+      - ip-data:/app/data
+      - ip-tmp:/app/tmp
 #   redis:
 #     image: redis:7-alpine
 #     volumes:
 #       - redis-data:/data
 
-# volumes:
-#   redis-data:
+volumes:
+  ip-data:
+  ip-tmp:

@@ -1,4 +1,6 @@
 import { Cluster, Redis } from "ioredis";
+// In-memory LRU cache for frequently accessed links
+import LRU from "lru-cache";
 
 const redisNodes = (process.env.REDIS_URL || "redis://localhost:6379")
   .split(",")
@@ -69,4 +71,27 @@ export async function saveToCache(
   } catch (error) {
     console.error("Error saving to cache:", error);
   }
+}
+
+const memoryCache = new LRU<string, any>({
+  max: 500, // Store max 500 items
+  ttl: 1000 * 60 * 2, // Cache for 2 minutes in memory
+  updateAgeOnGet: true,
+});
+
+export async function getWithCache<T>(
+  key: string,
+  redisGetter: () => Promise<T | null>
+): Promise<T | null> {
+  // First check memory cache
+  const memCached = memoryCache.get(key);
+  if (memCached) return memCached as T;
+
+  // Then check Redis
+  const redisCached = await redisGetter();
+  if (redisCached) {
+    memoryCache.set(key, redisCached);
+  }
+
+  return redisCached;
 }

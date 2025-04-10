@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
 import { getFromCache, saveToCache } from "../lib/redis";
+import { get404Template } from "../templates/404";
 
 import { getCountryFromIp } from "../utils/geolocation";
 import prisma from "../lib/prisma";
+import { getUserAgent, handleRedirection } from "../services/redirection";
 
-// Fonction pour générer un code court aléatoire
+// Function to generate a random short code
 const generateRandomCode = (length: number = 4): string => {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
   let result = "";
@@ -14,17 +16,7 @@ const generateRandomCode = (length: number = 4): string => {
   return result;
 };
 
-// Helper function to get user agent and device type
-const getUserAgent = (
-  req: Request
-): { deviceType: string; userAgent: string } => {
-  const userAgent = req.headers["user-agent"] || "";
-  if (/mobile/i.test(userAgent)) return { deviceType: "mobile", userAgent };
-  if (/tablet/i.test(userAgent)) return { deviceType: "tablet", userAgent };
-  return { deviceType: "desktop", userAgent };
-};
-
-// Vérifier si un code court est disponible
+// Check if a short code is available
 export const checkShortCodeAvailability = async (
   req: Request,
   res: Response
@@ -40,10 +32,10 @@ export const checkShortCodeAvailability = async (
       where: { shortCode: code },
     });
 
-    // Ajouter des logs pour débogage
+    // Add logs for debugging
     console.log(`Checking short code: ${code}, exists: ${!!existingLink}`);
 
-    // Si existingLink est null, le code est disponible
+    // If existingLink is null, the code is available
     return res.json({ data: { available: !existingLink } });
   } catch (error: unknown) {
     console.error("Error checking short code availability:", error);
@@ -192,7 +184,7 @@ export const getLinksByProject = async (req: Request, res: Response) => {
   }
 };
 
-// Créer un nouveau lien avec un code court
+// Create a new link with a short code
 export const createLink = async (req: Request, res: Response) => {
   try {
     const { name, baseUrl, shortCode, rules, deviceRules } = req.body;
@@ -586,105 +578,10 @@ async function cacheLinkData(shortCode: string, data: any): Promise<void> {
   await saveToCache(linkCacheKey, JSON.stringify(cacheData), 600);
 }
 
-// Handle link redirection
-export const handleRedirection = async (req: Request, res: Response) => {
-  try {
-    const path = req.params.path;
-    const ip = req.ip || "0.0.0.0";
-    const { deviceType, userAgent } = getUserAgent(req);
+// Export the handleRedirection function from the service
+export { handleRedirection } from "../services/redirection";
 
-    // Try to get link data from cache
-    let linkData = await getCachedLinkData(path);
-
-    if (!linkData) {
-      // If not in cache, fetch from database
-      const freshLinkData = await prisma.link.findFirst({
-        where: {
-          shortCode: path,
-          active: true,
-        },
-        include: {
-          rules: true,
-          deviceRules: true,
-        },
-      });
-
-      if (!freshLinkData) {
-        return res.status(404).send(`
-          <!DOCTYPE html>
-          <html>
-            <head><title>Link not found</title></head>
-            <body><h1>Link not found</h1></body>
-          </html>
-        `);
-      }
-
-      // Cache the fresh data
-      await cacheLinkData(path, freshLinkData);
-      linkData = freshLinkData;
-    }
-
-    // Determine redirect URL based on device rules (using cached data)
-    let redirectUrl = linkData.baseUrl;
-    const matchingDeviceRule = linkData.deviceRules?.find(
-      (rule: { deviceType: string }) =>
-        rule.deviceType === "all" || rule.deviceType === deviceType
-    );
-
-    if (matchingDeviceRule) {
-      redirectUrl = matchingDeviceRule.redirectUrl;
-    } else {
-      // Get country info for geo rules
-      const [userCountry, userCity] = await getCountryFromIp(ip);
-
-      const matchingGeoRule = linkData.rules?.find(
-        (rule: { countries: string }) => {
-          const countries: string[] = JSON.parse(rule.countries);
-          return countries.includes(userCountry);
-        }
-      );
-
-      if (matchingGeoRule) {
-        redirectUrl = matchingGeoRule.redirectUrl;
-      }
-    }
-
-    // Ensure URL has protocol
-    if (!redirectUrl.match(/^https?:\/\//i)) {
-      redirectUrl = `https://${redirectUrl}`;
-    }
-
-    // Send redirect
-    res.redirect(302, redirectUrl);
-
-    // Record analytics asynchronously
-    Promise.resolve()
-      .then(async () => {
-        const [userCountry, userCity] = await getCountryFromIp(ip);
-
-        await prisma.linkVisit.create({
-          data: {
-            linkId: linkData.id,
-            ip,
-            country: userCountry,
-            city: userCity,
-            ruleId: matchingDeviceRule?.id || null,
-            deviceRuleId: matchingDeviceRule?.id || null,
-            userAgent,
-            deviceType,
-          },
-        });
-      })
-      .catch((error) => {
-        console.error("Error in async analytics processing:", error);
-      });
-  } catch (error) {
-    console.error("Redirection error:", error);
-    return res.status(500).json({ message: "Error handling redirection" });
-  }
-};
-
-// Obtenir les statistiques d'un lien spécifique
+// Get link statistics
 export const getLinkStats = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;

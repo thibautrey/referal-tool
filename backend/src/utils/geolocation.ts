@@ -1,78 +1,55 @@
-import { getFromCache, saveToCache } from "../lib/redis";
+import { lookup, reload } from "ip-location-api";
+import path from "path";
 
-import { IPinfoWrapper } from "node-ipinfo";
-import prisma from "../lib/prisma";
+const DATA_DIR = process.env.ILA_DATA_DIR || path.join(process.cwd(), "data");
+const TMP_DATA_DIR =
+  process.env.ILA_TMP_DATA_DIR || path.join(process.cwd(), "tmp");
 
-const IPINFO_TOKEN = process.env.IPINFO_TOKEN || "";
-const ipinfoWrapper = new IPinfoWrapper(IPINFO_TOKEN);
+let databaseInitialized = false;
 
-const withTimeout = <T>(
-  promise: Promise<T>,
-  timeoutMs: number,
-  errorMsg: string
-): Promise<T> => {
-  return new Promise<T>((resolve, reject) => {
-    const timeoutId = setTimeout(() => {
-      reject(new Error(errorMsg));
-    }, timeoutMs);
-
-    promise
-      .then((result) => {
-        clearTimeout(timeoutId);
-        resolve(result);
-      })
-      .catch((error) => {
-        clearTimeout(timeoutId);
-        reject(error);
-      });
-  });
+// Configuration initiale
+const initGeolocation = async () => {
+  try {
+    // Initialize lookup
+    await reload({
+      fields: ["country", "city"],
+      smallMemory: false,
+      dataDir: DATA_DIR,
+      tmpDataDir: TMP_DATA_DIR,
+      autoUpdate: "default",
+    });
+    databaseInitialized = true;
+    console.log("IP geolocation service initialized successfully");
+  } catch (error) {
+    console.error("Failed to initialize IP geolocation service:", error);
+    console.log("Geolocation will return default values");
+  }
 };
 
 export async function getCountryFromIp(ip: string): Promise<[string, string]> {
   try {
-    // Check cache first
-    const cacheKey = `geolocation:${ip}`;
-    const cachedData = await getFromCache(cacheKey);
-    if (cachedData) {
-      return [cachedData.country, cachedData.city];
+    if (!databaseInitialized) {
+      // Try to initialize again if it failed on startup
+      try {
+        await initGeolocation();
+      } catch {
+        // If still fails, return default
+        return ["XX", ""];
+      }
     }
 
-    const now = new Date();
-
-    const cachedEntry = await prisma.ipCountryCache.findUnique({
-      where: { ip },
-    });
-
-    if (cachedEntry && cachedEntry.expiresAt > now) {
-      return [cachedEntry.countryCode, cachedEntry.city || "Unknown"];
-    }
-
-    const ipinfo = await withTimeout(
-      ipinfoWrapper.lookupIp(ip),
-      3000,
-      "IPInfo lookup timed out"
-    );
-
-    const countryCode = ipinfo.countryCode || "UNKNOWN";
-    const city = ipinfo.city || "Unknown";
-
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7);
-
-    prisma.ipCountryCache
-      .upsert({
-        where: { ip },
-        update: { countryCode, city, expiresAt, updatedAt: now },
-        create: { ip, countryCode, city, expiresAt },
-      })
-      .catch((err: unknown) => console.error("Error updating IP cache:", err));
-
-    // Cache the result for 24 hours (86400 seconds)
-    await saveToCache(cacheKey, { country: countryCode, city }, 86400);
-
-    return [countryCode, city];
-  } catch (err: unknown) {
-    console.error("Error getting country from IP:", err);
-    return ["unknown", "unknown"];
+    const location = await lookup(ip);
+    return [location?.country || "XX", location?.city || ""];
+  } catch (error) {
+    console.error("Error fetching location data:", error);
+    return ["XX", ""]; // Default fallback
   }
+}
+
+// Initialize on module import
+initGeolocation().catch(console.error);
+
+// Cleanup n'est plus nécessaire car géré par ip-location-api
+export async function cleanupExpiredIpCache(): Promise<void> {
+  // No-op - cache is managed by ip-location-api
 }

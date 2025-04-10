@@ -31,6 +31,7 @@
     "he": "^1.2.0",
     "helmet": "^7.2.0",
     "ioredis": "^5.6.0",
+    "ip-location-api": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
     "node-ipinfo": "^4.0.1",
