@@ -163,7 +163,7 @@ export function LinksList({
   };
 
   const handleCopyLink = (shortCode: string) => {
-    const fullUrl = `${window.location.protocol}//${currentDomain}/${shortCode}`;
+    const fullUrl = `${window.location.protocol}//${currentDomain}/l/${shortCode}`;
     navigator.clipboard.writeText(fullUrl);
     toast.success("Link copied to clipboard");
   };
@@ -302,7 +302,7 @@ export function LinksList({
                     <TableCell className="text-muted-foreground">
                       <div className="flex items-center">
                         <div className="flex items-center border rounded-md px-3 py-1 bg-muted/30">
-                          <span className="text-sm">{currentDomain}/</span>
+                          <span className="text-sm">{currentDomain}/l/</span>
                           <span className="font-medium text-sm">
                             {link.shortCode}
                           </span>

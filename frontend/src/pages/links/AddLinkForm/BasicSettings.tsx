@@ -60,7 +60,7 @@ export function BasicSettings({
         <Label htmlFor="shortCode">Short Code</Label>
         {isEditMode ? (
           <div className="flex items-center border rounded-md px-3 py-2 bg-muted">
-            <span className="text-muted-foreground">{currentDomain}/</span>
+            <span className="text-muted-foreground">{currentDomain}/l/</span>
             <span className="font-medium">{shortCode}</span>
           </div>
         ) : (
@@ -71,9 +71,6 @@ export function BasicSettings({
                   !isShortCodeAvailable ? "border-red-500" : "border-input"
                 }`}
               >
-                <span className="bg-muted px-3 py-2 text-muted-foreground text-sm">
-                  {currentDomain}/
-                </span>
                 <input
                   ref={shortCodeInputRef}
                   id="shortCode"

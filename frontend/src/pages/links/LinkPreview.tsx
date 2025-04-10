@@ -21,6 +21,7 @@ interface LinkPreviewProps {
   deviceRules?: DeviceRule[];
   onLoad?: () => void;
   isLoading?: boolean;
+  shortCodeUrl?: string;
 }
 
 const getRegionName = (region: string): string => {
@@ -50,6 +51,7 @@ export const LinkPreview = ({
   deviceRules = [],
   onLoad,
   isLoading = false,
+  shortCodeUrl = "",
 }: LinkPreviewProps) => {
   const [showQr, setShowQr] = useState(false);
   const [debouncedLinkUrl, setDebouncedLinkUrl] = useState(linkUrl);
@@ -107,7 +109,7 @@ export const LinkPreview = ({
             </div>
             {showQr && (
               <div className="flex justify-center p-4 bg-white rounded">
-                <QRCode value={debouncedLinkUrl} size={128} />
+                <QRCode value={shortCodeUrl} size={128} />
               </div>
             )}
           </div>

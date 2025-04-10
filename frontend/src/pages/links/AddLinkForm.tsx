@@ -386,6 +386,7 @@ export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
             deviceRules={deviceRules}
             isLoading={isLinkPreviewLoading}
             onLoad={() => setIsLinkPreviewLoading(false)}
+            shortCodeUrl={`${currentDomain}/l/${shortCode}`}
           />
         </div>
       </div>
