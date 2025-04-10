@@ -273,7 +273,10 @@ export const createLink = async (req: Request, res: Response) => {
       },
     });
 
-    return res.status(201).json(linkWithRules);
+    return res.json({
+      message: "Link created successfully",
+      data: linkWithRules,
+    });
   } catch (error: unknown) {
     console.error("Error creating link:", error);
     return res.status(500).json({ error: "Failed to create link" });

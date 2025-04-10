@@ -86,8 +86,7 @@ export default function LinksPage() {
       } else {
         response = await api.createLink(currentProjectId!, linkData);
       }
-
-      if (!response?.data) {
+      if (response?.status !== 200) {
         throw new Error("Invalid response from server");
       }
 

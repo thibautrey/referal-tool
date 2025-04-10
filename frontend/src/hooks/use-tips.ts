@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+
 import { api } from "@/lib/api";
 
 export interface Tip {
@@ -22,12 +23,12 @@ const APP_TIPS: Tip[] = [
   //     summary: "Start by creating a project to organize your referral links.",
   //     image: "/images/tips/project.png",
   //   },
-  {
-    id: "geo-rules",
-    title: "Geographic targeting",
-    summary: "Use geo-rules to redirect users based on their location.",
-    //image: "/images/tips/geo.png",
-  },
+  // {
+  //   id: "geo-rules",
+  //   title: "Geographic targeting",
+  //   summary: "Use geo-rules to redirect users based on their location.",
+  //   //image: "/images/tips/geo.png",
+  // },
 ];
 
 export function useTips() {
