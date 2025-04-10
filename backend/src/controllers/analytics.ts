@@ -136,7 +136,7 @@ export const getVisitStats = async (req: Request, res: Response) => {
       timeRange,
       parseInt(`${userId}`)
     );
-    console.log(JSON.stringify(visitsByDate));
+
     // Si linkId est spécifié, ajouter les statistiques par règles
     let visitsByRule = null;
     if (linkId) {
@@ -260,7 +260,6 @@ async function getVisitsByTimeInterval(
       },
     });
 
-    console.log(JSON.stringify(visits));
     // Préparer la structure de données pour l'agrégation
     const visitsByDate = new Map<string, number>();
     // Formater et agréger les dates selon le timeRange

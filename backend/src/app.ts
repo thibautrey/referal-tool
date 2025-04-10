@@ -50,17 +50,17 @@ app.use(express.json()); // Parse JSON bodies
 
 // Middleware de logging pour toutes les requêtes
 app.use((req: Request, _res: Response, next: NextFunction) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  console.log("Headers:", JSON.stringify(req.headers));
-  if (req.body && Object.keys(req.body).length > 0) {
-    // Masquer les mots de passe dans les logs
-    const sanitizedBody = { ...req.body };
-    if (sanitizedBody.password) sanitizedBody.password = "********";
-    if (sanitizedBody.currentPassword)
-      sanitizedBody.currentPassword = "********";
-    if (sanitizedBody.newPassword) sanitizedBody.newPassword = "********";
-    console.log("Body:", JSON.stringify(sanitizedBody));
-  }
+  // console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  // console.log("Headers:", JSON.stringify(req.headers));
+  // if (req.body && Object.keys(req.body).length > 0) {
+  //   // Masquer les mots de passe dans les logs
+  //   const sanitizedBody = { ...req.body };
+  //   if (sanitizedBody.password) sanitizedBody.password = "********";
+  //   if (sanitizedBody.currentPassword)
+  //     sanitizedBody.currentPassword = "********";
+  //   if (sanitizedBody.newPassword) sanitizedBody.newPassword = "********";
+  //   console.log("Body:", JSON.stringify(sanitizedBody));
+  // }
   next();
 });
 

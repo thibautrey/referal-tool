@@ -32,17 +32,23 @@ export async function getCountryFromIp(ip: string): Promise<[string, string]> {
       // Try to initialize again if it failed on startup
       try {
         await initGeolocation();
-      } catch {
+        console.log("IP geolocation service initialized successfully");
+      } catch (error) {
+        console.error("Failed to initialize IP geolocation service again");
         // If still fails, return default
-        return ["XX", ""];
+        return ["Unknown", ""];
       }
     }
 
     const location = await lookup(ip);
-    return [location?.country || "XX", location?.city || ""];
+    if (!location) {
+      console.error("No location found for IP:", ip);
+      return ["Unknown", ""]; // Default fallback
+    }
+    return [location?.country || "Unknown", location?.city || ""];
   } catch (error) {
     console.error("Error fetching location data:", error);
-    return ["XX", ""]; // Default fallback
+    return ["Unknown", ""]; // Default fallback
   }
 }
 
