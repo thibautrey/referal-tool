@@ -352,3 +352,59 @@ export const updateTheme = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error updating theme" });
   }
 };
+
+/**
+ * Update user's last selected project
+ */
+export const updateLastProjectId = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const { projectId } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    if (!projectId || typeof projectId !== "number") {
+      return res.status(400).json({ message: "Invalid project ID" });
+    }
+
+    // Verify that the project exists and belongs to the user
+    const project = await prisma.project.findFirst({
+      where: {
+        id: projectId,
+        userId: userId,
+      },
+    });
+
+    if (!project) {
+      return res
+        .status(404)
+        .json({ message: "Project not found or access denied" });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { lastProjectId: projectId },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        active: true,
+        lastProjectId: true,
+        theme: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    res.json({
+      message: "Last project ID updated successfully",
+      data: updatedUser,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating last project ID" });
+  }
+};

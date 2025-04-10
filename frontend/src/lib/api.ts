@@ -345,6 +345,10 @@ class Api {
     const response = await this.get<{ theme: string }>("/users/me");
     return response.data.theme || "system";
   }
+
+  async updateLastProject(projectId: number): Promise<ApiResponse<{ lastProjectId: number }>> {
+    return this.post<{ lastProjectId: number }>("/users/last-project", { projectId });
+  }
 }
 
 export const api = new Api(API_BASE_URL);

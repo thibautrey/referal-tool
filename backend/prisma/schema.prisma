@@ -24,6 +24,7 @@ model User {
     otpBackupCodes String? // Pour stocker les codes de secours (JSON formaté)
     seenTips       String? // Store seen tips IDs as JSON array
     theme          String?   @default("system") // Added theme preference
+    lastProjectId  Int?     // Added to store the last selected project
     projects       Project[]
     createdAt      DateTime  @default(now())
     updatedAt      DateTime  @updatedAt

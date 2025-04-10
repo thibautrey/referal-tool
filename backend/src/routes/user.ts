@@ -13,6 +13,13 @@ router.post("/", authenticateJWT, userController.createUser);
 // Route for theme updates
 router.post("/theme", authenticateJWT, userController.updateTheme);
 
+// Route for last project updates
+router.post(
+  "/last-project",
+  authenticateJWT,
+  userController.updateLastProjectId
+);
+
 // Route pour récupérer l'utilisateur actuellement connecté
 // Note: La route spécifique "/me" doit être placée AVANT les routes avec des paramètres "/:id"
 router.get("/me", authenticateJWT, userController.getCurrentUser);

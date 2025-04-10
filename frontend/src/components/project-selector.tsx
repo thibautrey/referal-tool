@@ -31,16 +31,50 @@ export function ProjectSelector() {
   const [isEditingModalOpen, setIsEditingModalOpen] = useState(false);
   const [editingProjectId, setEditingProjectId] = useState<number | null>(null);
   const [editingName, setEditingName] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    refreshProjects();
-  }, []);
+    const initializeProjects = async () => {
+      try {
+        // Charger les projets
+        const projectsResponse = await api.getProjects();
+        setProjects(projectsResponse.data);
 
-  useEffect(() => {
-    if (projects.length > 0 && !currentProjectId) {
-      setCurrentProjectId(projects[0].id);
+        // Charger les préférences utilisateur
+        const userResponse = await api.get<{ lastProjectId: number | null }>(
+          "/users/me"
+        );
+        const lastProjectId = userResponse.data.lastProjectId;
+
+        // Si un dernier projet est enregistré et existe toujours, l'utiliser
+        if (
+          lastProjectId &&
+          projectsResponse.data.some((p) => p.id === lastProjectId)
+        ) {
+          setCurrentProjectId(lastProjectId);
+        } else if (projectsResponse.data.length > 0) {
+          // Sinon utiliser le premier projet
+          setCurrentProjectId(projectsResponse.data[0].id);
+        }
+      } catch (error) {
+        console.error("Failed to load projects", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeProjects();
+  }, [setCurrentProjectId]);
+
+  const handleProjectChange = async (projectId: string) => {
+    const numericProjectId = Number(projectId);
+    setCurrentProjectId(numericProjectId);
+    try {
+      await api.updateLastProject(numericProjectId);
+    } catch (error) {
+      console.error("Failed to update last project", error);
     }
-  }, [projects, currentProjectId, setCurrentProjectId]);
+  };
 
   const refreshProjects = async () => {
     const response = await api.getProjects();
@@ -78,10 +112,13 @@ export function ProjectSelector() {
     <div className="flex items-center space-x-2">
       <Select
         value={currentProjectId?.toString()}
-        onValueChange={(value) => setCurrentProjectId(Number(value))}
+        onValueChange={handleProjectChange}
+        disabled={isLoading}
       >
         <SelectTrigger className="border-0 bg-background/50">
-          <SelectValue placeholder="Select a project" />
+          <SelectValue
+            placeholder={isLoading ? "Loading..." : "Select a project"}
+          />
         </SelectTrigger>
         <SelectContent>
           {projects.map((project) => (
