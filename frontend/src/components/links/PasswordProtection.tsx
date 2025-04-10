@@ -1,4 +1,5 @@
 import {
+  Form,
   FormControl,
   FormDescription,
   FormField,
@@ -10,6 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { useForm } from "react-hook-form";
 import { useState } from "react";
 
 interface PasswordProtectionProps {
@@ -26,6 +28,11 @@ export const PasswordProtection = ({
   onPasswordChange,
 }: PasswordProtectionProps) => {
   const [showPassword, setShowPassword] = useState(false);
+  const form = useForm({
+    defaultValues: {
+      password: password,
+    },
+  });
 
   return (
     <div className="space-y-4">
@@ -42,37 +49,43 @@ export const PasswordProtection = ({
 
       {isEnabled && (
         <div className="space-y-2">
-          <FormField
-            name="password"
-            render={() => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <div className="relative">
-                    <Input
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(e) => onPasswordChange(e.target.value)}
-                      placeholder="Enter password"
-                      className="pr-20"
-                      minLength={6}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute text-sm -translate-y-1/2 right-2 top-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      {showPassword ? "Hide" : "Show"}
-                    </button>
-                  </div>
-                </FormControl>
-                <FormDescription>
-                  Password must be at least 6 characters long
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <Form {...form}>
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          onPasswordChange(e.target.value);
+                        }}
+                        placeholder="Enter password"
+                        className="pr-20"
+                        minLength={6}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute text-sm -translate-y-1/2 right-2 top-1/2 text-muted-foreground hover:text-foreground"
+                      >
+                        {showPassword ? "Hide" : "Show"}
+                      </button>
+                    </div>
+                  </FormControl>
+                  <FormDescription>
+                    Password must be at least 6 characters long
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </Form>
         </div>
       )}
     </div>

@@ -1,15 +1,15 @@
 import {
+  AppWindow,
   ArrowRight,
   BarChart3,
+  Clock,
+  FilterX,
+  Gauge,
   Globe,
   Info,
-  Target,
-  Smartphone,
   Lock,
-  Clock,
-  AppWindow,
-  Gauge,
-  FilterX,
+  Smartphone,
+  Target,
 } from "lucide-react";
 import {
   Card,
@@ -18,19 +18,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-
-import { Button } from "@/components/ui/button";
-import { Link as RouterLink } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Link as RouterLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-// import { BackgroundGradientAnimation } from "@/components/ui/background-gradient";
+import { motion } from "framer-motion";
+import { useAuth } from "@/contexts/AuthContext";
 
 const fadeIn = {
   hidden: { opacity: 0, y: 20 },
@@ -72,27 +72,29 @@ const Feature = ({
         "hover:bg-card/70"
       )}
     >
-      <div className="absolute left-0 top-1/2 h-8 w-1 rounded-tr-full rounded-br-full bg-primary/30 group-hover/feature:h-16 transition-all -translate-y-1/2" />
+      <div className="absolute left-0 w-1 h-8 transition-all -translate-y-1/2 rounded-tr-full rounded-br-full top-1/2 bg-primary/30 group-hover/feature:h-16" />
       <div className="mb-4 text-primary">
-        <Icon className="h-8 w-8" />
+        <Icon className="w-8 h-8" />
       </div>
-      <h3 className="font-semibold text-lg mb-2 group-hover/feature:translate-x-2 transition-transform">
+      <h3 className="mb-2 text-lg font-semibold transition-transform group-hover/feature:translate-x-2">
         {title}
       </h3>
-      <p className="text-muted-foreground text-sm">{description}</p>
+      <p className="text-sm text-muted-foreground">{description}</p>
     </motion.div>
   );
 };
 
 export default function LandingPage() {
+  const { isAuthenticated } = useAuth();
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/90">
       {/* Header avec navigation */}
-      <header className="border-b bg-background/80 backdrop-blur-sm fixed top-0 left-0 right-0 z-50">
-        <div className="container flex h-16 items-center justify-between py-4">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b bg-background/80 backdrop-blur-sm">
+        <div className="container flex items-center justify-between h-16 py-4">
           <div className="flex items-center gap-2 pl-6">
-            <img src="/images/logo.avif" alt="Logo" className="h-8 w-auto" />
-            <span className="font-semibold text-xl">rflnk</span>
+            <img src="/images/logo.avif" alt="Logo" className="w-auto h-8" />
+            <span className="text-xl font-semibold">rflnk</span>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger>
@@ -112,34 +114,42 @@ export default function LandingPage() {
               </Tooltip>
             </TooltipProvider>
           </div>
-          <nav className="hidden md:flex items-center gap-6">
+          <nav className="items-center hidden gap-6 md:flex">
             <a
               href="#features"
-              className="text-muted-foreground hover:text-foreground transition-colors"
+              className="transition-colors text-muted-foreground hover:text-foreground"
             >
               Features
             </a>
             <a
               href="#benefits"
-              className="text-muted-foreground hover:text-foreground transition-colors"
+              className="transition-colors text-muted-foreground hover:text-foreground"
             >
               Benefits
             </a>
             <a
               href="#pricing"
-              className="text-muted-foreground hover:text-foreground transition-colors"
+              className="transition-colors text-muted-foreground hover:text-foreground"
             >
               Pricing
             </a>
-            <RouterLink
-              to="/app/login"
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Login
-            </RouterLink>
-            <Button asChild>
-              <RouterLink to="/app/register">Sign Up</RouterLink>
-            </Button>
+            {isAuthenticated ? (
+              <Button asChild>
+                <RouterLink to="/app/dashboard">Go to App</RouterLink>
+              </Button>
+            ) : (
+              <>
+                <RouterLink
+                  to="/app/login"
+                  className="transition-colors text-muted-foreground hover:text-foreground"
+                >
+                  Login
+                </RouterLink>
+                <Button asChild>
+                  <RouterLink to="/app/register">Sign Up</RouterLink>
+                </Button>
+              </>
+            )}
           </nav>
           <div className="md:hidden">
             <Button variant="ghost" size="icon">
@@ -167,42 +177,53 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       {/* <BackgroundGradientAnimation> */}
-      <section className="pt-24 md:pt-32 pb-16 md:pb-24 px-4">
+      <section className="px-4 pt-24 pb-16 md:pt-32 md:pb-24">
         <motion.div
-          className="container mx-auto text-center max-w-4xl"
+          className="container max-w-4xl mx-auto text-center"
           initial="hidden"
           animate="visible"
           variants={fadeIn}
         >
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-500">
+          <h1 className="mb-6 text-4xl font-bold tracking-tight text-transparent md:text-6xl bg-clip-text bg-gradient-to-r from-primary to-purple-500">
             Optimize Your Affiliate Links
           </h1>
-          <p className="text-xl md:text-2xl mb-10 text-black max-w-3xl mx-auto">
+          <p className="max-w-3xl mx-auto mb-10 text-xl md:text-2xl text-foreground">
             Increase your affiliate revenue with our intelligent link management
             platform, designed for influencers and marketers.
           </p>
-          <div className="flex flex-col md:flex-row gap-4 justify-center">
-            <Button size="lg" asChild>
-              <RouterLink to="/app/register">
-                Get Started Free
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </RouterLink>
-            </Button>
-            <Button size="lg" variant="outline" asChild>
-              <RouterLink to="/app/login">Login</RouterLink>
-            </Button>
+          <div className="flex flex-col justify-center gap-4 md:flex-row">
+            {isAuthenticated ? (
+              <Button size="lg" asChild>
+                <RouterLink to="/app/dashboard">
+                  Go to Dashboard
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </RouterLink>
+              </Button>
+            ) : (
+              <>
+                <Button size="lg" asChild>
+                  <RouterLink to="/app/register">
+                    Get Started Free
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </RouterLink>
+                </Button>
+                <Button size="lg" variant="outline" asChild>
+                  <RouterLink to="/app/login">Login</RouterLink>
+                </Button>
+              </>
+            )}
           </div>
         </motion.div>
       </section>
       <motion.div
-        className="container mx-auto px-4 mb-20"
+        className="container px-4 mx-auto mb-20"
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4, duration: 0.8 }}
       >
-        <div className="relative mx-auto max-w-5xl">
+        <div className="relative max-w-5xl mx-auto">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-background rounded-xl blur-3xl -z-10" />
-          <div className="bg-card/20 border rounded-xl shadow-xl overflow-hidden backdrop-blur-sm">
+          <div className="overflow-hidden border shadow-xl bg-card/20 rounded-xl backdrop-blur-sm">
             <img
               src="/images/dashboard.png"
               alt="Application Dashboard"
@@ -214,26 +235,26 @@ export default function LandingPage() {
       {/* </BackgroundGradientAnimation> */}
 
       {/* Features Section */}
-      <section id="features" className="py-20 px-4 bg-muted/30">
+      <section id="features" className="px-4 py-20 bg-muted/30">
         <div className="container mx-auto">
           <motion.div
-            className="text-center mb-16"
+            className="mb-16 text-center"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <h2 className="mb-4 text-3xl font-bold md:text-4xl">
               Powerful Features for Creators
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="max-w-2xl mx-auto text-xl text-muted-foreground">
               Everything you need to optimize your affiliate strategy and boost
               your revenue.
             </p>
           </motion.div>
 
           <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
             variants={staggerContainer}
             initial="hidden"
             whileInView="visible"
@@ -298,25 +319,25 @@ export default function LandingPage() {
       </section>
 
       {/* Benefits Section */}
-      <section id="benefits" className="py-20 px-4">
+      <section id="benefits" className="px-4 py-20">
         <div className="container mx-auto">
           <motion.div
-            className="text-center mb-16"
+            className="mb-16 text-center"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <h2 className="mb-4 text-3xl font-bold md:text-4xl">
               Influencer Benefits
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="max-w-2xl mx-auto text-xl text-muted-foreground">
               Maximize your affiliate revenue with tools adapted to your
               international audience.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+          <div className="grid items-center grid-cols-1 gap-12 md:grid-cols-2">
             <motion.div
               className="order-2 md:order-1"
               initial={{ opacity: 0, x: -40 }}
@@ -324,16 +345,16 @@ export default function LandingPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
             >
-              <h3 className="text-2xl font-bold mb-6">
+              <h3 className="mb-6 text-2xl font-bold">
                 Increase Your Conversions
               </h3>
               <div className="space-y-6">
                 <div className="flex gap-4">
-                  <div className="flex-shrink-0 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-primary font-bold text-lg">1</span>
+                  <div className="flex items-center justify-center flex-shrink-0 w-12 h-12 rounded-full bg-primary/10">
+                    <span className="text-lg font-bold text-primary">1</span>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-lg mb-1">
+                    <h4 className="mb-1 text-lg font-semibold">
                       Adaptation to Local Markets
                     </h4>
                     <p className="text-muted-foreground">
@@ -343,11 +364,11 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <div className="flex gap-4">
-                  <div className="flex-shrink-0 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-primary font-bold text-lg">2</span>
+                  <div className="flex items-center justify-center flex-shrink-0 w-12 h-12 rounded-full bg-primary/10">
+                    <span className="text-lg font-bold text-primary">2</span>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-lg mb-1">
+                    <h4 className="mb-1 text-lg font-semibold">
                       Real-Time Optimization
                     </h4>
                     <p className="text-muted-foreground">
@@ -357,11 +378,11 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <div className="flex gap-4">
-                  <div className="flex-shrink-0 h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-primary font-bold text-lg">3</span>
+                  <div className="flex items-center justify-center flex-shrink-0 w-12 h-12 rounded-full bg-primary/10">
+                    <span className="text-lg font-bold text-primary">3</span>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-lg mb-1">
+                    <h4 className="mb-1 text-lg font-semibold">
                       Simplified Campaign Management
                     </h4>
                     <p className="text-muted-foreground">
@@ -374,7 +395,7 @@ export default function LandingPage() {
             </motion.div>
 
             <motion.div
-              className="order-1 md:order-2 bg-card/20 border rounded-xl shadow-lg overflow-hidden backdrop-blur-sm"
+              className="order-1 overflow-hidden border shadow-lg md:order-2 bg-card/20 rounded-xl backdrop-blur-sm"
               initial={{ opacity: 0, x: 40 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
@@ -391,25 +412,25 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-20 px-4 bg-muted/30">
+      <section id="pricing" className="px-4 py-20 bg-muted/30">
         <div className="container mx-auto">
           <motion.div
-            className="text-center mb-16"
+            className="mb-16 text-center"
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            <h2 className="mb-4 text-3xl font-bold md:text-4xl">
               Simple Pricing
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <p className="max-w-2xl mx-auto text-xl text-muted-foreground">
               Start for free with our basic plan. Enhance your experience with
               optional add-ons.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
             {/* Free Plan */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -418,7 +439,7 @@ export default function LandingPage() {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="lg:col-span-1"
             >
-              <Card className="h-full bg-card/50 backdrop-blur-sm hover:shadow-md transition-all border-primary/10 hover:border-primary/30">
+              <Card className="h-full transition-all bg-card/50 backdrop-blur-sm hover:shadow-md border-primary/10 hover:border-primary/30">
                 <CardHeader className="pb-2">
                   <div className="flex justify-between">
                     <div>
@@ -432,8 +453,8 @@ export default function LandingPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <ul className="space-y-2">
-                    <li className="flex items-start group relative">
-                      <span className="mr-2 mt-1 text-primary">✓</span>
+                    <li className="relative flex items-start group">
+                      <span className="mt-1 mr-2 text-primary">✓</span>
                       Unlimited short links
                       <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                         Create as many short links as you need without any
@@ -441,32 +462,32 @@ export default function LandingPage() {
                       </div>
                     </li>
                     <li className="flex items-start">
-                      <span className="mr-2 mt-1 text-primary">✓</span>
+                      <span className="mt-1 mr-2 text-primary">✓</span>
                       Unlimited clicks
                     </li>
-                    <li className="flex items-start group relative">
-                      <span className="mr-2 mt-1 text-primary">✓</span>
+                    <li className="relative flex items-start group">
+                      <span className="mt-1 mr-2 text-primary">✓</span>
                       Geographic customization
                       <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                         Route users to different URLs based on their location
                       </div>
                     </li>
-                    <li className="flex items-start group relative">
-                      <span className="mr-2 mt-1 text-primary">✓</span>
+                    <li className="relative flex items-start group">
+                      <span className="mt-1 mr-2 text-primary">✓</span>
                       Device tagging
                       <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                         Redirect users depending on their device type or browser
                       </div>
                     </li>
-                    <li className="flex items-start group relative">
-                      <span className="mr-2 mt-1 text-primary">✓</span>
+                    <li className="relative flex items-start group">
+                      <span className="mt-1 mr-2 text-primary">✓</span>
                       Password protection
                       <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                         Secure your links with custom passwords
                       </div>
                     </li>
-                    <li className="flex items-start group relative">
-                      <span className="mr-2 mt-1 text-primary">✓</span>
+                    <li className="relative flex items-start group">
+                      <span className="mt-1 mr-2 text-primary">✓</span>
                       Link expiration and scheduling
                       <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                         Set links to automatically expire after a specific date
@@ -474,29 +495,29 @@ export default function LandingPage() {
                         time
                       </div>
                     </li>
-                    <li className="flex items-start group relative">
-                      <span className="mr-2 mt-1 text-primary">✓</span>
+                    <li className="relative flex items-start group">
+                      <span className="mt-1 mr-2 text-primary">✓</span>
                       Deeplinks support
                       <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                         Create links that open specific screens in mobile apps
                       </div>
                     </li>
-                    <li className="flex items-start group relative">
-                      <span className="mr-2 mt-1 text-primary">✓</span>
+                    <li className="relative flex items-start group">
+                      <span className="mt-1 mr-2 text-primary">✓</span>
                       Performance analytics
                       <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                         Track clicks, conversions and other key metrics
                       </div>
                     </li>
-                    <li className="flex items-start group relative">
-                      <span className="mr-2 mt-1 text-primary">✓</span>1 year
+                    <li className="relative flex items-start group">
+                      <span className="mt-1 mr-2 text-primary">✓</span>1 year
                       analytics retention
                       <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                         Access your analytics data for up to one year
                       </div>
                     </li>
-                    <li className="flex items-start text-muted-foreground group relative">
-                      <Info className="w-4 h-4 mr-2 mt-1" />
+                    <li className="relative flex items-start text-muted-foreground group">
+                      <Info className="w-4 h-4 mt-1 mr-2" />
                       5% traffic redirects to our links
                       <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                         For 5% of clicks on major retail links (Amazon,
@@ -505,8 +526,8 @@ export default function LandingPage() {
                         untouched.
                       </div>
                     </li>
-                    <li className="flex items-start text-muted-foreground group relative">
-                      <Info className="w-4 h-4 mr-2 mt-1" />
+                    <li className="relative flex items-start text-muted-foreground group">
+                      <Info className="w-4 h-4 mt-1 mr-2" />
                       No dedicated support
                       <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                         Support through community forums and documentation
@@ -518,7 +539,7 @@ export default function LandingPage() {
                     <RouterLink to="/app/register">Get Started</RouterLink>
                   </Button>
 
-                  <p className="text-xs text-center text-muted-foreground mt-2">
+                  <p className="mt-2 text-xs text-center text-muted-foreground">
                     No credit card required
                   </p>
                 </CardContent>
@@ -533,7 +554,7 @@ export default function LandingPage() {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="lg:col-span-3"
             >
-              <Card className="h-full bg-card/50 backdrop-blur-sm hover:shadow-md transition-all border-primary/10 hover:border-primary/30">
+              <Card className="h-full transition-all bg-card/50 backdrop-blur-sm hover:shadow-md border-primary/10 hover:border-primary/30">
                 <CardHeader>
                   <CardTitle>Optional Add-ons</CardTitle>
                   <CardDescription>
@@ -541,14 +562,14 @@ export default function LandingPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                     {/* Custom Domain */}
-                    <div className="p-4 border rounded-lg bg-background/50 group relative">
-                      <div className="flex justify-between items-start mb-2">
+                    <div className="relative p-4 border rounded-lg bg-background/50 group">
+                      <div className="flex items-start justify-between mb-2">
                         <h3 className="font-semibold">Custom Domain</h3>
-                        <span className="text-primary font-bold">$10/mo</span>
+                        <span className="font-bold text-primary">$10/mo</span>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-4">
+                      <p className="mb-4 text-sm text-muted-foreground">
                         Use your own domain for short links
                       </p>
                       <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
@@ -559,11 +580,11 @@ export default function LandingPage() {
 
                     {/* No Redirects */}
                     <div className="p-4 border rounded-lg bg-background/50">
-                      <div className="flex justify-between items-start mb-2">
+                      <div className="flex items-start justify-between mb-2">
                         <h3 className="font-semibold">No Redirects</h3>
-                        <span className="text-primary font-bold">$10/mo</span>
+                        <span className="font-bold text-primary">$10/mo</span>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-4">
+                      <p className="mb-4 text-sm text-muted-foreground">
                         Remove the 5% redirect to our links
                       </p>
                       {/* <Button variant="outline" className="w-full" asChild>
@@ -573,11 +594,11 @@ export default function LandingPage() {
 
                     {/* Customer Support */}
                     <div className="p-4 border rounded-lg bg-background/50">
-                      <div className="flex justify-between items-start mb-2">
+                      <div className="flex items-start justify-between mb-2">
                         <h3 className="font-semibold">Customer Support</h3>
-                        <span className="text-primary font-bold">$50/mo</span>
+                        <span className="font-bold text-primary">$50/mo</span>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-4">
+                      <p className="mb-4 text-sm text-muted-foreground">
                         Get priority support from our team
                       </p>
                       {/* <Button variant="outline" className="w-full" asChild>
@@ -586,12 +607,12 @@ export default function LandingPage() {
                     </div>
 
                     {/* Analytics Retention */}
-                    <div className="p-4 border rounded-lg bg-background/50 group relative">
-                      <div className="flex justify-between items-start mb-2">
+                    <div className="relative p-4 border rounded-lg bg-background/50 group">
+                      <div className="flex items-start justify-between mb-2">
                         <h3 className="font-semibold">Extended Analytics</h3>
-                        <span className="text-primary font-bold">$20/year</span>
+                        <span className="font-bold text-primary">$20/year</span>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-4">
+                      <p className="mb-4 text-sm text-muted-foreground">
                         Keep your analytics data beyond the first year
                       </p>
                       <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
@@ -608,18 +629,18 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 bg-primary/5">
+      <section className="px-4 py-20 bg-primary/5">
         <motion.div
-          className="container mx-auto text-center max-w-3xl"
+          className="container max-w-3xl mx-auto text-center"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">
+          <h2 className="mb-6 text-3xl font-bold md:text-4xl">
             Ready to Optimize Your Affiliate Revenue?
           </h2>
-          <p className="text-xl text-muted-foreground mb-8">
+          <p className="mb-8 text-xl text-muted-foreground">
             Join thousands of influencers who are increasing their conversions
             with our platform.
           </p>
@@ -633,41 +654,41 @@ export default function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t py-12 px-4">
+      <footer className="px-4 py-12 border-t">
         <div className="container mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center">
+          <div className="flex flex-col items-center justify-between md:flex-row">
             <div className="flex items-center gap-2 mb-6 md:mb-0">
-              <img src="/images/logo.avif" alt="Logo" className="h-8 w-auto" />
+              <img src="/images/logo.avif" alt="Logo" className="w-auto h-8" />
               <span className="font-semibold">rflnk</span>
             </div>
-            <div className="flex flex-col md:flex-row gap-6 md:gap-12 text-center md:text-left">
+            <div className="flex flex-col gap-6 text-center md:flex-row md:gap-12 md:text-left">
               <RouterLink
                 to="/app/login"
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="transition-colors text-muted-foreground hover:text-foreground"
               >
                 Login
               </RouterLink>
               <RouterLink
                 to="/register"
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="transition-colors text-muted-foreground hover:text-foreground"
               >
                 Sign Up
               </RouterLink>
               <a
                 href="#features"
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="transition-colors text-muted-foreground hover:text-foreground"
               >
                 Features
               </a>
               <a
                 href="#benefits"
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="transition-colors text-muted-foreground hover:text-foreground"
               >
                 Benefits
               </a>
             </div>
           </div>
-          <div className="mt-8 pt-8 border-t text-center text-sm text-muted-foreground">
+          <div className="pt-8 mt-8 text-sm text-center border-t text-muted-foreground">
             &copy; {new Date().getFullYear()}{" "}
             <a href="https://pleiades.solutions">Pleiades.solutions</a>. All
             rights reserved.

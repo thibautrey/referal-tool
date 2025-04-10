@@ -1,170 +1,105 @@
 import { NextFunction, Request, Response } from "express";
 import { getFromCache, saveToCache } from "../lib/redis";
 
-import { compare } from "bcrypt";
+import bcrypt from "bcrypt";
 import prisma from "../lib/prisma";
+import { v4 as uuidv4 } from "uuid";
 
-const MAX_ATTEMPTS = 5;
-const BLOCK_DURATION = 15 * 60; // 15 minutes in seconds
-const SESSION_DURATION = 24 * 60 * 60; // 24 hours in seconds
-
-const IN_MEMORY_CACHE = new Map<string, { value: string; expires: number }>();
-
-// Fallback cache function en cas d'indisponibilité de Redis
-const getFallbackCache = (key: string): string | null => {
-  const item = IN_MEMORY_CACHE.get(key);
-  if (!item) return null;
-  if (Date.now() > item.expires) {
-    IN_MEMORY_CACHE.delete(key);
-    return null;
-  }
-  return item.value;
-};
-
-const setFallbackCache = (
-  key: string,
-  value: string,
-  ttlSeconds: number
-): void => {
-  IN_MEMORY_CACHE.set(key, {
-    value,
-    expires: Date.now() + ttlSeconds * 1000,
-  });
-};
-
-export const validateLinkPassword = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const shortCode = req.params.path;
-  const password = req.body.password;
-  const ip = (req.headers["cf-connecting-ip"] as string) || req.ip || "0.0.0.0";
-
-  try {
-    // Check rate limit
-    const attemptsKey = `password_attempts:${shortCode}:${ip}`;
-    let attempts: number;
-
-    try {
-      attempts = parseInt((await getFromCache(attemptsKey)) || "0");
-    } catch (error) {
-      // Fallback to in-memory cache if Redis fails
-      attempts = parseInt(getFallbackCache(attemptsKey) || "0");
-    }
-
-    if (attempts >= MAX_ATTEMPTS) {
-      return res.status(429).json({
-        message: "Too many failed attempts. Please try again later.",
-        blockDuration: BLOCK_DURATION,
-      });
-    }
-
-    // Get link data
-    const link = await prisma.link.findUnique({
-      where: { shortCode },
-      select: { id: true, isPasswordProtected: true, passwordHash: true },
-    });
-
-    if (!link || !link.isPasswordProtected || !link.passwordHash) {
-      return res.status(400).json({ message: "Invalid request" });
-    }
-
-    // Validate password
-    const isValid = await compare(password, link.passwordHash);
-
-    if (!isValid) {
-      // Increment failed attempts
-      try {
-        await saveToCache(
-          attemptsKey,
-          (attempts + 1).toString(),
-          BLOCK_DURATION
-        );
-      } catch (error) {
-        // Fallback to in-memory cache if Redis fails
-        setFallbackCache(
-          attemptsKey,
-          (attempts + 1).toString(),
-          BLOCK_DURATION
-        );
-      }
-      return res.status(401).json({ message: "Invalid password" });
-    }
-
-    // Clear failed attempts
-    try {
-      await saveToCache(attemptsKey, "0", 1);
-    } catch (error) {
-      setFallbackCache(attemptsKey, "0", 1);
-    }
-
-    // Create session token
-    const sessionToken = Math.random().toString(36).substring(2);
-    const sessionKey = `link_session:${shortCode}:${sessionToken}`;
-
-    try {
-      await saveToCache(sessionKey, "valid", SESSION_DURATION);
-    } catch (error) {
-      setFallbackCache(sessionKey, "valid", SESSION_DURATION);
-    }
-
-    // Set session cookie
-    res.cookie("link_session", sessionToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: SESSION_DURATION * 1000,
-      sameSite: "lax",
-    });
-
-    next();
-  } catch (error) {
-    console.error("Password validation error:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
+// Check if the session is valid for password-protected links
 export const checkPasswordSession = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const shortCode = req.params.path;
-  const sessionToken = req.cookies.link_session;
+  const path = req.params.path;
 
   try {
-    // Check if link requires password
-    const link = await prisma.link.findUnique({
-      where: { shortCode },
-      select: { isPasswordProtected: true },
+    const link = await prisma.link.findFirst({
+      where: {
+        shortCode: path,
+        active: true,
+        isPasswordProtected: true,
+      },
     });
 
-    if (!link?.isPasswordProtected) {
-      return next();
+    if (!link) {
+      return next(); // No password protection, continue
     }
 
+    const sessionToken = req.cookies.link_session;
     if (!sessionToken) {
-      return res.status(401).json({ message: "Password required" });
+      return res.status(401).json({ error: "Password required" });
     }
 
-    // Validate session
-    const sessionKey = `link_session:${shortCode}:${sessionToken}`;
-    let isValid: string | null;
-
-    try {
-      isValid = await getFromCache(sessionKey);
-    } catch (error) {
-      // Fallback to in-memory cache if Redis fails
-      isValid = getFallbackCache(sessionKey);
-    }
+    const sessionKey = `link_session:${path}:${sessionToken}`;
+    const isValid = await getFromCache(sessionKey);
 
     if (!isValid) {
-      return res.status(401).json({ message: "Password required" });
+      return res.status(401).json({ error: "Invalid or expired session" });
     }
 
     next();
   } catch (error) {
-    console.error("Session validation error:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error("Error checking password session:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+// Validate password for password-protected links
+export const validateLinkPassword = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const { path } = req.params;
+  const { password } = req.body;
+
+  try {
+    if (!password) {
+      return res.status(400).json({ error: "Password is required" });
+    }
+
+    const link = await prisma.link.findFirst({
+      where: {
+        shortCode: path,
+        active: true,
+        isPasswordProtected: true,
+      },
+      select: {
+        id: true,
+        passwordHash: true,
+      },
+    });
+
+    if (!link || !link.passwordHash) {
+      return res
+        .status(404)
+        .json({ error: "Link not found or not password protected" });
+    }
+
+    const isValid = await bcrypt.compare(password, link.passwordHash);
+    if (!isValid) {
+      return res.status(401).json({ error: "Invalid password" });
+    }
+
+    // Create a session token
+    const sessionToken = uuidv4();
+    const sessionKey = `link_session:${path}:${sessionToken}`;
+
+    // Store session in Redis with 24-hour expiry
+    await saveToCache(sessionKey, "valid", 24 * 60 * 60);
+
+    // Set cookie with session token (24-hour expiry)
+    res.cookie("link_session", sessionToken, {
+      maxAge: 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    res.json({ message: "Password validated successfully" });
+  } catch (error) {
+    console.error("Error validating password:", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 };

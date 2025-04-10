@@ -190,23 +190,30 @@ export const createLink = async (req: Request, res: Response) => {
       shortCode,
       rules,
       deviceRules,
-      password,
       isPasswordProtected,
+      password,
     } = req.body;
     const projectId = parseInt(
       req.params.projectId || (req.headers["x-project-id"] as string)
     );
 
-    // Validate input
+    // Validate required fields
     if (!name || !baseUrl) {
       return res.status(400).json({ error: "Name and base URL are required" });
     }
 
     // Validate password if protection is enabled
-    if (isPasswordProtected && (!password || password.length < 6)) {
-      return res
-        .status(400)
-        .json({ error: "Password must be at least 6 characters long" });
+    if (isPasswordProtected === true) {
+      if (!password) {
+        return res.status(400).json({
+          error: "Password is required when password protection is enabled",
+        });
+      }
+      if (password.length < 6) {
+        return res.status(400).json({
+          error: "Password must be at least 6 characters long",
+        });
+      }
     }
 
     // Generate or validate short code
@@ -230,7 +237,7 @@ export const createLink = async (req: Request, res: Response) => {
       }
     }
 
-    // Hash password if provided
+    // Hash password if provided and protection is enabled
     let passwordHash = null;
     if (isPasswordProtected && password) {
       const bcrypt = require("bcrypt");
@@ -244,7 +251,7 @@ export const createLink = async (req: Request, res: Response) => {
         baseUrl,
         shortCode: finalShortCode,
         projectId,
-        isPasswordProtected: !!isPasswordProtected,
+        isPasswordProtected: isPasswordProtected === true,
         passwordHash,
       },
     });
@@ -332,8 +339,8 @@ export const updateLink = async (req: Request, res: Response) => {
       active,
       rules,
       deviceRules,
-      password,
       isPasswordProtected,
+      password,
       removePassword,
     } = req.body;
     const userId = req.user?.id;
@@ -348,9 +355,9 @@ export const updateLink = async (req: Request, res: Response) => {
     });
 
     if (!link) {
-      return res
-        .status(404)
-        .json({ message: "Link not found or unauthorized access" });
+      return res.status(404).json({
+        error: "Link not found or unauthorized access",
+      });
     }
 
     // Clear redirection cache for this link
@@ -359,25 +366,44 @@ export const updateLink = async (req: Request, res: Response) => {
     // Handle password updates
     let passwordUpdate = {};
     if (typeof isPasswordProtected !== "undefined") {
-      if (isPasswordProtected && password) {
-        // Validate new password
-        if (password.length < 6) {
-          return res
-            .status(400)
-            .json({ error: "Password must be at least 6 characters long" });
+      if (isPasswordProtected === true) {
+        // Password protection is being enabled or updated
+        if (!password && !link.passwordHash) {
+          return res.status(400).json({
+            error: "Password is required when enabling password protection",
+          });
         }
-        const bcrypt = require("bcrypt");
-        const passwordHash = await bcrypt.hash(password, 10);
-        passwordUpdate = {
-          isPasswordProtected: true,
-          passwordHash,
-        };
-      } else if (!isPasswordProtected || removePassword) {
+        if (password && password.length < 6) {
+          return res.status(400).json({
+            error: "Password must be at least 6 characters long",
+          });
+        }
+        if (password) {
+          const bcrypt = require("bcrypt");
+          const passwordHash = await bcrypt.hash(password, 10);
+          passwordUpdate = {
+            isPasswordProtected: true,
+            passwordHash,
+          };
+        } else {
+          // Keep existing password
+          passwordUpdate = {
+            isPasswordProtected: true,
+          };
+        }
+      } else {
+        // Password protection is being disabled
         passwordUpdate = {
           isPasswordProtected: false,
           passwordHash: null,
         };
       }
+    } else if (removePassword) {
+      // Explicit password removal
+      passwordUpdate = {
+        isPasswordProtected: false,
+        passwordHash: null,
+      };
     }
 
     // Update link basic information

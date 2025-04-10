@@ -293,7 +293,7 @@ export const markTipAsSeen = async (req: Request, res: Response) => {
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { seenTips: true }
+      select: { seenTips: true },
     });
 
     const seenTips = user?.seenTips ? JSON.parse(user.seenTips) : [];
@@ -303,11 +303,52 @@ export const markTipAsSeen = async (req: Request, res: Response) => {
 
     await prisma.user.update({
       where: { id: userId },
-      data: { seenTips: JSON.stringify(seenTips) }
+      data: { seenTips: JSON.stringify(seenTips) },
     });
 
     res.json({ message: "Tip marked as seen", data: { seenTips } });
   } catch (error) {
     res.status(500).json({ message: "Error updating seen tips" });
+  }
+};
+
+/**
+ * Update user's theme preference
+ */
+export const updateTheme = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    const { theme } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    if (!theme || !["light", "dark", "system"].includes(theme)) {
+      return res.status(400).json({ message: "Invalid theme value" });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { theme },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        active: true,
+        theme: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    res.json({
+      message: "Theme updated successfully",
+      data: updatedUser,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Error updating theme" });
   }
 };

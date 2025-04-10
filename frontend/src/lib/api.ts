@@ -280,6 +280,10 @@ class Api {
       name: string;
       baseUrl: string;
       rules: GeoRule[];
+      deviceRules?: { deviceType: string; redirectUrl: string }[];
+      isPasswordProtected?: boolean;
+      password?: string;
+      removePassword?: boolean;
     }
   ): Promise<ApiResponse<ReferralLink>> {
     const transformedData = {
@@ -290,6 +294,10 @@ class Api {
         redirectUrl: rule.redirectUrl,
         countries: rule.countries,
       })),
+      deviceRules: data.deviceRules || [],
+      isPasswordProtected: data.isPasswordProtected,
+      password: data.password,
+      removePassword: data.removePassword,
     };
     return this.put<ReferralLink>(`/links/${linkId}`, transformedData);
   }
@@ -301,6 +309,9 @@ class Api {
       baseUrl: string;
       shortCode: string;
       rules: GeoRule[];
+      deviceRules?: { deviceType: string; redirectUrl: string }[];
+      isPasswordProtected?: boolean;
+      password?: string;
     }
   ): Promise<ApiResponse<ReferralLink>> {
     const transformedData = {
@@ -311,12 +322,28 @@ class Api {
         redirectUrl: rule.redirectUrl,
         countries: rule.countries,
       })),
+      deviceRules: data.deviceRules || [],
+      isPasswordProtected: data.isPasswordProtected,
+      password: data.password,
     };
     return this.post<ReferralLink>("/links", transformedData, projectId);
   }
 
   async getProjects(): Promise<ApiResponse<Project[]>> {
     return this.get<Project[]>("/projects");
+  }
+
+  // Method to update user's theme preference
+  async updateTheme(
+    theme: "light" | "dark" | "system"
+  ): Promise<ApiResponse<{ theme: string }>> {
+    return this.post<{ theme: string }>("/users/theme", { theme });
+  }
+
+  // Method to get user's theme preference
+  async getUserTheme(): Promise<string> {
+    const response = await this.get<{ theme: string }>("/users/me");
+    return response.data.theme || "system";
   }
 }
 

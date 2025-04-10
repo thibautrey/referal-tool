@@ -47,6 +47,7 @@
     "proxy-chain": "^2.5.8",
     "resend": "^4.2.0",
     "speakeasy": "^2.0.0",
+    "uuid": "^11.1.0",
     "validator": "^13.15.0"
   },
   "devDependencies": {

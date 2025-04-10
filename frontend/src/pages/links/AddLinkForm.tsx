@@ -259,6 +259,13 @@ export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
           throw new Error("Invalid form data");
         }
 
+        if (isPasswordProtected && (!password || password.length < 6)) {
+          toast.error(
+            "Password must be at least 6 characters long when password protection is enabled"
+          );
+          throw new Error("Invalid form data");
+        }
+
         const validGeoRules = geoRules
           .filter((rule) => rule.redirectUrl.trim())
           .map((rule) => ({
@@ -281,11 +288,11 @@ export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
           shortCode: shortCode,
           rules: validGeoRules,
           deviceRules: validDeviceRules,
+          isPasswordProtected,
+          password: isPasswordProtected ? password : undefined,
           tags: [],
           comments: "",
           qrCode: false,
-          isPasswordProtected,
-          password: isPasswordProtected ? password : undefined,
           advanced: {
             conversionTracking: false,
           },

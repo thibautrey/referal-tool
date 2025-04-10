@@ -23,6 +23,7 @@ model User {
     otpVerified    Boolean   @default(false) // Indique si l'OTP a été vérifié
     otpBackupCodes String? // Pour stocker les codes de secours (JSON formaté)
     seenTips       String? // Store seen tips IDs as JSON array
+    theme          String?   @default("system") // Added theme preference
     projects       Project[]
     createdAt      DateTime  @default(now())
     updatedAt      DateTime  @updatedAt
