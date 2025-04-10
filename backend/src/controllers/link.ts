@@ -546,6 +546,43 @@ export const deleteRule = async (req: Request, res: Response) => {
   }
 };
 
+interface CachedLink {
+  data: any;
+  timestamp: number;
+}
+
+async function getCachedLinkData(shortCode: string): Promise<any | null> {
+  const linkCacheKey = `link:${shortCode}`;
+  const cached = await getFromCache(linkCacheKey);
+
+  if (!cached) return null;
+
+  const parsedCache: CachedLink = JSON.parse(cached);
+  const now = Date.now();
+
+  // Check if cache is still valid (10 minutes)
+  if (now - parsedCache.timestamp <= 10 * 60 * 1000) {
+    // Update timestamp for rolling cache
+    await saveToCache(
+      linkCacheKey,
+      JSON.stringify({ ...parsedCache, timestamp: now }),
+      600
+    );
+    return parsedCache.data;
+  }
+
+  return null;
+}
+
+async function cacheLinkData(shortCode: string, data: any): Promise<void> {
+  const linkCacheKey = `link:${shortCode}`;
+  const cacheData: CachedLink = {
+    data,
+    timestamp: Date.now(),
+  };
+  await saveToCache(linkCacheKey, JSON.stringify(cacheData), 600);
+}
+
 // Handle link redirection
 export const handleRedirection = async (req: Request, res: Response) => {
   try {
@@ -553,15 +590,12 @@ export const handleRedirection = async (req: Request, res: Response) => {
     const ip = req.ip || "0.0.0.0";
     const { deviceType, userAgent } = getUserAgent(req);
 
-    // Check cache for link data first
-    const linkCacheKey = `link:${path}`;
-    const cachedLink = await getFromCache(linkCacheKey);
+    // Try to get link data from cache
+    let linkData = await getCachedLinkData(path);
 
-    let link;
-    if (cachedLink) {
-      link = cachedLink;
-    } else {
-      link = await prisma.link.findFirst({
+    if (!linkData) {
+      // If not in cache, fetch from database
+      const freshLinkData = await prisma.link.findFirst({
         where: {
           shortCode: path,
           active: true,
@@ -572,127 +606,76 @@ export const handleRedirection = async (req: Request, res: Response) => {
         },
       });
 
-      if (link) {
-        // Cache link data for 5 minutes (300 seconds)
-        await saveToCache(linkCacheKey, link, 300);
+      if (!freshLinkData) {
+        return res.status(404).send(`
+          <!DOCTYPE html>
+          <html>
+            <head><title>Link not found</title></head>
+            <body><h1>Link not found</h1></body>
+          </html>
+        `);
       }
+
+      // Cache the fresh data
+      await cacheLinkData(path, freshLinkData);
+      linkData = freshLinkData;
     }
 
-    if (!link) {
-      return res.status(404).send(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Link not found</title>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <style>
-              body {
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                height: 100vh;
-                margin: 0;
-                padding: 20px;
-                text-align: center;
-                color: #333;
-                background-color: #f8f9fa;
-              }
-              .container {
-                max-width: 600px;
-                padding: 40px;
-                background-color: white;
-                border-radius: 8px;
-                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-              }
-              h1 {
-                font-size: 24px;
-                margin-bottom: 20px;
-              }
-              p {
-                font-size: 16px;
-                line-height: 1.5;
-                margin-bottom: 25px;
-              }
-              .icon {
-                font-size: 48px;
-                margin-bottom: 20px;
-              }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <div class="icon">😕</div>
-              <h1>Link not found</h1>
-              <p>The link you accessed is no longer available.</p>
-            </div>
-          </body>
-        </html>
-      `);
-    }
-
-    const [userCountry, userCity] = await getCountryFromIp(ip);
-
-    // First check device rules
-    interface DeviceRule {
-      id: number;
-      deviceType: "mobile" | "tablet" | "desktop" | "all";
-      redirectUrl: string;
-    }
-
-    const matchingDeviceRule: DeviceRule | null = link.deviceRules.find(
-      (rule: DeviceRule) => {
-        if (rule.deviceType === "all") return true;
-        return rule.deviceType === deviceType;
-      }
+    // Determine redirect URL based on device rules (using cached data)
+    let redirectUrl = linkData.baseUrl;
+    const matchingDeviceRule = linkData.deviceRules?.find(
+      (rule: { deviceType: string }) =>
+        rule.deviceType === "all" || rule.deviceType === deviceType
     );
 
-    // Then check geo rules if no device rule matched
-    interface GeoRule {
-      id: number;
-      countries: string;
-      redirectUrl: string;
-    }
+    if (matchingDeviceRule) {
+      redirectUrl = matchingDeviceRule.redirectUrl;
+    } else {
+      // Get country info for geo rules
+      const [userCountry, userCity] = await getCountryFromIp(ip);
 
-    const matchingGeoRule: GeoRule | null = !matchingDeviceRule
-      ? link.rules.find((rule: GeoRule) => {
+      const matchingGeoRule = linkData.rules?.find(
+        (rule: { countries: string }) => {
           const countries: string[] = JSON.parse(rule.countries);
           return countries.includes(userCountry);
-        })
-      : null;
+        }
+      );
 
-    let redirectUrl =
-      matchingDeviceRule?.redirectUrl ||
-      matchingGeoRule?.redirectUrl ||
-      link.baseUrl;
+      if (matchingGeoRule) {
+        redirectUrl = matchingGeoRule.redirectUrl;
+      }
+    }
 
-    // Vérifier si l'URL commence par http:// ou https://, sinon ajouter https://
+    // Ensure URL has protocol
     if (!redirectUrl.match(/^https?:\/\//i)) {
       redirectUrl = `https://${redirectUrl}`;
     }
 
-    // Asynchronously record the visit
-    prisma.linkVisit
-      .create({
-        data: {
-          linkId: link.id,
-          ip,
-          country: userCountry,
-          city: userCity,
-          ruleId: matchingGeoRule?.id || null,
-          deviceRuleId: matchingDeviceRule?.id || null,
-          userAgent,
-          deviceType,
-        },
-      })
-      .catch((error: Error | unknown) => {
-        console.error("Error recording visit:", error);
-      });
+    // Send redirect
+    res.redirect(302, redirectUrl);
 
-    return res.redirect(302, redirectUrl);
-  } catch (error: unknown) {
+    // Record analytics asynchronously
+    Promise.resolve()
+      .then(async () => {
+        const [userCountry, userCity] = await getCountryFromIp(ip);
+
+        await prisma.linkVisit.create({
+          data: {
+            linkId: linkData.id,
+            ip,
+            country: userCountry,
+            city: userCity,
+            ruleId: matchingDeviceRule?.id || null,
+            deviceRuleId: matchingDeviceRule?.id || null,
+            userAgent,
+            deviceType,
+          },
+        });
+      })
+      .catch((error) => {
+        console.error("Error in async analytics processing:", error);
+      });
+  } catch (error) {
     console.error("Redirection error:", error);
     return res.status(500).json({ message: "Error handling redirection" });
   }
