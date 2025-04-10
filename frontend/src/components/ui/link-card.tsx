@@ -19,7 +19,13 @@ export const LinkCard = ({
   const [isLoading, setIsLoading] = useState(false);
   const requestIdRef = useRef<Record<string, number>>({});
   const lastUrlRef = useRef<Record<string, string | undefined>>({});
-  const loadingStateRef = useRef<Record<string, boolean>>({});
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   const isValidUrl = (urlString: string): boolean => {
     try {
@@ -63,22 +69,27 @@ export const LinkCard = ({
         return;
       }
 
-      loadingStateRef.current[instanceId] = true;
-      setIsLoading(loadingStateRef.current[instanceId]);
+      setIsLoading(true);
 
       try {
         const metadata = await getMetadata(url);
-        // Only update if this is still the current request for this instance
-        if (requestIdRef.current[instanceId] === currentRequestId && metadata) {
+        // Only update if this is still the current request for this instance and component is mounted
+        if (
+          requestIdRef.current[instanceId] === currentRequestId &&
+          isMounted.current &&
+          metadata
+        ) {
           setTitle(metadata.title || null);
           setDescription(metadata.description || null);
           setImageUrl(metadata.image || null);
           onLoad?.();
         }
       } finally {
-        if (requestIdRef.current[instanceId] === currentRequestId) {
-          loadingStateRef.current[instanceId] = false;
-          setIsLoading(loadingStateRef.current[instanceId]);
+        if (
+          requestIdRef.current[instanceId] === currentRequestId &&
+          isMounted.current
+        ) {
+          setIsLoading(false);
         }
       }
     }

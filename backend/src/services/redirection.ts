@@ -119,36 +119,42 @@ export const handleRedirection = async (req: Request, res: Response) => {
     let matchingRule = null;
     let matchingDeviceRule = null;
 
-    // Priority 1: Check geographic rules first
-    // If a geo rule matches, it takes precedence over device rules
+    // Step 1: Check geographic rules first
     const geoRule = linkData.rules?.find(
       (rule: { countries: string; startDate?: Date; endDate?: Date }) => {
         const countries: string[] = JSON.parse(rule.countries);
         const isCountryMatch = countries.includes(userCountry);
-
         return isCountryMatch;
       }
     );
 
-    // Priority 2: Check device rules only if no geo rule matched
-    if (!geoRule) {
+    // Step 2: Check device rules if either:
+    // - no geo rule matched
+    // - or geo rule matched but allows fallthrough
+    const shouldCheckDeviceRules = !geoRule || !geoRule.isExclusive;
+
+    if (shouldCheckDeviceRules) {
       matchingDeviceRule = linkData.deviceRules?.find(
         (rule: { deviceType: string; startDate?: Date; endDate?: Date }) => {
           const isDeviceMatch =
             rule.deviceType === "all" || rule.deviceType === deviceType;
-
           return isDeviceMatch;
         }
       );
     }
 
-    // Apply the highest priority matching rule
+    // Apply rules based on matches
     if (geoRule) {
-      console.log(`Matched priority 1 (geo rule) for ${userCountry}`);
+      console.log(`Matched geo rule for ${userCountry}`);
       redirectUrl = geoRule.redirectUrl;
       matchingRule = geoRule;
+
+      if (matchingDeviceRule && !geoRule.isExclusive) {
+        console.log(`Also matched device rule for ${deviceType}`);
+        redirectUrl = matchingDeviceRule.redirectUrl;
+      }
     } else if (matchingDeviceRule) {
-      console.log(`Matched priority 2 (device rule) for ${deviceType}`);
+      console.log(`Matched device rule for ${deviceType}`);
       redirectUrl = matchingDeviceRule.redirectUrl;
     } else {
       console.log(`No rules matched, using base URL`);
@@ -164,25 +170,52 @@ export const handleRedirection = async (req: Request, res: Response) => {
     res.redirect(302, redirectUrl);
 
     // Record analytics asynchronously
-    prisma.linkVisit
-      .create({
+    try {
+      // Verify link exists before creating visit
+      const link = await prisma.link.findUnique({
+        where: { id: linkData.id },
+        select: { id: true },
+      });
+
+      if (!link) {
+        throw new Error(`Link with ID ${linkData.id} not found`);
+      }
+
+      // Verify rule IDs if they exist
+      if (matchingRule?.id) {
+        const rule = await prisma.linkRule.findUnique({
+          where: { id: matchingRule.id },
+          select: { id: true },
+        });
+        if (!rule) matchingRule = null;
+      }
+
+      if (matchingDeviceRule?.id) {
+        const deviceRule = await prisma.deviceRule.findUnique({
+          where: { id: matchingDeviceRule.id },
+          select: { id: true },
+        });
+        if (!deviceRule) matchingDeviceRule = null;
+      }
+
+      await prisma.linkVisit.create({
         data: {
           linkId: linkData.id,
           ip,
-          country: userCountry,
-          city: userCity,
+          country: userCountry || "unknown",
+          city: userCity || "unknown",
           ruleId: matchingRule?.id || null,
           deviceRuleId: matchingDeviceRule?.id || null,
           userAgent,
           deviceType,
         },
-      })
-      .then(() => {
-        // Async operation completed
-      })
-      .catch((error) => {
-        console.error("Error in async analytics processing:", error);
       });
+
+      console.log(`Analytics recorded for ${path}`);
+    } catch (error) {
+      console.error("Error in async analytics processing:", error);
+      // Don't throw the error since analytics are non-critical
+    }
   } catch (error: unknown) {
     console.error("Redirection error:", error);
     if (error instanceof Error && error.message === "Link not found") {
