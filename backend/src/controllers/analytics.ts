@@ -3,6 +3,9 @@ import { getFromCache, saveToCache } from "../lib/redis";
 
 import prisma from "../lib/prisma";
 
+// Ajouter au début du fichier, après les imports
+const DISABLE_CACHE = true;
+
 // Obtenir les statistiques de visites pour un lien ou un projet spécifique
 export const getVisitStats = async (req: Request, res: Response) => {
   const projectId = req.currentProjectId;
@@ -21,11 +24,13 @@ export const getVisitStats = async (req: Request, res: Response) => {
     });
   }
 
-  const cacheKey = `visits:${projectId || userId}`;
+  const cacheKey = `visits:${projectId || ""}:${userId || ""}`;
 
-  const cachedStats = await getFromCache(cacheKey);
-  if (cachedStats) {
-    return res.json(cachedStats);
+  if (!DISABLE_CACHE) {
+    const cachedStats = await getFromCache(cacheKey);
+    if (cachedStats) {
+      return res.json(cachedStats);
+    }
   }
 
   try {
@@ -47,15 +52,27 @@ export const getVisitStats = async (req: Request, res: Response) => {
     if (linkId) {
       // Si on a un linkId, on vérifie qu'il appartient au bon projet/utilisateur
       whereClause.linkId = parseInt(linkId as string);
-      whereClause.link = projectId
-        ? { projectId: parseInt(projectId as string) }
-        : { project: { userId } };
+      whereClause.link = {
+        project: {
+          userId: userId,
+          ...(projectId && { id: parseInt(projectId as string) }),
+        },
+      };
     } else if (projectId) {
-      // Filtrer par projet spécifique
-      whereClause.link = { projectId: parseInt(projectId as string) };
+      // Filtrer par projet spécifique (en s'assurant qu'il appartient à l'utilisateur)
+      whereClause.link = {
+        projectId: parseInt(projectId as string),
+        project: {
+          userId: userId,
+        },
+      };
     } else {
       // Filtrer par tous les projets de l'utilisateur
-      whereClause.link = { project: { userId } };
+      whereClause.link = {
+        project: {
+          userId: userId,
+        },
+      };
     }
 
     // Filtrer par plage de dates
@@ -116,9 +133,10 @@ export const getVisitStats = async (req: Request, res: Response) => {
     const visitsByDate = await getVisitsByTimeInterval(
       projectId ? parseInt(projectId as string) : null,
       linkId ? parseInt(linkId as string) : null,
-      timeRange
+      timeRange,
+      `${userId}`
     );
-
+    console.log(JSON.stringify(visitsByDate));
     // Si linkId est spécifié, ajouter les statistiques par règles
     let visitsByRule = null;
     if (linkId) {
@@ -167,8 +185,10 @@ export const getVisitStats = async (req: Request, res: Response) => {
       },
     };
 
-    // Cache the results for 5 minutes (300 seconds)
-    await saveToCache(cacheKey, stats, 300);
+    // Cache the results for 5 minutes (300 seconds) if caching is enabled
+    if (!DISABLE_CACHE) {
+      await saveToCache(cacheKey, stats, 300);
+    }
 
     return res.json(stats);
   } catch (error) {
@@ -185,22 +205,22 @@ async function getVisitsByTimeInterval(
   projectId: number | null = null,
   linkId: number | null = null,
   timeRange: string = "week",
-  userId?: string
+  userId: string
 ): Promise<Array<{ date: string; count: number }>> {
   try {
-    // Construire la clause where pour filtrer les visites
-    const whereClause: any = {};
-
-    if (linkId) {
-      whereClause.linkId = linkId;
-    } else if (projectId) {
-      whereClause.link = { projectId };
-    } else if (userId) {
-      whereClause.link = {
+    const whereClause: any = {
+      link: {
         project: {
           userId: userId,
         },
-      };
+      },
+    };
+
+    if (linkId) {
+      whereClause.linkId = linkId;
+    }
+    if (projectId) {
+      whereClause.link.projectId = projectId;
     }
 
     // Déterminer la plage de dates à analyser
@@ -240,9 +260,9 @@ async function getVisitsByTimeInterval(
       },
     });
 
+    console.log(JSON.stringify(visits));
     // Préparer la structure de données pour l'agrégation
     const visitsByDate = new Map<string, number>();
-
     // Formater et agréger les dates selon le timeRange
     visits.forEach((visit: LinkVisit) => {
       const date = formatDateByTimeRange(visit.createdAt, timeRange);
