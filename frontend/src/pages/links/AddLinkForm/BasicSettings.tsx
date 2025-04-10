@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Copy } from "lucide-react";
+import { toast } from "sonner";
 import { generateRandomCode } from "./utils";
 import { useRef } from "react";
 
@@ -36,6 +37,11 @@ export function BasicSettings({
     onShortCodeChange(generateRandomCode());
   };
 
+  const copyShortCode = () => {
+    navigator.clipboard.writeText(`${currentDomain}/l/${shortCode}`);
+    toast.success("Short link copied to clipboard");
+  };
+
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -62,15 +68,27 @@ export function BasicSettings({
           <div className="flex items-center border rounded-md px-3 py-2 bg-muted">
             <span className="text-muted-foreground">{currentDomain}/l/</span>
             <span className="font-medium">{shortCode}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="ml-2 h-8 w-8"
+              onClick={copyShortCode}
+              title="Copy short link"
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
           </div>
         ) : (
           <div className="flex gap-2">
             <div className="relative flex-1">
               <div
-                className={`flex items-center border rounded-md pr-0 overflow-hidden ${
+                className={`flex items-center border rounded-md overflow-hidden ${
                   !isShortCodeAvailable ? "border-red-500" : "border-input"
                 }`}
               >
+                <span className="text-[#166434] bg-[#DCFCE7] px-3 py-2 border-r border-[#166434]/20">
+                  {currentDomain}/l/
+                </span>
                 <input
                   ref={shortCodeInputRef}
                   id="shortCode"
@@ -78,9 +96,18 @@ export function BasicSettings({
                   onChange={(e) =>
                     onShortCodeChange(e.target.value.toLowerCase())
                   }
-                  className="flex-1 bg-transparent px-3 py-2 text-sm outline-none"
-                  placeholder="code"
+                  className="flex-1 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-0"
+                  placeholder="Enter your custom code"
                 />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={copyShortCode}
+                  title="Copy short link"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
               </div>
             </div>
             <Button

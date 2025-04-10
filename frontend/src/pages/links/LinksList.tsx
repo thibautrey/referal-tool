@@ -33,7 +33,6 @@ import {
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { ButtonColorful } from "@/components/ui/button-colorful";
 import { ReferralLink } from "../types";
 import { api } from "@/lib/api";
 import { motion } from "framer-motion";
@@ -243,11 +242,10 @@ export function LinksList({
             <p className="text-muted-foreground">
               Start by creating your first referral link
             </p>
-            <ButtonColorful
-              label="Add link"
-              icon={<Plus className="h-4 w-4" />}
-              onClick={onAddLinkClick}
-            />
+            <Button onClick={onAddLinkClick}>
+              <Plus className="h-4 w-4" />
+              Add link
+            </Button>
           </CardContent>
         </Card>
       </AnimatedCard>
@@ -258,11 +256,10 @@ export function LinksList({
     <AnimatedCard className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold tracking-tight"></h2>
-        <ButtonColorful
-          label="Add link"
-          icon={<Plus className="h-4 w-4" />}
-          onClick={onAddLinkClick}
-        />
+        <Button onClick={onAddLinkClick}>
+          <Plus className="h-4 w-4" />
+          Add link
+        </Button>
       </div>
 
       <Card className={glassCardStyle}>

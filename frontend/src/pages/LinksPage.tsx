@@ -6,7 +6,6 @@ import { useEffect, useRef, useState } from "react";
 import { AddLinkForm } from "./links/AddLinkForm";
 import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ButtonColorful } from "@/components/ui/button-colorful";
 import { LinkFormData } from "./links/types";
 import { LinksList } from "./links/LinksList";
 import { ReferralLink } from "./types";
@@ -179,7 +178,7 @@ export default function LinksPage() {
         </nav>
 
         {view === "form" && (
-          <ButtonColorful onClick={handleFormSubmit}>
+          <Button onClick={handleFormSubmit}>
             {editingLink ? (
               <>
                 <Save className="h-4 w-4 mr-2" />
@@ -191,7 +190,7 @@ export default function LinksPage() {
                 Add Link
               </>
             )}
-          </ButtonColorful>
+          </Button>
         )}
       </div>
 

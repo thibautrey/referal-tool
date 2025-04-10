@@ -1,6 +1,6 @@
 import { AVAILABLE_COUNTRIES } from "../Countries";
 
-export const generateRandomCode = (length: number = 4): string => {
+export const generateRandomCode = (length: number = 6): string => {
   const letters = "abcdefghijklmnopqrstuvwxyz";
   const numbers = "0123456789";
   const chars = letters + numbers;

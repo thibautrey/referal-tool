@@ -137,10 +137,12 @@ export function DeviceTargeting({
           </div>
         </div>
       ))}
-      <Button variant="outline" onClick={handleAddRule}>
-        <Plus className="h-4 w-4 mr-2" />
-        Add Device Rule
-      </Button>
+      <center>
+        <Button variant="outline" onClick={handleAddRule}>
+          <Plus className="h-4 w-4 mr-2" />
+          Add Rule
+        </Button>
+      </center>
     </div>
   );
 }
