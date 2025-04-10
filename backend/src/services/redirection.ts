@@ -73,7 +73,9 @@ export const handleRedirection = async (req: Request, res: Response) => {
   console.log(`Processing redirection for path: ${path}`);
 
   try {
-    const ip = req.ip || "0.0.0.0";
+    const ip =
+      (req.headers["cf-connecting-ip"] as string) || req.ip || "0.0.0.0";
+
     const { deviceType, userAgent } = getUserAgent(req);
 
     // Run cache check and geolocation in parallel since they're independent

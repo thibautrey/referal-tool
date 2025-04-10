@@ -12,7 +12,17 @@ const initGeolocation = async () => {
   try {
     // Initialize lookup
     await reload({
-      fields: ["country", "city"],
+      fields: [
+        "country",
+        "city",
+        "metro",
+        "eu",
+        "timezone",
+        "latitude",
+        "longitude",
+        "area",
+        "postcode",
+      ],
       smallMemory: false,
       dataDir: DATA_DIR,
       tmpDataDir: TMP_DATA_DIR,

@@ -1,10 +1,6 @@
 import { Request, Response } from "express";
 import { getFromCache, saveToCache } from "../lib/redis";
-import { get404Template } from "../templates/404";
-
-import { getCountryFromIp } from "../utils/geolocation";
 import prisma from "../lib/prisma";
-import { getUserAgent, handleRedirection } from "../services/redirection";
 
 // Function to generate a random short code
 const generateRandomCode = (length: number = 4): string => {
