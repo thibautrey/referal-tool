@@ -5,6 +5,7 @@ import { RefreshCw, Copy } from "lucide-react";
 import { toast } from "sonner";
 import { generateRandomCode } from "./utils";
 import { useRef } from "react";
+import { QRCodeDialog } from "@/components/QRCodeDialog";
 
 interface BasicSettingsProps {
   linkName: string;
@@ -68,15 +69,18 @@ export function BasicSettings({
           <div className="flex items-center border rounded-md px-3 py-2 bg-muted">
             <span className="text-muted-foreground">{currentDomain}/l/</span>
             <span className="font-medium">{shortCode}</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="ml-2 h-8 w-8"
-              onClick={copyShortCode}
-              title="Copy short link"
-            >
-              <Copy className="h-4 w-4" />
-            </Button>
+            <div className="flex ml-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={copyShortCode}
+                title="Copy short link"
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+              <QRCodeDialog url={`${currentDomain}/l/${shortCode}`} />
+            </div>
           </div>
         ) : (
           <div className="flex gap-2">
@@ -99,15 +103,18 @@ export function BasicSettings({
                   className="flex-1 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-0"
                   placeholder="Enter your custom code"
                 />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={copyShortCode}
-                  title="Copy short link"
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
+                <div className="flex">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={copyShortCode}
+                    title="Copy short link"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                  <QRCodeDialog url={`${currentDomain}/l/${shortCode}`} />
+                </div>
               </div>
             </div>
             <Button

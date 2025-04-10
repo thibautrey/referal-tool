@@ -1,4 +1,5 @@
 import express, { Application, NextFunction, Request, Response } from "express";
+import rateLimit from "express-rate-limit";
 
 import analyticsRoutes from "./routes/analytics";
 import cors from "cors";
@@ -16,6 +17,18 @@ import metadataRoutes from "./routes/metadata";
 dotenv.config();
 const app: Application = express();
 
+// Configuration du rate limiter
+const limiter = rateLimit({
+  windowMs: 1000, // 1 seconde
+  max: 15,
+  message: {
+    error: "Too many requests from this IP, please try again later.",
+    status: 429,
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Configuration de Morgan avec un format personnalisé plus détaillé
 morgan.token("body", (req: Request) => JSON.stringify(req.body));
 morgan.token("params", (req: Request) => JSON.stringify(req.params));
@@ -27,6 +40,7 @@ const morganFormat =
     : ":method :url :status :response-time ms - :res[content-length] - Params: :params - Query: :query - Body: :body";
 
 // Middleware
+app.use(limiter); // Rate limiter
 app.use(
   helmet({
     contentSecurityPolicy: {

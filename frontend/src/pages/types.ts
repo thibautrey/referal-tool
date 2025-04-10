@@ -12,6 +12,7 @@ export interface ReferralLink {
   createdAt: string;
   updatedAt: string;
   rules: GeoRule[];
+  deviceRules: DeviceRule[]; // Add this line
   _count?: {
     LinkVisit?: number;
   };
@@ -46,4 +47,19 @@ export interface LinkAnalyticsData {
   visitsByCountry: CountryVisit[];
   visitsByDate: DateVisit[];
   visitsByRule?: RuleVisit[];
+}
+
+export interface Rule {
+  id: number;
+  redirectUrl: string;
+  countries: string[];
+  linkId: number;
+}
+
+export interface DeviceRule {
+  id: number;
+  redirectUrl: string;
+  deviceType: string;
+  devices: string[];
+  linkId: number;
 }

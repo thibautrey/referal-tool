@@ -31,14 +31,13 @@ export default function LinksPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const formRef = useRef<AddLinkFormRef>(null);
 
-  // Detect URL parameters on load
-  useEffect(() => {
+  const checkParams = () => {
     const mode = searchParams.get("mode");
     const id = searchParams.get("id");
 
     if (mode === "edit" && id) {
       setView("form");
-      // We'll set the editingLink when we have the data
+      // Le lien sera déjà défini par navigateToEditForm
     } else if (mode === "add") {
       setView("form");
       setEditingLink(null);
@@ -46,7 +45,13 @@ export default function LinksPage() {
       setView("list");
       setEditingLink(null);
     }
-  }, [searchParams]);
+  };
+
+  useEffect(() => {
+    if (currentProjectId) {
+      checkParams();
+    }
+  }, [searchParams, currentProjectId]);
 
   const navigateToList = () => {
     setView("list");
@@ -89,7 +94,7 @@ export default function LinksPage() {
         throw new Error("Invalid response from server");
       }
 
-      // Parse the countries JSON string in rules if needed
+      // Parse the JSON strings in rules and deviceRules if needed
       const processedResponse = {
         ...response.data,
         rules: response.data.rules.map((rule) => ({
@@ -98,6 +103,13 @@ export default function LinksPage() {
             typeof rule.countries === "string"
               ? JSON.parse(rule.countries)
               : rule.countries,
+        })),
+        deviceRules: response.data.deviceRules.map((rule) => ({
+          ...rule,
+          devices:
+            typeof rule.devices === "string"
+              ? JSON.parse(rule.devices)
+              : rule.devices,
         })),
       };
 

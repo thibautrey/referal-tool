@@ -188,12 +188,12 @@ export const createLink = async (req: Request, res: Response) => {
       req.params.projectId || (req.headers["x-project-id"] as string)
     );
 
-    // Valider les entrées
+    // Validate input
     if (!name || !baseUrl) {
       return res.status(400).json({ error: "Name and base URL are required" });
     }
 
-    // Générer un code court si non fourni
+    // Generate or validate short code
     let finalShortCode = shortCode;
     if (!finalShortCode) {
       let isUnique = false;
@@ -205,7 +205,6 @@ export const createLink = async (req: Request, res: Response) => {
         isUnique = !existingLink;
       }
     } else {
-      // Vérifier si le code court existe déjà
       const existingLink = await prisma.link.findUnique({
         where: { shortCode: finalShortCode },
       });
@@ -215,7 +214,7 @@ export const createLink = async (req: Request, res: Response) => {
       }
     }
 
-    // Créer le lien avec son code court
+    // Create link with its short code
     const link = await prisma.link.create({
       data: {
         name,
@@ -225,34 +224,30 @@ export const createLink = async (req: Request, res: Response) => {
       },
     });
 
-    // Ajouter les règles si fournies
+    // Handle geo rules
     if (rules && Array.isArray(rules)) {
-      for (const rule of rules) {
-        await prisma.linkRule.create({
-          data: {
-            redirectUrl: rule.redirectUrl,
-            countries: JSON.stringify(rule.countries),
-            linkId: link.id,
-          },
-        });
-      }
+      await prisma.linkRule.createMany({
+        data: rules.map((rule) => ({
+          redirectUrl: rule.redirectUrl,
+          countries: JSON.stringify(rule.countries),
+          linkId: link.id,
+        })),
+      });
     }
 
-    // Ajouter les règles de périphérique si fournies
+    // Handle device rules
     if (deviceRules && Array.isArray(deviceRules)) {
-      for (const rule of deviceRules) {
-        await prisma.deviceRule.create({
-          data: {
-            redirectUrl: rule.redirectUrl,
-            deviceType: rule.deviceType,
-            devices: JSON.stringify(rule.devices),
-            linkId: link.id,
-          },
-        });
-      }
+      await prisma.deviceRule.createMany({
+        data: deviceRules.map((rule) => ({
+          redirectUrl: rule.redirectUrl,
+          deviceType: rule.deviceType,
+          devices: JSON.stringify(rule.devices),
+          linkId: link.id,
+        })),
+      });
     }
 
-    // Récupérer le lien avec ses règles
+    // Return link with all rules
     const linkWithRules = await prisma.link.findUnique({
       where: { id: link.id },
       include: {
@@ -286,6 +281,7 @@ export const getLinkById = async (req: Request, res: Response) => {
       },
       include: {
         rules: true,
+        deviceRules: true,
       },
     });
 
@@ -333,46 +329,38 @@ export const updateLink = async (req: Request, res: Response) => {
       },
     });
 
-    // Update rules if provided
+    // Update geo rules
     if (rules && Array.isArray(rules)) {
-      // Delete existing rules
       await prisma.linkRule.deleteMany({
         where: { linkId: parseInt(id) },
       });
 
-      // Create new rules
-      for (const rule of rules) {
-        await prisma.linkRule.create({
-          data: {
-            redirectUrl: rule.redirectUrl,
-            countries: JSON.stringify(rule.countries),
-            linkId: parseInt(id),
-          },
-        });
-      }
+      await prisma.linkRule.createMany({
+        data: rules.map((rule) => ({
+          redirectUrl: rule.redirectUrl,
+          countries: JSON.stringify(rule.countries),
+          linkId: parseInt(id),
+        })),
+      });
     }
 
-    // Update device rules if provided
+    // Update device rules
     if (deviceRules && Array.isArray(deviceRules)) {
-      // Delete existing device rules
       await prisma.deviceRule.deleteMany({
         where: { linkId: parseInt(id) },
       });
 
-      // Create new device rules
-      for (const rule of deviceRules) {
-        await prisma.deviceRule.create({
-          data: {
-            redirectUrl: rule.redirectUrl,
-            deviceType: rule.deviceType,
-            devices: JSON.stringify(rule.devices || []),
-            linkId: parseInt(id),
-          },
-        });
-      }
+      await prisma.deviceRule.createMany({
+        data: deviceRules.map((rule) => ({
+          redirectUrl: rule.redirectUrl,
+          deviceType: rule.deviceType,
+          devices: JSON.stringify(rule.devices),
+          linkId: parseInt(id),
+        })),
+      });
     }
 
-    // Get the updated link with all its rules
+    // Get updated link with all rules
     const linkWithRules = await prisma.link.findUnique({
       where: { id: parseInt(id) },
       include: {

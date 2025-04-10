@@ -283,6 +283,7 @@ class Api {
     }
   ): Promise<ApiResponse<ReferralLink>> {
     const transformedData = {
+      ...data,
       name: data.name,
       baseUrl: data.baseUrl,
       rules: data.rules.map((rule) => ({

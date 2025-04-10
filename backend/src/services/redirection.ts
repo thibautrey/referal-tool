@@ -112,33 +112,46 @@ export const handleRedirection = async (req: Request, res: Response) => {
       })(),
     ]);
 
-    // Determine redirect URL based on device rules
-    let redirectUrl = linkData.baseUrl;
-    let matchingDeviceRule = null;
-    let matchingGeoRule = null;
+    const now = new Date();
 
-    // Check device rules
-    matchingDeviceRule = linkData.deviceRules?.find(
-      (rule: { deviceType: string }) =>
-        rule.deviceType === "all" || rule.deviceType === deviceType
+    // 1. Check geo rules first
+    let redirectUrl = linkData.baseUrl;
+    let matchingRule = null;
+    let matchingDeviceRule = null;
+
+    // Priority 1: Check geographic rules first
+    // If a geo rule matches, it takes precedence over device rules
+    const geoRule = linkData.rules?.find(
+      (rule: { countries: string; startDate?: Date; endDate?: Date }) => {
+        const countries: string[] = JSON.parse(rule.countries);
+        const isCountryMatch = countries.includes(userCountry);
+
+        return isCountryMatch;
+      }
     );
 
-    if (matchingDeviceRule) {
-      console.log(`Matched device rule for ${deviceType}`);
+    // Priority 2: Check device rules only if no geo rule matched
+    if (!geoRule) {
+      matchingDeviceRule = linkData.deviceRules?.find(
+        (rule: { deviceType: string; startDate?: Date; endDate?: Date }) => {
+          const isDeviceMatch =
+            rule.deviceType === "all" || rule.deviceType === deviceType;
+
+          return isDeviceMatch;
+        }
+      );
+    }
+
+    // Apply the highest priority matching rule
+    if (geoRule) {
+      console.log(`Matched priority 1 (geo rule) for ${userCountry}`);
+      redirectUrl = geoRule.redirectUrl;
+      matchingRule = geoRule;
+    } else if (matchingDeviceRule) {
+      console.log(`Matched priority 2 (device rule) for ${deviceType}`);
       redirectUrl = matchingDeviceRule.redirectUrl;
     } else {
-      // Check geo rules only if no device rule matched
-      matchingGeoRule = linkData.rules?.find((rule: { countries: string }) => {
-        const countries: string[] = JSON.parse(rule.countries);
-        return countries.includes(userCountry);
-      });
-
-      if (matchingGeoRule) {
-        console.log(`Matched geo rule for ${userCountry}`);
-        redirectUrl = matchingGeoRule.redirectUrl;
-      } else {
-        console.log(`No rules matched, using base URL`);
-      }
+      console.log(`No rules matched, using base URL`);
     }
 
     // Ensure URL has protocol
@@ -158,7 +171,7 @@ export const handleRedirection = async (req: Request, res: Response) => {
           ip,
           country: userCountry,
           city: userCity,
-          ruleId: matchingGeoRule?.id || null,
+          ruleId: matchingRule?.id || null,
           deviceRuleId: matchingDeviceRule?.id || null,
           userAgent,
           deviceType,
