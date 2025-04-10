@@ -362,6 +362,12 @@ export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
                 onShortCodeChange={setShortCode}
               />
 
+              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                <span>
+                  {currentDomain}/l/{shortCode}
+                </span>
+              </div>
+
               <div className="space-y-4">
                 <ExpandableTabs
                   tabs={tabs}

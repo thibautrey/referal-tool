@@ -111,6 +111,11 @@ app.get("/", (_req, res) => {
   res.sendFile(path.join(frontendBuildPath, "index.html"));
 });
 
+// Handle redirects - now using /l/ prefix
+app.get("/l/:path([a-zA-Z0-9-_]+)", (req, res) => {
+  handleRedirection(req, res);
+});
+
 // Handle redirects - this should catch any other single-segment path
 // This must come after all other routes to not interfere with /app or /api
 app.get("/:path([a-zA-Z0-9-_]+)", (req, res, next) => {
