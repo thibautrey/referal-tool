@@ -73,6 +73,11 @@ export async function saveToCache(
   }
 }
 
+export const deleteFromCache = async (key: string): Promise<void> => {
+  await redis.del(key);
+  memoryCache.del(key);
+};
+
 const memoryCache = new LRU<string, any>({
   max: 500, // Store max 500 items
   ttl: 1000 * 60 * 2, // Cache for 2 minutes in memory

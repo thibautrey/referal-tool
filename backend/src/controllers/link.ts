@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getFromCache, saveToCache } from "../lib/redis";
+import { getFromCache, saveToCache, deleteFromCache } from "../lib/redis";
 import prisma from "../lib/prisma";
 
 // Function to generate a random short code
@@ -319,6 +319,9 @@ export const updateLink = async (req: Request, res: Response) => {
         .json({ message: "Link not found or unauthorized access" });
     }
 
+    // Clear redirection cache for this link
+    await deleteFromCache(`link:${link.shortCode}`);
+
     // Update link basic information
     const updatedLink = await prisma.link.update({
       where: { id: parseInt(id) },
@@ -330,34 +333,42 @@ export const updateLink = async (req: Request, res: Response) => {
     });
 
     // Update geo rules
-    if (rules && Array.isArray(rules)) {
+    if (Array.isArray(rules)) {
       await prisma.linkRule.deleteMany({
         where: { linkId: parseInt(id) },
       });
 
-      await prisma.linkRule.createMany({
-        data: rules.map((rule) => ({
-          redirectUrl: rule.redirectUrl,
-          countries: JSON.stringify(rule.countries),
-          linkId: parseInt(id),
-        })),
-      });
+      if (rules.length > 0) {
+        await prisma.linkRule.createMany({
+          data: rules.map((rule) => ({
+            redirectUrl: rule.redirectUrl,
+            countries: Array.isArray(rule.countries)
+              ? JSON.stringify(rule.countries)
+              : rule.countries,
+            linkId: parseInt(id),
+          })),
+        });
+      }
     }
 
     // Update device rules
-    if (deviceRules && Array.isArray(deviceRules)) {
+    if (Array.isArray(deviceRules)) {
       await prisma.deviceRule.deleteMany({
         where: { linkId: parseInt(id) },
       });
 
-      await prisma.deviceRule.createMany({
-        data: deviceRules.map((rule) => ({
-          redirectUrl: rule.redirectUrl,
-          deviceType: rule.deviceType,
-          devices: JSON.stringify(rule.devices),
-          linkId: parseInt(id),
-        })),
-      });
+      if (deviceRules.length > 0) {
+        await prisma.deviceRule.createMany({
+          data: deviceRules.map((rule) => ({
+            redirectUrl: rule.redirectUrl,
+            deviceType: rule.deviceType,
+            devices: Array.isArray(rule.devices)
+              ? JSON.stringify(rule.devices)
+              : "[]", // Default to empty array if no devices specified
+            linkId: parseInt(id),
+          })),
+        });
+      }
     }
 
     // Get updated link with all rules
@@ -374,6 +385,7 @@ export const updateLink = async (req: Request, res: Response) => {
       data: linkWithRules,
     });
   } catch (error: unknown) {
+    console.error("Error updating link:", error);
     return res.status(500).json({ message: "Error updating link", error });
   }
 };
@@ -398,6 +410,9 @@ export const deleteLink = async (req: Request, res: Response) => {
         .status(404)
         .json({ message: "Lien non trouvé ou accès non autorisé" });
     }
+
+    // Clear redirection cache before deleting
+    await deleteFromCache(`link:${link.shortCode}`);
 
     await prisma.linkRule.deleteMany({
       where: { linkId: parseInt(id) },

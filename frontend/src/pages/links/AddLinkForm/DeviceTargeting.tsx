@@ -29,7 +29,7 @@ export function DeviceTargeting({
       {
         redirectUrl: "",
         deviceType: "all",
-        devices: [],
+        devices: [], // Ensure devices is always an array
       },
     ]);
   };
@@ -40,7 +40,19 @@ export function DeviceTargeting({
 
   const updateRule = (index: number, updates: Partial<DeviceRule>) => {
     onRulesChange(
-      rules.map((rule, i) => (i === index ? { ...rule, ...updates } : rule))
+      rules.map((rule, i) => {
+        if (i === index) {
+          // Ensure devices remains an array when updating
+          return {
+            ...rule,
+            ...updates,
+            devices: Array.isArray(updates.devices)
+              ? updates.devices
+              : rule.devices,
+          };
+        }
+        return rule;
+      })
     );
   };
 

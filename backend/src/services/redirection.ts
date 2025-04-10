@@ -3,6 +3,8 @@ import { getFromCache, getWithCache, saveToCache } from "../lib/redis";
 import { get404Template } from "../templates/404";
 import { getCountryFromIp } from "../utils/geolocation";
 import prisma from "../lib/prisma";
+import { Rule, RuleContext } from "../types/rules";
+import { DeviceRule, GeoRule } from "./rules";
 
 // Helper function to get user agent and device type
 export const getUserAgent = (
@@ -67,6 +69,24 @@ async function cacheLinkData(shortCode: string, data: any): Promise<void> {
   await saveToCache(linkCacheKey, JSON.stringify(cacheData), 600);
 }
 
+async function applyRules(linkData: any, context: RuleContext): Promise<void> {
+  const rules: Rule[] = [
+    ...linkData.rules.map((r: any) => new GeoRule(r)),
+    ...linkData.deviceRules.map((r: any) => new DeviceRule(r)),
+  ].sort((a, b) => b.priority - a.priority);
+
+  for (const rule of rules) {
+    try {
+      await rule.execute(context);
+    } catch (error) {
+      if (error instanceof Error && error.message === "STOP_CHAIN") {
+        break;
+      }
+      throw error;
+    }
+  }
+}
+
 // Handle link redirection
 export const handleRedirection = async (req: Request, res: Response) => {
   const path = req.params.path;
@@ -112,62 +132,24 @@ export const handleRedirection = async (req: Request, res: Response) => {
       })(),
     ]);
 
-    const now = new Date();
+    const context: RuleContext = {
+      userCountry,
+      userCity,
+      deviceType,
+      redirectUrl: linkData.baseUrl,
+      matchedRules: [],
+    };
 
-    // 1. Check geo rules first
-    let redirectUrl = linkData.baseUrl;
-    let matchingRule = null;
-    let matchingDeviceRule = null;
-
-    // Step 1: Check geographic rules first
-    const geoRule = linkData.rules?.find(
-      (rule: { countries: string; startDate?: Date; endDate?: Date }) => {
-        const countries: string[] = JSON.parse(rule.countries);
-        const isCountryMatch = countries.includes(userCountry);
-        return isCountryMatch;
-      }
-    );
-
-    // Step 2: Check device rules if either:
-    // - no geo rule matched
-    // - or geo rule matched but allows fallthrough
-    const shouldCheckDeviceRules = !geoRule || !geoRule.isExclusive;
-
-    if (shouldCheckDeviceRules) {
-      matchingDeviceRule = linkData.deviceRules?.find(
-        (rule: { deviceType: string; startDate?: Date; endDate?: Date }) => {
-          const isDeviceMatch =
-            rule.deviceType === "all" || rule.deviceType === deviceType;
-          return isDeviceMatch;
-        }
-      );
-    }
-
-    // Apply rules based on matches
-    if (geoRule) {
-      console.log(`Matched geo rule for ${userCountry}`);
-      redirectUrl = geoRule.redirectUrl;
-      matchingRule = geoRule;
-
-      if (matchingDeviceRule && !geoRule.isExclusive) {
-        console.log(`Also matched device rule for ${deviceType}`);
-        redirectUrl = matchingDeviceRule.redirectUrl;
-      }
-    } else if (matchingDeviceRule) {
-      console.log(`Matched device rule for ${deviceType}`);
-      redirectUrl = matchingDeviceRule.redirectUrl;
-    } else {
-      console.log(`No rules matched, using base URL`);
-    }
+    await applyRules(linkData, context);
 
     // Ensure URL has protocol
-    if (!redirectUrl.match(/^https?:\/\//i)) {
-      redirectUrl = `https://${redirectUrl}`;
+    if (!context.redirectUrl.match(/^https?:\/\//i)) {
+      context.redirectUrl = `https://${context.redirectUrl}`;
     }
 
     // Send redirect and record analytics in parallel
-    console.log(`Redirecting to: ${redirectUrl}`);
-    res.redirect(302, redirectUrl);
+    console.log(`Redirecting to: ${context.redirectUrl}`);
+    res.redirect(302, context.redirectUrl);
 
     // Record analytics asynchronously
     try {
@@ -182,20 +164,18 @@ export const handleRedirection = async (req: Request, res: Response) => {
       }
 
       // Verify rule IDs if they exist
-      if (matchingRule?.id) {
-        const rule = await prisma.linkRule.findUnique({
-          where: { id: matchingRule.id },
-          select: { id: true },
-        });
-        if (!rule) matchingRule = null;
-      }
-
-      if (matchingDeviceRule?.id) {
-        const deviceRule = await prisma.deviceRule.findUnique({
-          where: { id: matchingDeviceRule.id },
-          select: { id: true },
-        });
-        if (!deviceRule) matchingDeviceRule = null;
+      if (context.matchedRules.length > 0) {
+        for (const rule of context.matchedRules) {
+          const ruleRecord = await prisma.linkRule.findUnique({
+            where: { id: parseInt(rule.id) },
+            select: { id: true },
+          });
+          if (!ruleRecord) {
+            context.matchedRules = context.matchedRules.filter(
+              (r) => r.id !== rule.id
+            );
+          }
+        }
       }
 
       await prisma.linkVisit.create({
@@ -204,8 +184,14 @@ export const handleRedirection = async (req: Request, res: Response) => {
           ip,
           country: userCountry || "unknown",
           city: userCity || "unknown",
-          ruleId: matchingRule?.id || null,
-          deviceRuleId: matchingDeviceRule?.id || null,
+          ruleId:
+            context.matchedRules.length > 0
+              ? parseInt(context.matchedRules[0].id)
+              : null,
+          deviceRuleId:
+            context.matchedRules.length > 1
+              ? parseInt(context.matchedRules[1].id)
+              : null,
           userAgent,
           deviceType,
         },

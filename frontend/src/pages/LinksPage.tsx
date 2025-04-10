@@ -14,6 +14,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSearchParams } from "react-router-dom";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 interface AddLinkFormRef {
   getFormData: () => LinkFormData;
@@ -30,6 +31,7 @@ export default function LinksPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const formRef = useRef<AddLinkFormRef>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const checkParams = () => {
     const mode = searchParams.get("mode");
@@ -136,9 +138,14 @@ export default function LinksPage() {
 
   const handleFormSubmit = async () => {
     if (!formRef.current) return;
+    setIsSubmitting(true);
 
-    const formData = formRef.current.getFormData();
-    await handleAddLink(formData);
+    try {
+      const formData = formRef.current.getFormData();
+      await handleAddLink(formData);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -190,18 +197,19 @@ export default function LinksPage() {
         </nav>
 
         {view === "form" && (
-          <Button onClick={handleFormSubmit}>
-            {editingLink ? (
-              <>
-                <Save className="h-4 w-4 mr-2" />
-                Save Changes
-              </>
+          <Button
+            onClick={handleFormSubmit}
+            disabled={isSubmitting}
+            className="relative"
+          >
+            {isSubmitting ? (
+              <LoadingSpinner className="h-4 w-4 mr-2" />
+            ) : editingLink ? (
+              <Save className="h-4 w-4 mr-2" />
             ) : (
-              <>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Link
-              </>
+              <Plus className="h-4 w-4 mr-2" />
             )}
+            {editingLink ? "Save Changes" : "Add Link"}
           </Button>
         )}
       </div>

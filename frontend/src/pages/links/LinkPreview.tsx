@@ -1,4 +1,3 @@
-import { Card, CardContent } from "@/components/ui/card";
 import { Globe, Smartphone } from "lucide-react";
 import {
   Tooltip,
@@ -48,7 +47,6 @@ export const LinkPreview = ({
   geoRules = [],
   deviceRules = [],
   onLoad,
-  isLoading = false,
 }: LinkPreviewProps) => {
   const [debouncedLinkUrl, setDebouncedLinkUrl] = useState(linkUrl);
   const [debouncedGeoRules, setDebouncedGeoRules] = useState(geoRules);
@@ -84,88 +82,78 @@ export const LinkPreview = ({
   return (
     <>
       <LinkCard url={debouncedLinkUrl} onLoad={handleLoad} instanceId="main" />
-      <Card className="sticky mt-6">
-        <CardContent className={`space-y-6 ${isLoading ? "opacity-50" : ""}`}>
-          {/* Rules Summary */}
-          <div className="space-y-4">
-            {validGeoRules.length > 0 && (
-              <div className="space-y-2 border-l-2 border-primary/20 pl-4">
-                <div className="flex items-center gap-2 text-sm">
-                  <Globe className="h-4 w-4 text-primary" />
-                  <span className="font-medium">Geo Rules</span>
-                  <div className="h-1 w-1 rounded-full bg-primary/40" />
-                  <span className="text-xs text-muted-foreground">
-                    Takes precedence
-                  </span>
-                </div>
-                <div className="pl-6 space-y-4">
-                  {validGeoRules.map((rule, i) => (
-                    <div key={i} className="space-y-2">
-                      <div className="text-sm space-y-1">
-                        {rule.region === "custom" ? (
-                          <>
-                            <div className="font-medium">Custom Countries:</div>
-                            <div className="text-muted-foreground font-mono text-xs">
-                              {formatCountries(rule.countries)}
-                            </div>
-                          </>
-                        ) : (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger className="font-medium">
-                                {getRegionName(rule.region || "")}
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p className="font-mono text-xs">
-                                  {formatCountries(rule.countries)}
-                                </p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        )}
-                      </div>
-                      <LinkCard
-                        url={rule.redirectUrl}
-                        instanceId={`geo-${i}`}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {debouncedDeviceRules.length > 0 && (
-              <div className="space-y-2 border-l-2 border-muted pl-4">
-                <div className="flex items-center gap-2 text-sm">
-                  <Smartphone className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium">Device Rules</span>
-                </div>
-                <div className="pl-6 space-y-4">
-                  {debouncedDeviceRules.map((rule, i) => (
-                    <div key={i} className="space-y-2">
-                      <div className="text-sm">
-                        <div className="font-medium">
-                          {rule.deviceType === "all"
-                            ? "All Devices"
-                            : rule.deviceType}
-                          {rule.os && rule.os !== "any" && ` • ${rule.os}`}
-                          {rule.browser &&
-                            rule.browser !== "any" &&
-                            ` • ${rule.browser}`}
+      {/* Rules Summary */}
+      <div className="space-y-4 mt-6">
+        {validGeoRules.length > 0 && (
+          <div className="space-y-2 border-l-2 border-primary/20 pl-4">
+            <div className="flex items-center gap-2 text-sm">
+              <Globe className="h-4 w-4 text-primary" />
+              <span className="font-medium">Geo Rules</span>
+              <div className="h-1 w-1 rounded-full bg-primary/40" />
+              <span className="text-xs text-muted-foreground">
+                Takes precedence
+              </span>
+            </div>
+            <div className="pl-6 space-y-4">
+              {validGeoRules.map((rule, i) => (
+                <div key={i} className="space-y-2">
+                  <div className="text-sm space-y-1">
+                    {rule.region === "custom" ? (
+                      <>
+                        <div className="font-medium">Custom Countries:</div>
+                        <div className="text-muted-foreground font-mono text-xs">
+                          {formatCountries(rule.countries)}
                         </div>
-                      </div>
-                      <LinkCard
-                        url={rule.redirectUrl}
-                        instanceId={`device-${i}`}
-                      />
-                    </div>
-                  ))}
+                      </>
+                    ) : (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger className="font-medium">
+                            {getRegionName(rule.region || "")}
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="font-mono text-xs">
+                              {formatCountries(rule.countries)}
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
+                  <LinkCard url={rule.redirectUrl} instanceId={`geo-${i}`} />
                 </div>
-              </div>
-            )}
+              ))}
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        )}
+
+        {debouncedDeviceRules.length > 0 && (
+          <div className="space-y-2 border-l-2 border-muted pl-4">
+            <div className="flex items-center gap-2 text-sm">
+              <Smartphone className="h-4 w-4 text-muted-foreground" />
+              <span className="font-medium">Device Rules</span>
+            </div>
+            <div className="pl-6 space-y-4">
+              {debouncedDeviceRules.map((rule, i) => (
+                <div key={i} className="space-y-2">
+                  <div className="text-sm">
+                    <div className="font-medium">
+                      {rule.deviceType === "all"
+                        ? "All Devices"
+                        : rule.deviceType}
+                      {rule.os && rule.os !== "any" && ` • ${rule.os}`}
+                      {rule.browser &&
+                        rule.browser !== "any" &&
+                        ` • ${rule.browser}`}
+                    </div>
+                  </div>
+                  <LinkCard url={rule.redirectUrl} instanceId={`device-${i}`} />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </>
   );
 };
