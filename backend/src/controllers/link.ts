@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
-import { getFromCache, saveToCache, deleteFromCache } from "../lib/redis";
+import { deleteFromCache, getFromCache, saveToCache } from "../lib/redis";
+
 import prisma from "../lib/prisma";
 
 // Function to generate a random short code
@@ -183,7 +184,15 @@ export const getLinksByProject = async (req: Request, res: Response) => {
 // Create a new link with a short code
 export const createLink = async (req: Request, res: Response) => {
   try {
-    const { name, baseUrl, shortCode, rules, deviceRules } = req.body;
+    const {
+      name,
+      baseUrl,
+      shortCode,
+      rules,
+      deviceRules,
+      password,
+      isPasswordProtected,
+    } = req.body;
     const projectId = parseInt(
       req.params.projectId || (req.headers["x-project-id"] as string)
     );
@@ -191,6 +200,13 @@ export const createLink = async (req: Request, res: Response) => {
     // Validate input
     if (!name || !baseUrl) {
       return res.status(400).json({ error: "Name and base URL are required" });
+    }
+
+    // Validate password if protection is enabled
+    if (isPasswordProtected && (!password || password.length < 6)) {
+      return res
+        .status(400)
+        .json({ error: "Password must be at least 6 characters long" });
     }
 
     // Generate or validate short code
@@ -214,6 +230,13 @@ export const createLink = async (req: Request, res: Response) => {
       }
     }
 
+    // Hash password if provided
+    let passwordHash = null;
+    if (isPasswordProtected && password) {
+      const bcrypt = require("bcrypt");
+      passwordHash = await bcrypt.hash(password, 10);
+    }
+
     // Create link with its short code
     const link = await prisma.link.create({
       data: {
@@ -221,6 +244,8 @@ export const createLink = async (req: Request, res: Response) => {
         baseUrl,
         shortCode: finalShortCode,
         projectId,
+        isPasswordProtected: !!isPasswordProtected,
+        passwordHash,
       },
     });
 
@@ -301,7 +326,16 @@ export const getLinkById = async (req: Request, res: Response) => {
 export const updateLink = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, baseUrl, active, rules, deviceRules } = req.body;
+    const {
+      name,
+      baseUrl,
+      active,
+      rules,
+      deviceRules,
+      password,
+      isPasswordProtected,
+      removePassword,
+    } = req.body;
     const userId = req.user?.id;
 
     const link = await prisma.link.findFirst({
@@ -322,6 +356,30 @@ export const updateLink = async (req: Request, res: Response) => {
     // Clear redirection cache for this link
     await deleteFromCache(`link:${link.shortCode}`);
 
+    // Handle password updates
+    let passwordUpdate = {};
+    if (typeof isPasswordProtected !== "undefined") {
+      if (isPasswordProtected && password) {
+        // Validate new password
+        if (password.length < 6) {
+          return res
+            .status(400)
+            .json({ error: "Password must be at least 6 characters long" });
+        }
+        const bcrypt = require("bcrypt");
+        const passwordHash = await bcrypt.hash(password, 10);
+        passwordUpdate = {
+          isPasswordProtected: true,
+          passwordHash,
+        };
+      } else if (!isPasswordProtected || removePassword) {
+        passwordUpdate = {
+          isPasswordProtected: false,
+          passwordHash: null,
+        };
+      }
+    }
+
     // Update link basic information
     const updatedLink = await prisma.link.update({
       where: { id: parseInt(id) },
@@ -329,6 +387,7 @@ export const updateLink = async (req: Request, res: Response) => {
         name,
         baseUrl,
         active,
+        ...passwordUpdate,
       },
     });
 
@@ -364,7 +423,7 @@ export const updateLink = async (req: Request, res: Response) => {
             deviceType: rule.deviceType,
             devices: Array.isArray(rule.devices)
               ? JSON.stringify(rule.devices)
-              : "[]", // Default to empty array if no devices specified
+              : "[]",
             linkId: parseInt(id),
           })),
         });

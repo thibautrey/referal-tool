@@ -1,10 +1,14 @@
+import { DeviceRule, GeoRule } from "./rules";
 import { Request, Response } from "express";
+import { Rule, RuleContext } from "../types/rules";
 import { getFromCache, getWithCache, saveToCache } from "../lib/redis";
+
 import { get404Template } from "../templates/404";
 import { getCountryFromIp } from "../utils/geolocation";
+import { getPasswordTemplate } from "../templates/password";
 import prisma from "../lib/prisma";
-import { Rule, RuleContext } from "../types/rules";
-import { DeviceRule, GeoRule } from "./rules";
+
+// Add template for password entry page
 
 // Helper function to get user agent and device type
 export const getUserAgent = (
@@ -93,44 +97,44 @@ export const handleRedirection = async (req: Request, res: Response) => {
   console.log(`Processing redirection for path: ${path}`);
 
   try {
+    // Check if link requires password and session is not valid
+    const linkData = await prisma.link.findFirst({
+      where: {
+        shortCode: path,
+        active: true,
+      },
+      select: {
+        id: true,
+        isPasswordProtected: true,
+        baseUrl: true,
+        rules: true,
+        deviceRules: true,
+      },
+    });
+
+    if (!linkData) {
+      throw new Error("Link not found");
+    }
+
+    if (linkData.isPasswordProtected) {
+      const sessionToken = req.cookies.link_session;
+      if (!sessionToken) {
+        return res.send(getPasswordTemplate(path));
+      }
+
+      const sessionKey = `link_session:${path}:${sessionToken}`;
+      const isValid = await getFromCache(sessionKey);
+      if (!isValid) {
+        return res.send(getPasswordTemplate(path));
+      }
+    }
+
     const ip =
       (req.headers["cf-connecting-ip"] as string) || req.ip || "0.0.0.0";
-
     const { deviceType, userAgent } = getUserAgent(req);
 
-    // Run cache check and geolocation in parallel since they're independent
-    const [linkData, [userCountry, userCity]] = await Promise.all([
-      getCachedLinkData(path).then(async (cached) => {
-        if (cached) {
-          console.log(`Cache hit for ${path}`);
-          return cached;
-        }
-        // If not in cache, fetch from database
-        console.log(`Cache miss for ${path}, fetching from database`);
-        const freshLinkData = await prisma.link.findFirst({
-          where: {
-            shortCode: path,
-            active: true,
-          },
-          include: {
-            rules: true,
-            deviceRules: true,
-          },
-        });
-
-        if (!freshLinkData) {
-          throw new Error("Link not found");
-        }
-
-        // Cache the fresh data
-        await cacheLinkData(path, freshLinkData);
-        return freshLinkData;
-      }),
-      (async () => {
-        const result = await getCountryFromIp(ip);
-        return result;
-      })(),
-    ]);
+    // Run geolocation check
+    const [userCountry, userCity] = await getCountryFromIp(ip);
 
     const context: RuleContext = {
       userCountry,

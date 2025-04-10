@@ -1,7 +1,13 @@
 import * as linkController from "../controllers/link";
 
+import {
+  checkPasswordSession,
+  validateLinkPassword,
+} from "../middleware/passwordProtection";
+
 import { Router } from "express";
 import { authenticateJWT } from "../middleware/auth";
+import { handleRedirection } from "../services/redirection";
 import { validateProjectAccess } from "../middleware/projectAccess";
 
 const router = Router();
@@ -29,5 +35,13 @@ router.delete("/rules/:ruleId", linkController.deleteRule);
 
 // Link statistics
 router.get("/:id/stats", linkController.getLinkStats);
+
+// Password validation route
+router.post("/l/:path/validate", validateLinkPassword, (req, res) => {
+  res.json({ message: "Password validated successfully" });
+});
+
+// Update redirection route to use password session check
+router.get("/l/:path", checkPasswordSession, handleRedirection);
 
 export default router;

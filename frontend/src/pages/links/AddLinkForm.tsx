@@ -21,11 +21,12 @@ import { DeviceTargeting } from "./AddLinkForm/DeviceTargeting";
 import { ExpandableTabs } from "@/components/ui/expandable-tabs";
 import { GeoTargeting } from "./AddLinkForm/GeoTargeting";
 import { LinkPreview } from "./LinkPreview";
+import { PasswordProtection } from "@/components/links/PasswordProtection";
 import { api } from "@/lib/api";
+import { detectRegionFromCountries } from "./utils";
 import { generateRandomCode } from "./AddLinkForm/utils";
 import { toast } from "sonner";
 import { useSearchParams } from "react-router-dom";
-import { detectRegionFromCountries } from "./utils";
 
 export interface GeoRule {
   redirectUrl: string;
@@ -41,6 +42,8 @@ interface AddLinkFormProps {
     baseUrl: string;
     shortCode: string;
     rules: GeoRule[];
+    isPasswordProtected?: boolean;
+    password?: string;
   };
   mode?: "add" | "edit";
 }
@@ -77,6 +80,10 @@ export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
     const [activeTab, setActiveTab] = useState<number | null>(null);
     const [isLinkPreviewLoading, setIsLinkPreviewLoading] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string>("");
+    const [isPasswordProtected, setIsPasswordProtected] = useState(
+      initialData?.isPasswordProtected || false
+    );
+    const [password, setPassword] = useState("");
 
     const isEditMode = searchParams.get("mode") === "edit";
     const id = Number(searchParams.get("id"));
@@ -277,9 +284,10 @@ export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
           tags: [],
           comments: "",
           qrCode: false,
+          isPasswordProtected,
+          password: isPasswordProtected ? password : undefined,
           advanced: {
             conversionTracking: false,
-            passwordProtection: "",
           },
         };
       },
@@ -322,9 +330,12 @@ export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
         case 4:
           return (
             <div className="p-4 border rounded">
-              <p className="text-muted-foreground">
-                Pass protection coming soon
-              </p>
+              <PasswordProtection
+                isEnabled={isPasswordProtected}
+                onToggle={setIsPasswordProtected}
+                password={password}
+                onPasswordChange={setPassword}
+              />
             </div>
           );
         case 5:

@@ -42,18 +42,20 @@ model Project {
 }
 
 model Link {
-    id          Int          @id @default(autoincrement())
-    name        String
-    baseUrl     String
-    shortCode   String       @unique // Code court unique pour l'URL
-    project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
-    projectId   Int
-    rules       LinkRule[]
-    deviceRules DeviceRule[]
-    active      Boolean      @default(true)
-    createdAt   DateTime     @default(now())
-    updatedAt   DateTime     @updatedAt
-    LinkVisit   LinkVisit[]
+    id                  Int          @id @default(autoincrement())
+    name                String
+    baseUrl             String
+    shortCode           String       @unique // Code court unique pour l'URL
+    project             Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+    projectId           Int
+    rules               LinkRule[]
+    deviceRules         DeviceRule[]
+    active              Boolean      @default(true)
+    isPasswordProtected Boolean      @default(false)
+    passwordHash        String?
+    createdAt           DateTime     @default(now())
+    updatedAt           DateTime     @updatedAt
+    LinkVisit           LinkVisit[]
 
     @@index([projectId])
 }

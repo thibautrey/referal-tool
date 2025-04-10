@@ -1,22 +1,24 @@
 import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogFooter,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { api } from "@/lib/api";
 import { useEffect, useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Settings } from "lucide-react";
+import { api } from "@/lib/api";
+import { useProject } from "@/contexts/project-context";
 
 export interface Project {
   id: number;
@@ -25,7 +27,7 @@ export interface Project {
 
 export function ProjectSelector() {
   const [projects, setProjects] = useState<Project[]>([]);
-  const [selectedProject, setSelectedProject] = useState<string>();
+  const { currentProjectId, setCurrentProjectId } = useProject();
   const [isEditingModalOpen, setIsEditingModalOpen] = useState(false);
   const [editingProjectId, setEditingProjectId] = useState<number | null>(null);
   const [editingName, setEditingName] = useState<string>("");
@@ -34,18 +36,19 @@ export function ProjectSelector() {
     refreshProjects();
   }, []);
 
+  useEffect(() => {
+    if (projects.length > 0 && !currentProjectId) {
+      setCurrentProjectId(projects[0].id);
+    }
+  }, [projects, currentProjectId, setCurrentProjectId]);
+
   const refreshProjects = async () => {
     const response = await api.getProjects();
     setProjects(response.data);
-    if (response.data.length > 0 && !selectedProject) {
-      setSelectedProject(response.data[0].id.toString());
-    }
   };
 
   const openEditModal = () => {
-    const currentProject = projects.find(
-      (p) => p.id.toString() === selectedProject
-    );
+    const currentProject = projects.find((p) => p.id === currentProjectId);
     if (currentProject) {
       setEditingProjectId(currentProject.id);
       setEditingName(currentProject.name);
@@ -73,8 +76,11 @@ export function ProjectSelector() {
 
   return (
     <div className="flex items-center space-x-2">
-      <Select value={selectedProject} onValueChange={setSelectedProject}>
-        <SelectTrigger className="bg-background/50 border-0">
+      <Select
+        value={currentProjectId?.toString()}
+        onValueChange={(value) => setCurrentProjectId(Number(value))}
+      >
+        <SelectTrigger className="border-0 bg-background/50">
           <SelectValue placeholder="Select a project" />
         </SelectTrigger>
         <SelectContent>
@@ -91,7 +97,7 @@ export function ProjectSelector() {
         size="icon"
         aria-label="Edit Project"
       >
-        <Settings className="h-4 w-4" />
+        <Settings className="w-4 h-4" />
       </Button>
 
       <Dialog open={isEditingModalOpen} onOpenChange={setIsEditingModalOpen}>

@@ -1,17 +1,18 @@
 import express, { Application, NextFunction, Request, Response } from "express";
-import rateLimit from "express-rate-limit";
 
 import analyticsRoutes from "./routes/analytics";
 import cors from "cors";
 import dotenv from "dotenv";
+import { errorHandler } from "./middleware/errorHandler";
 import { handleRedirection } from "./controllers/link";
 import helmet from "helmet";
 import linkRoutes from "./routes/link";
+import metadataRoutes from "./routes/metadata";
 import morgan from "morgan";
 import path from "path";
-import userRoutes from "./routes/user";
 import projectRoutes from "./routes/project";
-import metadataRoutes from "./routes/metadata";
+import rateLimit from "express-rate-limit";
+import userRoutes from "./routes/user";
 
 // Configuration
 dotenv.config();
@@ -162,5 +163,7 @@ app.use((err: Error, req: Request, res: Response, _next: NextFunction) => {
     timestamp,
   });
 });
+
+app.use(errorHandler);
 
 export default app;

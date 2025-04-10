@@ -25,7 +25,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { useAuth } from "@/contexts/AuthContext";
+import { useProject } from "@/contexts/project-context";
 
 // Style pour le glassmorphism
 const glassCardStyle =
@@ -58,7 +58,8 @@ const AnimatedCard = ({
 };
 
 export default function HomePage() {
-  const { currentProjectId } = useAuth();
+  const { currentProjectId } = useProject();
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<{
@@ -160,8 +161,8 @@ export default function HomePage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6 relative z-10">
-        <h1 className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+      <div className="relative z-10 space-y-6">
+        <h1 className="text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
           Dashboard
         </h1>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -179,27 +180,27 @@ export default function HomePage() {
 
   if (error) {
     return (
-      <div className="space-y-6 relative z-10">
-        <h1 className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+      <div className="relative z-10 space-y-6">
+        <h1 className="text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
           Dashboard
         </h1>
         <Card className={cn("w-full", glassCardStyle)}>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-destructive" />
+              <AlertCircle className="w-5 h-5 text-destructive" />
               Loading failed
             </CardTitle>
             <CardDescription>Data could not be loaded</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="p-4 rounded-md bg-destructive/10 mb-4 backdrop-blur-sm">
+            <div className="p-4 mb-4 rounded-md bg-destructive/10 backdrop-blur-sm">
               <p className="text-sm">{error}</p>
             </div>
-            <p className="text-muted-foreground mb-4">
+            <p className="mb-4 text-muted-foreground">
               This could be due to a temporary issue or a server error.
             </p>
             <Button onClick={fetchDashboardData} variant="glass">
-              <RefreshCw className="h-4 w-4 mr-2" />
+              <RefreshCw className="w-4 h-4 mr-2" />
               Retry
             </Button>
           </CardContent>
@@ -210,8 +211,8 @@ export default function HomePage() {
 
   if (!currentProjectId) {
     return (
-      <div className="space-y-6 relative z-10">
-        <h1 className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+      <div className="relative z-10 space-y-6">
+        <h1 className="text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
           Dashboard
         </h1>
         <Card className={cn("w-full", glassCardStyle)}>
@@ -222,7 +223,7 @@ export default function HomePage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center py-10">
-            <p className="text-center text-muted-foreground mb-6">
+            <p className="mb-6 text-center text-muted-foreground">
               No project is currently selected. Please create one or select an
               existing one to get started.
             </p>
@@ -232,7 +233,7 @@ export default function HomePage() {
               className="ring-1 ring-white/10 hover:ring-white/20"
             >
               <Link to="/settings">
-                <Settings className="mr-2 h-4 w-4" />
+                <Settings className="w-4 h-4 mr-2" />
                 Manage projects
               </Link>
             </Button>
@@ -243,22 +244,22 @@ export default function HomePage() {
   }
 
   return (
-    <div className="space-y-6 relative z-10">
-      <h1 className="text-3xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+    <div className="relative z-10 space-y-6">
+      <h1 className="text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
         Dashboard
       </h1>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <AnimatedCard index={0}>
           <Card className={cn(glassCardStyle, "group hover:-translate-y-1")}>
             <CardHeader>
-              <CardTitle className="flex justify-between items-center">
+              <CardTitle className="flex items-center justify-between">
                 Referal links
-                <LinkIcon className="h-5 w-5 text-primary/70 group-hover:text-primary transition-colors" />
+                <LinkIcon className="w-5 h-5 transition-colors text-primary/70 group-hover:text-primary" />
               </CardTitle>
               <CardDescription>Total of created links</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+              <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
                 {stats.totalLinks}
               </p>
             </CardContent>
@@ -270,7 +271,7 @@ export default function HomePage() {
                 asChild
               >
                 <Link to="/app/links">
-                  View all <ArrowRight className="ml-2 h-4 w-4" />
+                  View all <ArrowRight className="w-4 h-4 ml-2" />
                 </Link>
               </Button>
             </CardFooter>
@@ -280,14 +281,14 @@ export default function HomePage() {
         <AnimatedCard index={1}>
           <Card className={cn(glassCardStyle, "group hover:-translate-y-1")}>
             <CardHeader>
-              <CardTitle className="flex justify-between items-center">
+              <CardTitle className="flex items-center justify-between">
                 Total clicks
-                <BarChart3 className="h-5 w-5 text-primary/70 group-hover:text-primary transition-colors" />
+                <BarChart3 className="w-5 h-5 transition-colors text-primary/70 group-hover:text-primary" />
               </CardTitle>
               <CardDescription>Global performance</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary">
+              <p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
                 {stats.totalClicks}
               </p>
             </CardContent>
@@ -299,7 +300,7 @@ export default function HomePage() {
                 asChild
               >
                 <Link to="/app/analytics">
-                  View analytics <ArrowRight className="ml-2 h-4 w-4" />
+                  View analytics <ArrowRight className="w-4 h-4 ml-2" />
                 </Link>
               </Button>
             </CardFooter>
@@ -309,9 +310,9 @@ export default function HomePage() {
         <AnimatedCard index={2}>
           <Card className={cn(glassCardStyle, "group hover:-translate-y-1")}>
             <CardHeader>
-              <CardTitle className="flex justify-between items-center">
+              <CardTitle className="flex items-center justify-between">
                 Quick Actions
-                <PlusCircle className="h-5 w-5 text-primary/70 group-hover:text-primary transition-colors" />
+                <PlusCircle className="w-5 h-5 transition-colors text-primary/70 group-hover:text-primary" />
               </CardTitle>
               <CardDescription>Access to main features</CardDescription>
             </CardHeader>
@@ -378,11 +379,11 @@ export default function HomePage() {
                   {topLinks.map((link) => (
                     <div
                       key={link.id}
-                      className="flex items-center justify-between p-3 rounded-md bg-white/10 backdrop-blur-md hover:bg-white/20 transition-colors"
+                      className="flex items-center justify-between p-3 transition-colors rounded-md bg-white/10 backdrop-blur-md hover:bg-white/20"
                     >
-                      <div className="truncate mr-4">
+                      <div className="mr-4 truncate">
                         <p className="font-medium truncate">{link.name}</p>
-                        <p className="text-sm text-muted-foreground truncate">
+                        <p className="text-sm truncate text-muted-foreground">
                           /{link.shortCode}
                         </p>
                       </div>
@@ -406,7 +407,7 @@ export default function HomePage() {
                 asChild
               >
                 <Link to="/app/links">
-                  See all links <ArrowRight className="ml-2 h-4 w-4" />
+                  See all links <ArrowRight className="w-4 h-4 ml-2" />
                 </Link>
               </Button>
             </CardFooter>

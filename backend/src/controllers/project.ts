@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+
 import prisma from "../lib/prisma";
 
 const ALLOWED_SORT_FIELDS = [
@@ -15,10 +16,10 @@ const ALLOWED_SORT_FIELDS = [
 export const getProjects = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
+    const isAdmin = req.user?.role === "ADMIN";
+
     const projects = await prisma.project.findMany({
-      where: {
-        userId,
-      },
+      where: isAdmin ? {} : { userId },
     });
 
     res.json({ data: projects });
