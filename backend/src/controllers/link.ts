@@ -691,7 +691,7 @@ export const handleRedirection = async (req: Request, res: Response) => {
         console.error("Error recording visit:", error);
       });
 
-    return res.redirect(301, redirectUrl);
+    return res.redirect(302, redirectUrl);
   } catch (error: unknown) {
     console.error("Redirection error:", error);
     return res.status(500).json({ message: "Error handling redirection" });

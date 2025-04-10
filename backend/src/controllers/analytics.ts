@@ -134,7 +134,7 @@ export const getVisitStats = async (req: Request, res: Response) => {
       projectId ? parseInt(projectId as string) : null,
       linkId ? parseInt(linkId as string) : null,
       timeRange,
-      `${userId}`
+      parseInt(`${userId}`)
     );
     console.log(JSON.stringify(visitsByDate));
     // Si linkId est spécifié, ajouter les statistiques par règles
@@ -205,13 +205,13 @@ async function getVisitsByTimeInterval(
   projectId: number | null = null,
   linkId: number | null = null,
   timeRange: string = "week",
-  userId: string
+  userId: number // Changer le type en number
 ): Promise<Array<{ date: string; count: number }>> {
   try {
     const whereClause: any = {
       link: {
         project: {
-          userId: userId,
+          userId: userId, // userId est maintenant un nombre
         },
       },
     };
