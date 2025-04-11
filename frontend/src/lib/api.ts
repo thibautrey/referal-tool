@@ -284,6 +284,11 @@ class Api {
       isPasswordProtected?: boolean;
       password?: string;
       removePassword?: boolean;
+      utmSource?: string;
+      utmMedium?: string;
+      utmCampaign?: string;
+      utmTerm?: string;
+      utmContent?: string;
     }
   ): Promise<ApiResponse<ReferralLink>> {
     const transformedData = {
@@ -298,6 +303,11 @@ class Api {
       isPasswordProtected: data.isPasswordProtected,
       password: data.password,
       removePassword: data.removePassword,
+      utmSource: data.utmSource,
+      utmMedium: data.utmMedium,
+      utmCampaign: data.utmCampaign,
+      utmTerm: data.utmTerm,
+      utmContent: data.utmContent,
     };
     return this.put<ReferralLink>(`/links/${linkId}`, transformedData);
   }
@@ -312,6 +322,11 @@ class Api {
       deviceRules?: { deviceType: string; redirectUrl: string }[];
       isPasswordProtected?: boolean;
       password?: string;
+      utmSource?: string;
+      utmMedium?: string;
+      utmCampaign?: string;
+      utmTerm?: string;
+      utmContent?: string;
     }
   ): Promise<ApiResponse<ReferralLink>> {
     const transformedData = {
@@ -325,6 +340,11 @@ class Api {
       deviceRules: data.deviceRules || [],
       isPasswordProtected: data.isPasswordProtected,
       password: data.password,
+      utmSource: data.utmSource,
+      utmMedium: data.utmMedium,
+      utmCampaign: data.utmCampaign,
+      utmTerm: data.utmTerm,
+      utmContent: data.utmContent,
     };
     return this.post<ReferralLink>("/links", transformedData, projectId);
   }
@@ -346,8 +366,12 @@ class Api {
     return response.data.theme || "system";
   }
 
-  async updateLastProject(projectId: number): Promise<ApiResponse<{ lastProjectId: number }>> {
-    return this.post<{ lastProjectId: number }>("/users/last-project", { projectId });
+  async updateLastProject(
+    projectId: number
+  ): Promise<ApiResponse<{ lastProjectId: number }>> {
+    return this.post<{ lastProjectId: number }>("/users/last-project", {
+      projectId,
+    });
   }
 }
 

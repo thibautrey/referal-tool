@@ -7,7 +7,7 @@ import {
   Smartphone,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { DeviceRule, LinkFormData } from "./types";
+import { DeviceRule, LinkFormData, UTMParametersType } from "./types";
 import {
   forwardRef,
   useCallback,
@@ -22,6 +22,7 @@ import { ExpandableTabs } from "@/components/ui/expandable-tabs";
 import { GeoTargeting } from "./AddLinkForm/GeoTargeting";
 import { LinkPreview } from "./LinkPreview";
 import { PasswordProtection } from "@/components/links/PasswordProtection";
+import { UTMParameters } from "./AddLinkForm/UTMParameters";
 import { api } from "@/lib/api";
 import { detectRegionFromCountries } from "./utils";
 import { generateRandomCode } from "./AddLinkForm/utils";
@@ -42,8 +43,14 @@ interface AddLinkFormProps {
     baseUrl: string;
     shortCode: string;
     rules: GeoRule[];
+    deviceRules?: DeviceRule[];
     isPasswordProtected?: boolean;
     password?: string;
+    utmSource?: string;
+    utmMedium?: string;
+    utmCampaign?: string;
+    utmTerm?: string;
+    utmContent?: string;
   };
   mode?: "add" | "edit";
 }
@@ -84,6 +91,14 @@ export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
       initialData?.isPasswordProtected || false
     );
     const [password, setPassword] = useState("");
+
+    const [utmParameters, setUtmParameters] = useState<UTMParametersType>({
+      utmSource: initialData?.utmSource || "",
+      utmMedium: initialData?.utmMedium || "",
+      utmCampaign: initialData?.utmCampaign || "",
+      utmTerm: initialData?.utmTerm || "",
+      utmContent: initialData?.utmContent || "",
+    });
 
     const isEditMode = searchParams.get("mode") === "edit";
     const id = Number(searchParams.get("id"));
@@ -192,6 +207,9 @@ export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
             interface ShortCodeResponse {
               available: boolean;
             }
+            interface ShortCodeResponse {
+              available: boolean;
+            }
             const response = await api.get<ShortCodeResponse>(
               `/links/check-short-code/${newCode}`
             );
@@ -290,6 +308,7 @@ export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
           deviceRules: validDeviceRules,
           isPasswordProtected,
           password: isPasswordProtected ? password : undefined,
+          ...utmParameters,
           tags: [],
           comments: "",
           qrCode: false,
@@ -348,9 +367,11 @@ export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
         case 5:
           return (
             <div className="p-4 border rounded">
-              <p className="text-muted-foreground">
-                UTM parameters coming soon
-              </p>
+              <UTMParameters
+                parameters={utmParameters}
+                onChange={setUtmParameters}
+                baseUrl={baseUrl}
+              />
             </div>
           );
         default:
@@ -395,6 +416,8 @@ export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
             isLoading={isLinkPreviewLoading}
             onLoad={() => setIsLinkPreviewLoading(false)}
             shortCodeUrl={`${currentDomain}/l/${shortCode}`}
+            isPasswordProtected={isPasswordProtected}
+            utmParameters={utmParameters}
           />
         </div>
       </div>

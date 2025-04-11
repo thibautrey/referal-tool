@@ -12,13 +12,23 @@ export interface DeviceRule {
   browserVersion?: string;
 }
 
-export interface LinkFormData {
+export interface UTMParametersType {
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmTerm?: string;
+  utmContent?: string;
+}
+
+export interface LinkFormData extends UTMParametersType {
   id?: number;
   name: string;
   baseUrl: string;
   shortCode: string;
   rules: GeoRule[];
   deviceRules: DeviceRule[];
+  isPasswordProtected?: boolean;
+  password?: string;
 }
 
 export type LinkFormProps = {

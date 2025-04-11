@@ -192,6 +192,11 @@ export const createLink = async (req: Request, res: Response) => {
       deviceRules,
       isPasswordProtected,
       password,
+      utmSource,
+      utmMedium,
+      utmCampaign,
+      utmTerm,
+      utmContent,
     } = req.body;
     const projectId = parseInt(
       req.params.projectId || (req.headers["x-project-id"] as string)
@@ -244,7 +249,7 @@ export const createLink = async (req: Request, res: Response) => {
       passwordHash = await bcrypt.hash(password, 10);
     }
 
-    // Create link with its short code
+    // Create link with its short code and UTM parameters
     const link = await prisma.link.create({
       data: {
         name,
@@ -253,6 +258,11 @@ export const createLink = async (req: Request, res: Response) => {
         projectId,
         isPasswordProtected: isPasswordProtected === true,
         passwordHash,
+        utmSource,
+        utmMedium,
+        utmCampaign,
+        utmTerm,
+        utmContent,
       },
     });
 
@@ -342,6 +352,11 @@ export const updateLink = async (req: Request, res: Response) => {
       isPasswordProtected,
       password,
       removePassword,
+      utmSource,
+      utmMedium,
+      utmCampaign,
+      utmTerm,
+      utmContent,
     } = req.body;
     const userId = req.user?.id;
 
@@ -406,7 +421,7 @@ export const updateLink = async (req: Request, res: Response) => {
       };
     }
 
-    // Update link basic information
+    // Update link basic information including UTM parameters
     const updatedLink = await prisma.link.update({
       where: { id: parseInt(id) },
       data: {
@@ -414,6 +429,11 @@ export const updateLink = async (req: Request, res: Response) => {
         baseUrl,
         active,
         ...passwordUpdate,
+        utmSource,
+        utmMedium,
+        utmCampaign,
+        utmTerm,
+        utmContent,
       },
     });
 

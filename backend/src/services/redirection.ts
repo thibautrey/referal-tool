@@ -91,6 +91,42 @@ async function applyRules(linkData: any, context: RuleContext): Promise<void> {
   }
 }
 
+const attachUtmParameters = (url: string, link: any): string => {
+  try {
+    const finalUrl = new URL(url);
+
+    // Attach UTM parameters if they exist
+    if (link.utmSource) finalUrl.searchParams.set("utm_source", link.utmSource);
+    if (link.utmMedium) finalUrl.searchParams.set("utm_medium", link.utmMedium);
+    if (link.utmCampaign)
+      finalUrl.searchParams.set("utm_campaign", link.utmCampaign);
+    if (link.utmTerm) finalUrl.searchParams.set("utm_term", link.utmTerm);
+    if (link.utmContent)
+      finalUrl.searchParams.set("utm_content", link.utmContent);
+
+    return finalUrl.toString();
+  } catch {
+    // If URL parsing fails, append parameters manually
+    const separator = url.includes("?") ? "&" : "?";
+    const utmParams = [];
+
+    if (link.utmSource)
+      utmParams.push(`utm_source=${encodeURIComponent(link.utmSource)}`);
+    if (link.utmMedium)
+      utmParams.push(`utm_medium=${encodeURIComponent(link.utmMedium)}`);
+    if (link.utmCampaign)
+      utmParams.push(`utm_campaign=${encodeURIComponent(link.utmCampaign)}`);
+    if (link.utmTerm)
+      utmParams.push(`utm_term=${encodeURIComponent(link.utmTerm)}`);
+    if (link.utmContent)
+      utmParams.push(`utm_content=${encodeURIComponent(link.utmContent)}`);
+
+    return utmParams.length > 0
+      ? `${url}${separator}${utmParams.join("&")}`
+      : url;
+  }
+};
+
 // Handle link redirection
 export const handleRedirection = async (req: Request, res: Response) => {
   const path = req.params.path;
@@ -109,6 +145,11 @@ export const handleRedirection = async (req: Request, res: Response) => {
         baseUrl: true,
         rules: true,
         deviceRules: true,
+        utmSource: true,
+        utmMedium: true,
+        utmCampaign: true,
+        utmTerm: true,
+        utmContent: true,
       },
     });
 
@@ -146,14 +187,17 @@ export const handleRedirection = async (req: Request, res: Response) => {
 
     await applyRules(linkData, context);
 
-    // Ensure URL has protocol
-    if (!context.redirectUrl.match(/^https?:\/\//i)) {
-      context.redirectUrl = `https://${context.redirectUrl}`;
+    // Ensure URL has protocol and attach UTM parameters
+    let finalUrl = context.redirectUrl;
+    if (!finalUrl.match(/^https?:\/\//i)) {
+      finalUrl = `https://${finalUrl}`;
     }
 
+    finalUrl = attachUtmParameters(finalUrl, linkData);
+
     // Send redirect and record analytics in parallel
-    console.log(`Redirecting to: ${context.redirectUrl}`);
-    res.redirect(302, context.redirectUrl);
+    console.log(`Redirecting to: ${finalUrl}`);
+    res.redirect(302, finalUrl);
 
     // Record analytics asynchronously
     try {
