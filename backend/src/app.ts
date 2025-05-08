@@ -18,6 +18,9 @@ import userRoutes from "./routes/user";
 dotenv.config();
 const app: Application = express();
 
+// Configuration de trust proxy pour gérer correctement les headers X-Forwarded-For
+app.set("trust proxy", true);
+
 // Configuration du rate limiter
 const limiter = rateLimit({
   windowMs: 1000, // 1 seconde
