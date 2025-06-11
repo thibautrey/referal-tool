@@ -359,6 +359,7 @@ export const updateTheme = async (req: Request, res: Response) => {
 export const updateLastProjectId = async (req: Request, res: Response) => {
   try {
     const userId = req.user?.id;
+    const isAdmin = req.user?.role === "ADMIN";
     const { projectId } = req.body;
 
     if (!userId) {
@@ -373,7 +374,7 @@ export const updateLastProjectId = async (req: Request, res: Response) => {
     const project = await prisma.project.findFirst({
       where: {
         id: projectId,
-        userId: userId,
+        ...(isAdmin ? {} : { userId: userId }),
       },
     });
 

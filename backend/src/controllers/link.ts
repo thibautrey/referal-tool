@@ -48,6 +48,7 @@ export const getLinksByProject = async (req: Request, res: Response) => {
   try {
     const { projectId } = req.params;
     const userId = req.user?.id;
+    const isAdmin = req.user?.role === "ADMIN";
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 10;
     let sortBy = (req.query.sortBy as string) || "createdAt";
@@ -94,7 +95,7 @@ export const getLinksByProject = async (req: Request, res: Response) => {
     const project = await prisma.project.findFirst({
       where: {
         id: parseInt(projectId),
-        userId: userId,
+        ...(isAdmin ? {} : { userId: userId }),
       },
     });
     console.log(
@@ -313,12 +314,13 @@ export const getLinkById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.user?.id;
+    const isAdmin = req.user?.role === "ADMIN";
 
     const link = await prisma.link.findFirst({
       where: {
         id: parseInt(id),
         project: {
-          userId: userId,
+          ...(isAdmin ? {} : { userId: userId }),
         },
       },
       include: {
@@ -359,12 +361,13 @@ export const updateLink = async (req: Request, res: Response) => {
       utmContent,
     } = req.body;
     const userId = req.user?.id;
+    const isAdmin = req.user?.role === "ADMIN";
 
     const link = await prisma.link.findFirst({
       where: {
         id: parseInt(id),
         project: {
-          userId: userId,
+          ...(isAdmin ? {} : { userId: userId }),
         },
       },
     });
@@ -500,12 +503,13 @@ export const deleteLink = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.user?.id;
+    const isAdmin = req.user?.role === "ADMIN";
 
     const link = await prisma.link.findFirst({
       where: {
         id: parseInt(id),
         project: {
-          userId: userId,
+          ...(isAdmin ? {} : { userId: userId }),
         },
       },
     });
@@ -539,12 +543,13 @@ export const addRule = async (req: Request, res: Response) => {
     const { linkId } = req.params;
     const { redirectUrl, countries } = req.body;
     const userId = req.user?.id;
+    const isAdmin = req.user?.role === "ADMIN";
 
     const link = await prisma.link.findFirst({
       where: {
         id: parseInt(linkId),
         project: {
-          userId: userId,
+          ...(isAdmin ? {} : { userId: userId }),
         },
       },
     });
@@ -577,13 +582,14 @@ export const updateRule = async (req: Request, res: Response) => {
     const { ruleId } = req.params;
     const { redirectUrl, countries } = req.body;
     const userId = req.user?.id;
+    const isAdmin = req.user?.role === "ADMIN";
 
     const rule = await prisma.linkRule.findFirst({
       where: {
         id: parseInt(ruleId),
         link: {
           project: {
-            userId: userId,
+            ...(isAdmin ? {} : { userId: userId }),
           },
         },
       },
@@ -617,13 +623,14 @@ export const deleteRule = async (req: Request, res: Response) => {
   try {
     const { ruleId } = req.params;
     const userId = req.user?.id;
+    const isAdmin = req.user?.role === "ADMIN";
 
     const rule = await prisma.linkRule.findFirst({
       where: {
         id: parseInt(ruleId),
         link: {
           project: {
-            userId: userId,
+            ...(isAdmin ? {} : { userId: userId }),
           },
         },
       },
@@ -690,6 +697,7 @@ export const getLinkStats = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const userId = req.user?.id;
+    const isAdmin = req.user?.role === "ADMIN";
     const timeRange = (req.query.timeRange as string) || "week";
     const startDate = req.query.startDate
       ? new Date(req.query.startDate as string)
@@ -706,7 +714,7 @@ export const getLinkStats = async (req: Request, res: Response) => {
       where: {
         id: parseInt(id),
         project: {
-          userId,
+          ...(isAdmin ? {} : { userId }),
         },
       },
     });

@@ -10,6 +10,7 @@ const DISABLE_CACHE = true;
 export const getVisitStats = async (req: Request, res: Response) => {
   const projectId = req.currentProjectId;
   const userId = req.user?.id;
+  const isAdmin = req.user?.role === "ADMIN";
 
   // Security check: ensure we have either a project ID or a user ID
   if (!projectId && !userId) {
@@ -54,7 +55,7 @@ export const getVisitStats = async (req: Request, res: Response) => {
       whereClause.linkId = parseInt(linkId as string);
       whereClause.link = {
         project: {
-          userId: userId,
+          ...(isAdmin ? {} : { userId: userId }),
           ...(projectId && { id: parseInt(projectId as string) }),
         },
       };
@@ -63,14 +64,14 @@ export const getVisitStats = async (req: Request, res: Response) => {
       whereClause.link = {
         projectId: parseInt(projectId as string),
         project: {
-          userId: userId,
+          ...(isAdmin ? {} : { userId: userId }),
         },
       };
     } else {
       // Filtrer par tous les projets de l'utilisateur
       whereClause.link = {
         project: {
-          userId: userId,
+          ...(isAdmin ? {} : { userId: userId }),
         },
       };
     }
@@ -134,7 +135,8 @@ export const getVisitStats = async (req: Request, res: Response) => {
       projectId ? parseInt(projectId as string) : null,
       linkId ? parseInt(linkId as string) : null,
       timeRange,
-      parseInt(`${userId}`)
+      parseInt(`${userId}`),
+      isAdmin
     );
 
     // Si linkId est spécifié, ajouter les statistiques par règles
@@ -205,13 +207,14 @@ async function getVisitsByTimeInterval(
   projectId: number | null = null,
   linkId: number | null = null,
   timeRange: string = "week",
-  userId: number // Changer le type en number
+  userId: number,
+  isAdmin: boolean = false
 ): Promise<Array<{ date: string; count: number }>> {
   try {
     const whereClause: any = {
       link: {
         project: {
-          userId: userId, // userId est maintenant un nombre
+          ...(isAdmin ? {} : { userId }),
         },
       },
     };
@@ -313,17 +316,18 @@ export const getDashboardStats = async (req: Request, res: Response) => {
 
   try {
     const userId = req.user?.id;
+    const isAdmin = req.user?.role === "ADMIN";
 
     // Construire la clause where commune
     const baseWhereClause = projectId
       ? { link: { projectId: Number(projectId) } }
-      : { link: { project: { userId } } };
+      : { link: { project: isAdmin ? {} : { userId } } };
 
     // Obtenir le nombre total de liens
     const totalLinks = await prisma.link.count({
       where: projectId
         ? { projectId: Number(projectId) }
-        : { project: { userId } },
+        : { project: isAdmin ? {} : { userId } },
     });
 
     // Obtenir le nombre total de visites
