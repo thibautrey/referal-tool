@@ -8,6 +8,8 @@ export const validateProjectAccess = async (
 ) => {
   try {
     const userId = req.user?.id;
+    const role = req.user?.role;
+    const isAdmin = role === "ADMIN";
     const projectId =
       req.currentProjectId ||
       req.params.projectId ||
@@ -25,7 +27,7 @@ export const validateProjectAccess = async (
     const project = await prisma.project.findFirst({
       where: {
         id: parseInt(projectId as string),
-        userId: userId,
+        ...(isAdmin ? {} : { userId: userId }),
       },
     });
 
