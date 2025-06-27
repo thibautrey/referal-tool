@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { deleteFromCache, getFromCache, saveToCache } from "../lib/redis";
 
 import prisma from "../lib/prisma";
+import { Prisma } from "@prisma/client";
 
 // Function to generate a random short code
 const generateRandomCode = (length: number = 4): string => {
@@ -815,43 +816,41 @@ export const getLinkStats = async (req: Request, res: Response) => {
       }
     );
 
-    // Obtenir les données de séries temporelles
-    const timeSeriesQuery = `
+    // Obtenir les données de séries temporelles avec requête paramétrée
+    const dateFormat =
+      timeRange === "day"
+        ? "%Y-%m-%d %H:00:00"
+        : timeRange === "week" || timeRange === "month"
+          ? "%Y-%m-%d"
+          : "%Y-%m";
+
+    let conditions = Prisma.sql``;
+    if (whereClause.createdAt?.gte) {
+      conditions = Prisma.sql`${conditions} AND createdAt >= ${whereClause.createdAt.gte}`;
+    }
+    if (whereClause.createdAt?.lte) {
+      conditions = Prisma.sql`${conditions} AND createdAt <= ${whereClause.createdAt.lte}`;
+    }
+    if (whereClause.country?.in) {
+      const countryList = Prisma.join(
+        whereClause.country.in.map((c: string) => Prisma.sql`${c}`),
+        ","
+      );
+      conditions = Prisma.sql`${conditions} AND country IN (${countryList})`;
+    }
+
+    const timeSeriesQuery = Prisma.sql`
       SELECT
-        DATE_FORMAT(createdAt, '${
-          timeRange === "day"
-            ? "%Y-%m-%d %H:00:00"
-            : timeRange === "week"
-              ? "%Y-%m-%d"
-              : timeRange === "month"
-                ? "%Y-%m-%d"
-                : "%Y-%m"
-        }') as date,
+        DATE_FORMAT(createdAt, ${Prisma.raw(dateFormat)}) as date,
         COUNT(*) as count
       FROM LinkVisit
       WHERE linkId = ${parseInt(id)}
-        ${
-          whereClause.createdAt?.gte
-            ? `AND createdAt >= '${whereClause.createdAt.gte.toISOString()}'`
-            : ""
-        }
-        ${
-          whereClause.createdAt?.lte
-            ? `AND createdAt <= '${whereClause.createdAt.lte.toISOString()}'`
-            : ""
-        }
-        ${
-          whereClause.country?.in
-            ? `AND country IN (${whereClause.country.in
-                .map((c: string) => `'${c}'`)
-                .join(",")})`
-            : ""
-        }
+      ${conditions}
       GROUP BY date
       ORDER BY date ASC
     `;
 
-    const timeSeries = await prisma.$queryRawUnsafe(timeSeriesQuery);
+    const timeSeries = await prisma.$queryRaw(timeSeriesQuery);
 
     return res.json({
       message: "Statistiques du lien récupérées avec succès",
