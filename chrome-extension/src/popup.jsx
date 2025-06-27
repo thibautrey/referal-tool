@@ -16,13 +16,25 @@ async function apiRequest(endpoint, method, data) {
   const headers = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = `Bearer ${token}`;
   if (projectId) headers['X-Project-ID'] = String(projectId);
+
   const res = await fetch(API_URL + endpoint, {
     method,
     headers,
-    body: data ? JSON.stringify(data) : undefined
+    body: data ? JSON.stringify(data) : undefined,
   });
-  if (!res.ok) throw new Error('API error');
-  const json = await res.json();
+
+  let json;
+  try {
+    json = await res.json();
+  } catch (e) {
+    console.error('Failed to parse API response', e);
+  }
+
+  if (!res.ok) {
+    console.error('API error', res.status, json);
+    throw new Error(json?.error || json?.message || 'API error');
+  }
+
   return json.data;
 }
 
@@ -33,6 +45,7 @@ export default function Popup() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [result, setResult] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     getStored('token').then(t => t && setLoggedIn(true));
@@ -40,6 +53,7 @@ export default function Popup() {
 
   const handleLogin = async () => {
     try {
+      setError('');
       const res = await fetch(API_URL + '/users/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -52,18 +66,21 @@ export default function Popup() {
       if (projects.length) await setStored({ projectId: projects[0].id });
       setLoggedIn(true);
     } catch (e) {
-      alert('Login failed');
+      console.error('Login failed', e);
+      setError('Login failed');
     }
   };
 
   const handleCreate = async () => {
     try {
+      setError('');
       const link = await apiRequest('/links', 'POST', { name, baseUrl: url, shortCode: '' });
       const shortUrl = `https://rflnk.com/l/${link.shortCode}`;
       await navigator.clipboard.writeText(shortUrl);
       setResult(shortUrl);
     } catch (e) {
-      alert('Failed to create link');
+      console.error('Create link error', e);
+      setError(e.message || 'Failed to create link');
     }
   };
 
@@ -83,6 +100,7 @@ export default function Popup() {
         </div>
       )}
       {result && <div className="mt-2 text-primary font-medium break-all"><a href={result} target="_blank" rel="noopener noreferrer">{result}</a> <span className="text-green-600">(copied!)</span></div>}
+      {error && <div className="mt-2 text-destructive break-all">{error}</div>}
     </div>
   );
 }
