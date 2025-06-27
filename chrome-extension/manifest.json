@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "rflnk Quick Link",
+  "version": "0.1.0",
+  "description": "Create rflnk links directly from your browser.",
+  "permissions": ["storage", "activeTab", "scripting", "contextMenus", "clipboardWrite", "notifications"],
+  "host_permissions": ["https://rflnk.com/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://rflnk.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ]
+}
