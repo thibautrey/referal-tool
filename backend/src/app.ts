@@ -3,6 +3,7 @@ import express, { Application, NextFunction, Request, Response } from "express";
 import analyticsRoutes from "./routes/analytics";
 import cors from "cors";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
 import { errorHandler } from "./middleware/errorHandler";
 import { handleRedirection } from "./controllers/link";
 import helmet from "helmet";
@@ -65,6 +66,7 @@ app.use(
 app.use(morgan(morganFormat)); // Logging avancé
 app.use(cors()); // CORS
 app.use(express.json()); // Parse JSON bodies
+app.use(cookieParser());
 
 // Middleware de logging pour toutes les requêtes
 app.use((req: Request, _res: Response, next: NextFunction) => {
