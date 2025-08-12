@@ -12,6 +12,7 @@ import metadataRoutes from "./routes/metadata";
 import morgan from "morgan";
 import path from "path";
 import projectRoutes from "./routes/project";
+import apiKeyRoutes from "./routes/apiKey";
 import rateLimit from "express-rate-limit";
 import userRoutes from "./routes/user";
 
@@ -90,6 +91,7 @@ app.use("/api/links", linkRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/projects", projectRoutes);
 app.use("/api/metadata", metadataRoutes);
+app.use("/api/api-keys", apiKeyRoutes);
 
 // Chemin vers le build de l'application React
 const frontendBuildPath = path.resolve(__dirname, "../../frontend/dist");

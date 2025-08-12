@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 
 import jwt from "jsonwebtoken";
+import prisma from "../lib/prisma";
 
 // Étendre l'interface Request pour inclure l'utilisateur
 declare global {
@@ -16,11 +17,38 @@ declare global {
 }
 
 // Middleware pour vérifier le JWT
-export const authenticateJWT = (
+export const authenticateJWT = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
+  const apiKey = req.headers["x-api-key"] as string | undefined;
+
+  if (apiKey) {
+    try {
+      const keyRecord = await prisma.apiKey.findUnique({
+        where: { key: apiKey },
+        include: { user: true },
+      });
+
+      if (keyRecord && keyRecord.user) {
+        req.user = {
+          id: keyRecord.userId,
+          email: keyRecord.user.email,
+          role: keyRecord.user.role,
+        };
+        next();
+        return;
+      }
+
+      return res.status(401).json({
+        message: "Accès non autorisé. API key invalide",
+      });
+    } catch (error) {
+      return res.status(500).json({ message: "Erreur serveur" });
+    }
+  }
+
   const authHeader = req.headers.authorization;
   if (!authHeader) {
     return res.status(401).json({
