@@ -5,6 +5,7 @@ import GeneralSettings from "./settings/GeneralSettings";
 import NotificationSettings from "./settings/NotificationSettings";
 import ProfileSettings from "./settings/ProfileSettings";
 import SecuritySettings from "./settings/SecuritySettings";
+import ApiKeysSettings from "./settings/ApiKeysSettings";
 import { useState } from "react";
 
 export default function SettingsPage() {
@@ -25,6 +26,7 @@ export default function SettingsPage() {
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          <TabsTrigger value="api-keys">API Keys</TabsTrigger>
         </TabsList>
 
         <TabsContent value="general">
@@ -41,6 +43,10 @@ export default function SettingsPage() {
 
         <TabsContent value="notifications">
           <NotificationSettings />
+        </TabsContent>
+
+        <TabsContent value="api-keys">
+          <ApiKeysSettings />
         </TabsContent>
       </Tabs>
     </div>
