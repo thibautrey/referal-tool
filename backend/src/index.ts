@@ -1,3 +1,5 @@
+import "./lib/bullmqSafeAdd";
+
 import app from "./app";
 import dotenv from "dotenv";
 
