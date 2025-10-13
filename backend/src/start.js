@@ -2,6 +2,23 @@ const { spawn } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 
+let configureFlowMcpServerEnv = (env) => env;
+
+try {
+  ({ configureFlowMcpServerEnv } = require("./lib/configureFlowMcpServerEnv.cjs"));
+} catch (firstError) {
+  try {
+    ({ configureFlowMcpServerEnv } = require("./lib/configureFlowMcpServerEnv.js"));
+  } catch (secondError) {
+    if (process.env.NODE_ENV !== "test") {
+      console.warn(
+        "Flow MCP server environment helper unavailable, continuing with default environment.",
+        firstError.message || secondError.message
+      );
+    }
+  }
+}
+
 const DATA_DIR = process.env.ILA_DATA_DIR || path.join(process.cwd(), "data");
 const TMP_DIR = process.env.ILA_TMP_DATA_DIR || path.join(process.cwd(), "tmp");
 
@@ -29,9 +46,11 @@ async function startApp() {
     console.log(`IP location data directory: ${DATA_DIR}`);
     console.log(`IP location temp directory: ${TMP_DIR}`);
 
+    const childEnv = configureFlowMcpServerEnv(process.env);
+
     const app = spawn("node", [path.join(__dirname, "index.js")], {
       stdio: "inherit",
-      env: process.env,
+      env: childEnv,
     });
 
     app.on("close", (code) => {
