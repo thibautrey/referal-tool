@@ -12,6 +12,19 @@ export const listApiKeys = async (req: Request, res: Response) => {
         name: true,
         key: true,
         createdAt: true,
+        primaryAiProvider: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        primaryAiModel: {
+          select: {
+            id: true,
+            name: true,
+            modelIdentifier: true,
+          },
+        },
       },
     });
 
@@ -28,20 +41,76 @@ export const listApiKeys = async (req: Request, res: Response) => {
 
 export const createApiKey = async (req: Request, res: Response) => {
   try {
-    const { name } = req.body;
+    const { name, primaryAiProviderId, primaryAiModelId } = req.body;
     const key = randomBytes(32).toString("hex");
+
+    if (!name) {
+      res.status(400).json({ message: "Le nom de la clé API est requis" });
+      return;
+    }
+
+    let providerIdToUse = primaryAiProviderId as number | undefined;
+
+    if (primaryAiModelId) {
+      const model = await prisma.aiModel.findUnique({
+        where: { id: Number(primaryAiModelId) },
+        select: {
+          id: true,
+          providerId: true,
+        },
+      });
+
+      if (!model) {
+        res.status(400).json({ message: "Modèle d'IA introuvable" });
+        return;
+      }
+
+      if (providerIdToUse && model.providerId !== Number(providerIdToUse)) {
+        res.status(400).json({ message: "Le modèle sélectionné n'appartient pas au fournisseur spécifié" });
+        return;
+      }
+
+      providerIdToUse = model.providerId;
+    }
+
+    if (providerIdToUse) {
+      const providerExists = await prisma.aiProvider.findUnique({
+        where: { id: Number(providerIdToUse) },
+        select: { id: true },
+      });
+
+      if (!providerExists) {
+        res.status(400).json({ message: "Fournisseur d'IA introuvable" });
+        return;
+      }
+    }
 
     const apiKey = await prisma.apiKey.create({
       data: {
         name,
         key,
         userId: req.user!.id,
+        primaryAiProviderId: providerIdToUse ? Number(providerIdToUse) : undefined,
+        primaryAiModelId: primaryAiModelId ? Number(primaryAiModelId) : undefined,
       },
       select: {
         id: true,
         name: true,
         key: true,
         createdAt: true,
+        primaryAiProvider: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        primaryAiModel: {
+          select: {
+            id: true,
+            name: true,
+            modelIdentifier: true,
+          },
+        },
       },
     });
 
