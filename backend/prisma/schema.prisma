@@ -134,7 +134,43 @@ model ApiKey {
     key       String   @unique
     user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
     userId    Int
+    primaryAiProvider   AiProvider? @relation("ApiKeyPrimaryProvider", fields: [primaryAiProviderId], references: [id])
+    primaryAiProviderId Int?
+    primaryAiModel      AiModel?    @relation("ApiKeyPrimaryModel", fields: [primaryAiModelId], references: [id])
+    primaryAiModelId    Int?
     createdAt DateTime @default(now())
+}
+
+model AiProvider {
+    id                  Int        @id @default(autoincrement())
+    name                String     @unique
+    baseUrl             String?
+    inputTokenPrice     Decimal?   @db.Decimal(18, 8)
+    outputTokenPrice    Decimal?   @db.Decimal(18, 8)
+    fallbackProvider    AiProvider? @relation("AiProviderFallback", fields: [fallbackProviderId], references: [id])
+    fallbackProviderId  Int?
+    fallbackFor         AiProvider[] @relation("AiProviderFallback")
+    models              AiModel[]
+    apiKeys             ApiKey[]   @relation("ApiKeyPrimaryProvider")
+    createdAt           DateTime   @default(now())
+    updatedAt           DateTime   @updatedAt
+}
+
+model AiModel {
+    id                Int        @id @default(autoincrement())
+    name              String
+    modelIdentifier   String?
+    baseUrl           String?
+    inputTokenPrice   Decimal?   @db.Decimal(18, 8)
+    outputTokenPrice  Decimal?   @db.Decimal(18, 8)
+    provider          AiProvider @relation(fields: [providerId], references: [id])
+    providerId        Int
+    fallbackModel     AiModel?   @relation("AiModelFallback", fields: [fallbackModelId], references: [id])
+    fallbackModelId   Int?
+    fallbackFor       AiModel[]  @relation("AiModelFallback")
+    apiKeys           ApiKey[]   @relation("ApiKeyPrimaryModel")
+    createdAt         DateTime   @default(now())
+    updatedAt         DateTime   @updatedAt
 }
 
 enum Role {

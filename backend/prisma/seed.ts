@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 import * as bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
@@ -8,9 +8,76 @@ async function main() {
   await prisma.linkVisit.deleteMany();
   await prisma.ipCountryCache.deleteMany();
   await prisma.linkRule.deleteMany();
+  await prisma.apiKey.deleteMany();
   await prisma.link.deleteMany();
   await prisma.project.deleteMany();
+  await prisma.aiModel.deleteMany();
+  await prisma.aiProvider.deleteMany();
   await prisma.user.deleteMany();
+
+  // Seed AI providers and models
+  const openAiProvider = await prisma.aiProvider.create({
+    data: {
+      name: "OpenAI",
+      baseUrl: "https://api.openai.com/v1",
+      inputTokenPrice: new Prisma.Decimal("0.0005"),
+      outputTokenPrice: new Prisma.Decimal("0.0015"),
+      models: {
+        create: [
+          {
+            name: "GPT-4o",
+            modelIdentifier: "gpt-4o",
+            inputTokenPrice: new Prisma.Decimal("0.0005"),
+            outputTokenPrice: new Prisma.Decimal("0.0015"),
+          },
+          {
+            name: "GPT-4o-mini",
+            modelIdentifier: "gpt-4o-mini",
+            inputTokenPrice: new Prisma.Decimal("0.00025"),
+            outputTokenPrice: new Prisma.Decimal("0.0006"),
+          },
+        ],
+      },
+    },
+  });
+
+  const anthropicProvider = await prisma.aiProvider.create({
+    data: {
+      name: "Anthropic",
+      baseUrl: "https://api.anthropic.com",
+      inputTokenPrice: new Prisma.Decimal("0.0008"),
+      outputTokenPrice: new Prisma.Decimal("0.0024"),
+      fallbackProviderId: openAiProvider.id,
+      models: {
+        create: [
+          {
+            name: "Claude 3.5 Sonnet",
+            modelIdentifier: "claude-3-5-sonnet-20240620",
+            inputTokenPrice: new Prisma.Decimal("0.0008"),
+            outputTokenPrice: new Prisma.Decimal("0.0024"),
+          },
+          {
+            name: "Claude 3 Haiku",
+            modelIdentifier: "claude-3-haiku-20240307",
+            inputTokenPrice: new Prisma.Decimal("0.00025"),
+            outputTokenPrice: new Prisma.Decimal("0.00125"),
+          },
+        ],
+      },
+    },
+  });
+
+  // Configure model fallbacks
+  const gpt4oMini = await prisma.aiModel.findFirst({
+    where: { modelIdentifier: "gpt-4o-mini" },
+  });
+
+  if (gpt4oMini) {
+    await prisma.aiModel.updateMany({
+      where: { providerId: anthropicProvider.id },
+      data: { fallbackModelId: gpt4oMini.id },
+    });
+  }
 
   // Create demo user
   const demoUser = await prisma.user.create({
