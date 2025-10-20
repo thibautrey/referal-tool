@@ -22,10 +22,21 @@ async function apiRequest(endpoint, method, data) {
   const res = await fetch(API_URL + endpoint, {
     method,
     headers,
-    body: data ? JSON.stringify(data) : undefined
+    body: data ? JSON.stringify(data) : undefined,
   });
-  if (!res.ok) throw new Error('API error');
-  const json = await res.json();
+
+  let json;
+  try {
+    json = await res.json();
+  } catch (e) {
+    console.error('Failed to parse API response', e);
+  }
+
+  if (!res.ok) {
+    console.error('API error', res.status, json);
+    throw new Error(json?.error || json?.message || 'API error');
+  }
+
   return json.data;
 }
 
@@ -54,6 +65,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
         message: 'Link created and copied!'
       });
     } catch (e) {
+      console.error('Context menu link creation failed', e);
       chrome.notifications.create({
         type: 'basic',
         iconUrl: '',

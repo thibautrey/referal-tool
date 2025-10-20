@@ -8,4 +8,18 @@ This extension allows you to create rflnk links without visiting rflnk.com.
 - Create links from the popup form or by selecting text and using the context menu.
 - Copies the generated short link to your clipboard and shows a notification.
 
-Load the `chrome-extension` folder as an unpacked extension in Chrome.
+After building, load the `chrome-extension` folder as an unpacked extension in Chrome.
+You must run the build step any time you make changes or update the extension files.
+
+To inspect logs from the popup, open the popup and right-click inside it then choose **Inspect**. This launches the DevTools window where all `console.log` output from `popup.jsx` will appear.
+
+## Development
+
+The popup interface is now built with React and Tailwind CSS using Vite. Run the following commands to build the extension assets:
+
+```bash
+npm install
+npm run build
+```
+
+This produces a `dist` folder containing `popup.html` and related assets that Chrome will load.
