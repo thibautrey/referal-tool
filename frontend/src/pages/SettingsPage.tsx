@@ -1,19 +1,26 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Import des composants modulaires
+import ApiKeysSettings from "./settings/ApiKeysSettings";
 import GeneralSettings from "./settings/GeneralSettings";
 import NotificationSettings from "./settings/NotificationSettings";
 import ProfileSettings from "./settings/ProfileSettings";
 import SecuritySettings from "./settings/SecuritySettings";
-import ApiKeysSettings from "./settings/ApiKeysSettings";
+import { LanguageSelector } from "@/components/settings/LanguageSelector";
+import { useAppTranslation } from "@/i18n";
 import { useState } from "react";
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("general");
+  const { t } = useAppTranslation();
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <h1 className="text-3xl font-bold tracking-tight">
+          {t("settings.title")}
+        </h1>
+        <LanguageSelector />
+      </div>
 
       <Tabs
         defaultValue="general"
@@ -21,12 +28,22 @@ export default function SettingsPage() {
         onValueChange={setActiveTab}
         value={activeTab}
       >
-        <TabsList>
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="api-keys">API Keys</TabsTrigger>
+        <TabsList className="flex flex-wrap">
+          <TabsTrigger value="general">
+            {t("settings.tabs.general")}
+          </TabsTrigger>
+          <TabsTrigger value="profile">
+            {t("settings.tabs.profile")}
+          </TabsTrigger>
+          <TabsTrigger value="security">
+            {t("settings.tabs.security")}
+          </TabsTrigger>
+          <TabsTrigger value="notifications">
+            {t("settings.tabs.notifications")}
+          </TabsTrigger>
+          <TabsTrigger value="api-keys">
+            {t("settings.tabs.api_keys")}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="general">

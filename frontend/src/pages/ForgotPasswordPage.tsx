@@ -19,6 +19,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api";
+import { useAppTranslation } from "@/i18n";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
 import { z } from "zod";
@@ -26,7 +27,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 // Validation schema for password recovery
 const forgotPasswordSchema = z.object({
-  email: z.string().email("Invalid email address"),
+  email: z.string().email(),
 });
 
 type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
@@ -35,6 +36,7 @@ export default function ForgotPasswordPage() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useAppTranslation();
 
   const form = useForm<ForgotPasswordFormValues>({
     resolver: zodResolver(forgotPasswordSchema),
@@ -64,22 +66,19 @@ export default function ForgotPasswordPage() {
       <div className="flex min-h-screen bg-background items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>Check your inbox</CardTitle>
+            <CardTitle>{t("auth.forgot_password.submitted.title")}</CardTitle>
             <CardDescription>
-              If an account is associated with this email, you will receive
-              instructions to reset your password.
+              {t("auth.forgot_password.submitted.description")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
-              For security reasons, we do not disclose if an email is registered
-              in our system. If you don't receive an email within a few minutes,
-              please check your spam folder.
+              {t("auth.forgot_password.submitted.helper")}
             </p>
           </CardContent>
           <CardFooter className="flex justify-center">
             <Link to="/app/login">
-              <Button>Return to login</Button>
+              <Button>{t("auth.forgot_password.return_to_login")}</Button>
             </Link>
           </CardFooter>
         </Card>
@@ -91,9 +90,9 @@ export default function ForgotPasswordPage() {
     <div className="flex min-h-screen bg-background items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>Forgot password</CardTitle>
+          <CardTitle>{t("auth.forgot_password.title")}</CardTitle>
           <CardDescription>
-            Enter your email to receive a password reset link
+            {t("auth.forgot_password.description")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -109,10 +108,10 @@ export default function ForgotPasswordPage() {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email address</FormLabel>
+                    <FormLabel>{t("common.email")}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="name@example.com"
+                        placeholder={t("auth.forgot_password.placeholder")}
                         type="email"
                         {...field}
                       />
@@ -123,7 +122,9 @@ export default function ForgotPasswordPage() {
               />
 
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Sending..." : "Send reset link"}
+                {isLoading
+                  ? t("auth.forgot_password.sending")
+                  : t("auth.forgot_password.submit")}
               </Button>
             </form>
           </Form>
@@ -133,7 +134,7 @@ export default function ForgotPasswordPage() {
             to="/app/login"
             className="text-sm text-primary hover:underline"
           >
-            Return to login
+            {t("auth.forgot_password.return_to_login")}
           </Link>
         </CardFooter>
       </Card>

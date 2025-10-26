@@ -4,6 +4,7 @@ import { AlertCircle, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useAppTranslation } from "@/i18n";
 import { useState } from "react";
 import { validatePassword } from "@/services/passwordValidation";
 
@@ -15,6 +16,7 @@ export const PasswordValidationPage = ({ shortCode }: Props) => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { t } = useAppTranslation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,10 +28,14 @@ export const PasswordValidationPage = ({ shortCode }: Props) => {
       if (isValid) {
         window.location.reload();
       } else {
-        setError("Invalid password");
+        setError(t("auth.password_validation.invalid"));
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      setError(
+        error instanceof Error
+          ? error.message
+          : t("auth.password_validation.error")
+      );
     } finally {
       setIsLoading(false);
     }
@@ -40,9 +46,11 @@ export const PasswordValidationPage = ({ shortCode }: Props) => {
       <Card className="w-full max-w-md p-6 space-y-6">
         <div className="space-y-2 text-center">
           <Shield className="w-12 h-12 mx-auto text-primary" />
-          <h1 className="text-2xl font-semibold">Password Protected Link</h1>
+          <h1 className="text-2xl font-semibold">
+            {t("auth.password_validation.title")}
+          </h1>
           <p className="text-muted-foreground">
-            This link is protected. Please enter the password to continue.
+            {t("auth.password_validation.description")}
           </p>
         </div>
 
@@ -50,7 +58,7 @@ export const PasswordValidationPage = ({ shortCode }: Props) => {
           <div className="space-y-2">
             <Input
               type="password"
-              placeholder="Enter password"
+              placeholder={t("auth.password_validation.placeholder")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={isLoading}
@@ -70,7 +78,9 @@ export const PasswordValidationPage = ({ shortCode }: Props) => {
             className="w-full"
             disabled={!password || isLoading}
           >
-            {isLoading ? "Validating..." : "Continue"}
+            {isLoading
+              ? t("auth.password_validation.validating")
+              : t("auth.password_validation.submit")}
           </Button>
         </form>
       </Card>

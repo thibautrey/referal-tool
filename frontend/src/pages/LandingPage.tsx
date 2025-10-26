@@ -1,3 +1,4 @@
+import type { ComponentType } from "react";
 import {
   AppWindow,
   ArrowRight,
@@ -30,6 +31,7 @@ import { Button } from "@/components/ui/button";
 import { Link as RouterLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { useAppTranslation } from "@/i18n";
 import { useAuth } from "@/contexts/AuthContext";
 
 const fadeIn = {
@@ -53,6 +55,45 @@ const staggerContainer = {
   },
 };
 
+const featureConfig = [
+  { icon: Globe, key: "smart_geo_routing" },
+  { icon: Target, key: "advanced_targeting" },
+  { icon: Smartphone, key: "deep_linking" },
+  { icon: Lock, key: "link_protection" },
+  { icon: Clock, key: "smart_scheduling" },
+  { icon: AppWindow, key: "multi_platform" },
+  { icon: Gauge, key: "realtime_analytics" },
+  { icon: FilterX, key: "no_limits" },
+  { icon: BarChart3, key: "performance_insights" },
+] as const;
+
+const benefitSteps = [
+  { key: "local_markets", index: 1 },
+  { key: "real_time", index: 2 },
+  { key: "campaign_management", index: 3 },
+] as const;
+
+const freePlanFeatures = [
+  { key: "unlimited_links", type: "check", withTooltip: true },
+  { key: "unlimited_clicks", type: "check", withTooltip: true },
+  { key: "geo_customization", type: "check", withTooltip: true },
+  { key: "device_tagging", type: "check", withTooltip: true },
+  { key: "password_protection", type: "check", withTooltip: true },
+  { key: "link_expiration", type: "check", withTooltip: true },
+  { key: "deeplinks", type: "check", withTooltip: true },
+  { key: "performance_analytics", type: "check", withTooltip: true },
+  { key: "analytics_retention", type: "check", withTooltip: true },
+  { key: "traffic_share", type: "info", withTooltip: true },
+  { key: "no_support", type: "info", withTooltip: true },
+] as const;
+
+const addOnCards = [
+  { key: "custom_domain", withTooltip: true },
+  { key: "no_redirects", withTooltip: false },
+  { key: "support", withTooltip: false },
+  { key: "analytics", withTooltip: true },
+] as const;
+
 const Feature = ({
   title,
   description,
@@ -60,8 +101,7 @@ const Feature = ({
 }: {
   title: string;
   description: string;
-  icon: React.ComponentType<{ className?: string }>;
-  index: number;
+  icon: ComponentType<{ className?: string }>;
 }) => {
   return (
     <motion.div
@@ -86,15 +126,19 @@ const Feature = ({
 
 export default function LandingPage() {
   const { isAuthenticated } = useAuth();
+  const { t } = useAppTranslation();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-background/90">
-      {/* Header avec navigation */}
       <header className="fixed top-0 left-0 right-0 z-50 border-b bg-background/80 backdrop-blur-sm">
         <div className="container flex items-center justify-between h-16 py-4">
           <div className="flex items-center gap-2 pl-6">
-            <img src="/images/logo.avif" alt="Logo" className="w-auto h-8" />
-            <span className="text-xl font-semibold">rflnk</span>
+            <img
+              src="/images/logo.avif"
+              alt={t("landing.header.logo_alt")}
+              className="w-auto h-8"
+            />
+            <span className="text-xl font-semibold">{t("app.name")}</span>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger>
@@ -102,14 +146,11 @@ export default function LandingPage() {
                     variant="secondary"
                     className="text-xs font-normal bg-secondary/30"
                   >
-                    alpha
+                    {t("app.alpha_badge")}
                   </Badge>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>
-                    This is an alpha version. Some features may not be available
-                    yet or might be unstable. We appreciate your feedback!
-                  </p>
+                  <p>{t("app.alpha_tooltip")}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
@@ -119,23 +160,25 @@ export default function LandingPage() {
               href="#features"
               className="transition-colors text-muted-foreground hover:text-foreground"
             >
-              Features
+              {t("landing.header.nav.features")}
             </a>
             <a
               href="#benefits"
               className="transition-colors text-muted-foreground hover:text-foreground"
             >
-              Benefits
+              {t("landing.header.nav.benefits")}
             </a>
             <a
               href="#pricing"
               className="transition-colors text-muted-foreground hover:text-foreground"
             >
-              Pricing
+              {t("landing.header.nav.pricing")}
             </a>
             {isAuthenticated ? (
               <Button asChild>
-                <RouterLink to="/app/dashboard">Go to App</RouterLink>
+                <RouterLink to="/app/dashboard">
+                  {t("landing.header.nav.dashboard")}
+                </RouterLink>
               </Button>
             ) : (
               <>
@@ -143,17 +186,19 @@ export default function LandingPage() {
                   to="/app/login"
                   className="transition-colors text-muted-foreground hover:text-foreground"
                 >
-                  Login
+                  {t("landing.header.nav.login")}
                 </RouterLink>
                 <Button asChild>
-                  <RouterLink to="/app/register">Sign Up</RouterLink>
+                  <RouterLink to="/app/register">
+                    {t("landing.header.nav.sign_up")}
+                  </RouterLink>
                 </Button>
               </>
             )}
           </nav>
           <div className="md:hidden">
             <Button variant="ghost" size="icon">
-              <span className="sr-only">Menu</span>
+              <span className="sr-only">{t("app.menu")}</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
@@ -175,8 +220,6 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* Hero Section */}
-      {/* <BackgroundGradientAnimation> */}
       <section className="px-4 pt-24 pb-16 md:pt-32 md:pb-24">
         <motion.div
           className="container max-w-4xl mx-auto text-center"
@@ -185,17 +228,16 @@ export default function LandingPage() {
           variants={fadeIn}
         >
           <h1 className="mb-6 text-4xl font-bold tracking-tight text-transparent md:text-6xl bg-clip-text bg-gradient-to-r from-primary to-purple-500">
-            Optimize Your Affiliate Links
+            {t("landing.hero.title")}
           </h1>
           <p className="max-w-3xl mx-auto mb-10 text-xl md:text-2xl text-foreground">
-            Increase your affiliate revenue with our intelligent link management
-            platform, designed for influencers and marketers.
+            {t("landing.hero.subtitle")}
           </p>
           <div className="flex flex-col justify-center gap-4 md:flex-row">
             {isAuthenticated ? (
               <Button size="lg" asChild>
                 <RouterLink to="/app/dashboard">
-                  Go to Dashboard
+                  {t("landing.hero.cta_authenticated")}
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </RouterLink>
               </Button>
@@ -203,18 +245,21 @@ export default function LandingPage() {
               <>
                 <Button size="lg" asChild>
                   <RouterLink to="/app/register">
-                    Get Started Free
+                    {t("landing.hero.cta_primary")}
                     <ArrowRight className="w-5 h-5 ml-2" />
                   </RouterLink>
                 </Button>
                 <Button size="lg" variant="outline" asChild>
-                  <RouterLink to="/app/login">Login</RouterLink>
+                  <RouterLink to="/app/login">
+                    {t("landing.hero.cta_secondary")}
+                  </RouterLink>
                 </Button>
               </>
             )}
           </div>
         </motion.div>
       </section>
+
       <motion.div
         className="container px-4 mx-auto mb-20"
         initial={{ opacity: 0, y: 40 }}
@@ -232,9 +277,7 @@ export default function LandingPage() {
           </div>
         </div>
       </motion.div>
-      {/* </BackgroundGradientAnimation> */}
 
-      {/* Features Section */}
       <section id="features" className="px-4 py-20 bg-muted/30">
         <div className="container mx-auto">
           <motion.div
@@ -245,11 +288,10 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
           >
             <h2 className="mb-4 text-3xl font-bold md:text-4xl">
-              Powerful Features for Creators
+              {t("landing.features.title")}
             </h2>
             <p className="max-w-2xl mx-auto text-xl text-muted-foreground">
-              Everything you need to optimize your affiliate strategy and boost
-              your revenue.
+              {t("landing.features.subtitle")}
             </p>
           </motion.div>
 
@@ -260,65 +302,18 @@ export default function LandingPage() {
             whileInView="visible"
             viewport={{ once: true }}
           >
-            <Feature
-              icon={Globe}
-              title="Smart Geographic Routing"
-              description="Automatically direct users to country-specific stores or content based on their location"
-              index={0}
-            />
-            <Feature
-              icon={Target}
-              title="Advanced Targeting"
-              description="Create custom rules based on location, device, time, and more"
-              index={1}
-            />
-            <Feature
-              icon={Smartphone}
-              title="Deep Linking"
-              description="Send mobile users directly to apps, desktop users to web versions"
-              index={2}
-            />
-            <Feature
-              icon={Lock}
-              title="Link Protection"
-              description="Set passwords, expiration dates, and IP restrictions for your links"
-              index={3}
-            />
-            <Feature
-              icon={Clock}
-              title="Smart Scheduling"
-              description="Schedule links to activate or deactivate automatically"
-              index={4}
-            />
-            <Feature
-              icon={AppWindow}
-              title="Multi-Platform Support"
-              description="Works with major platforms like Amazon, Shopify, and more"
-              index={5}
-            />
-            <Feature
-              icon={Gauge}
-              title="Real-Time Analytics"
-              description="Track clicks, locations, devices, and conversion rates"
-              index={6}
-            />
-            <Feature
-              icon={FilterX}
-              title="No Traffic Limits"
-              description="Handle unlimited clicks with no throttling or restrictions"
-              index={7}
-            />
-            <Feature
-              icon={BarChart3}
-              title="Performance Insights"
-              description="Get detailed analytics and reports to optimize your campaigns"
-              index={8}
-            />
+            {featureConfig.map(({ icon, key }) => (
+              <Feature
+                key={key}
+                icon={icon}
+                title={t(`landing.features.items.${key}.title`)}
+                description={t(`landing.features.items.${key}.description`)}
+              />
+            ))}
           </motion.div>
         </div>
       </section>
 
-      {/* Benefits Section */}
       <section id="benefits" className="px-4 py-20">
         <div className="container mx-auto">
           <motion.div
@@ -329,11 +324,10 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
           >
             <h2 className="mb-4 text-3xl font-bold md:text-4xl">
-              Influencer Benefits
+              {t("landing.benefits.title")}
             </h2>
             <p className="max-w-2xl mx-auto text-xl text-muted-foreground">
-              Maximize your affiliate revenue with tools adapted to your
-              international audience.
+              {t("landing.benefits.subtitle")}
             </p>
           </motion.div>
 
@@ -346,51 +340,24 @@ export default function LandingPage() {
               transition={{ duration: 0.8 }}
             >
               <h3 className="mb-6 text-2xl font-bold">
-                Increase Your Conversions
+                {t("landing.benefits.section_title")}
               </h3>
               <div className="space-y-6">
-                <div className="flex gap-4">
-                  <div className="flex items-center justify-center flex-shrink-0 w-12 h-12 rounded-full bg-primary/10">
-                    <span className="text-lg font-bold text-primary">1</span>
+                {benefitSteps.map(({ key, index }) => (
+                  <div key={key} className="flex gap-4">
+                    <div className="flex items-center justify-center flex-shrink-0 w-12 h-12 rounded-full bg-primary/10">
+                      <span className="text-lg font-bold text-primary">{index}</span>
+                    </div>
+                    <div>
+                      <h4 className="mb-1 text-lg font-semibold">
+                        {t(`landing.benefits.steps.${key}.title`)}
+                      </h4>
+                      <p className="text-muted-foreground">
+                        {t(`landing.benefits.steps.${key}.description`)}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="mb-1 text-lg font-semibold">
-                      Adaptation to Local Markets
-                    </h4>
-                    <p className="text-muted-foreground">
-                      Automatically redirect your visitors to platforms suited
-                      to their country to maximize conversion chances.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-4">
-                  <div className="flex items-center justify-center flex-shrink-0 w-12 h-12 rounded-full bg-primary/10">
-                    <span className="text-lg font-bold text-primary">2</span>
-                  </div>
-                  <div>
-                    <h4 className="mb-1 text-lg font-semibold">
-                      Real-Time Optimization
-                    </h4>
-                    <p className="text-muted-foreground">
-                      Analyze the performance of your links and quickly adjust
-                      your strategies with real-time data.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-4">
-                  <div className="flex items-center justify-center flex-shrink-0 w-12 h-12 rounded-full bg-primary/10">
-                    <span className="text-lg font-bold text-primary">3</span>
-                  </div>
-                  <div>
-                    <h4 className="mb-1 text-lg font-semibold">
-                      Simplified Campaign Management
-                    </h4>
-                    <p className="text-muted-foreground">
-                      An intuitive interface allows you to easily manage all
-                      your affiliate links and projects.
-                    </p>
-                  </div>
-                </div>
+                ))}
               </div>
             </motion.div>
 
@@ -411,7 +378,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing Section */}
       <section id="pricing" className="px-4 py-20 bg-muted/30">
         <div className="container mx-auto">
           <motion.div
@@ -422,16 +388,14 @@ export default function LandingPage() {
             transition={{ duration: 0.6 }}
           >
             <h2 className="mb-4 text-3xl font-bold md:text-4xl">
-              Simple Pricing
+              {t("landing.pricing.title")}
             </h2>
             <p className="max-w-2xl mx-auto text-xl text-muted-foreground">
-              Start for free with our basic plan. Enhance your experience with
-              optional add-ons.
+              {t("landing.pricing.subtitle")}
             </p>
           </motion.div>
 
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
-            {/* Free Plan */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -443,110 +407,62 @@ export default function LandingPage() {
                 <CardHeader className="pb-2">
                   <div className="flex justify-between">
                     <div>
-                      <CardTitle>Free</CardTitle>
+                      <CardTitle>{t("landing.pricing.free_plan.title")}</CardTitle>
                       <CardDescription>
-                        Get started with no commitment
+                        {t("landing.pricing.free_plan.description")}
                       </CardDescription>
                     </div>
-                    <div className="text-3xl font-bold text-primary">$0</div>
+                    <div className="text-3xl font-bold text-primary">
+                      {t("landing.pricing.free_plan.price")}
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <ul className="space-y-2">
-                    <li className="relative flex items-start group">
-                      <span className="mt-1 mr-2 text-primary">✓</span>
-                      Unlimited short links
-                      <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                        Create as many short links as you need without any
-                        limitations
-                      </div>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="mt-1 mr-2 text-primary">✓</span>
-                      Unlimited clicks
-                    </li>
-                    <li className="relative flex items-start group">
-                      <span className="mt-1 mr-2 text-primary">✓</span>
-                      Geographic customization
-                      <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                        Route users to different URLs based on their location
-                      </div>
-                    </li>
-                    <li className="relative flex items-start group">
-                      <span className="mt-1 mr-2 text-primary">✓</span>
-                      Device tagging
-                      <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                        Redirect users depending on their device type or browser
-                      </div>
-                    </li>
-                    <li className="relative flex items-start group">
-                      <span className="mt-1 mr-2 text-primary">✓</span>
-                      Password protection
-                      <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                        Secure your links with custom passwords
-                      </div>
-                    </li>
-                    <li className="relative flex items-start group">
-                      <span className="mt-1 mr-2 text-primary">✓</span>
-                      Link expiration and scheduling
-                      <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                        Set links to automatically expire after a specific date
-                        or schedule redirections to start working at a certain
-                        time
-                      </div>
-                    </li>
-                    <li className="relative flex items-start group">
-                      <span className="mt-1 mr-2 text-primary">✓</span>
-                      Deeplinks support
-                      <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                        Create links that open specific screens in mobile apps
-                      </div>
-                    </li>
-                    <li className="relative flex items-start group">
-                      <span className="mt-1 mr-2 text-primary">✓</span>
-                      Performance analytics
-                      <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                        Track clicks, conversions and other key metrics
-                      </div>
-                    </li>
-                    <li className="relative flex items-start group">
-                      <span className="mt-1 mr-2 text-primary">✓</span>1 year
-                      analytics retention
-                      <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                        Access your analytics data for up to one year
-                      </div>
-                    </li>
-                    <li className="relative flex items-start text-muted-foreground group">
-                      <Info className="w-4 h-4 mt-1 mr-2" />
-                      5% traffic redirects to our links
-                      <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                        For 5% of clicks on major retail links (Amazon,
-                        Walmart), we'll add our affiliate code. Your links will
-                        work exactly the same, and all other links remain
-                        untouched.
-                      </div>
-                    </li>
-                    <li className="relative flex items-start text-muted-foreground group">
-                      <Info className="w-4 h-4 mt-1 mr-2" />
-                      No dedicated support
-                      <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                        Support through community forums and documentation
-                      </div>
-                    </li>
+                    {freePlanFeatures.map(({ key, type, withTooltip }) => {
+                      const content = (
+                        <>
+                          {type === "check" ? (
+                            <span className="mt-1 mr-2 text-primary">✓</span>
+                          ) : (
+                            <Info className="w-4 h-4 mt-1 mr-2 text-primary" />
+                          )}
+                          {t(`landing.pricing.free_plan.features.${key}`)}
+                        </>
+                      );
+
+                      const itemClass = cn(
+                        "flex items-start relative",
+                        type === "info" ? "text-muted-foreground" : undefined,
+                        "group"
+                      );
+
+                      return (
+                        <li key={key} className={itemClass}>
+                          {content}
+                          {withTooltip && (
+                            <div className="absolute left-0 -top-2 -translate-y-full w-48 rounded-md bg-popover p-2 text-sm text-popover-foreground shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                              {t(`landing.pricing.free_plan.tooltips.${key}`)}
+                            </div>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ul>
 
                   <Button className="w-full" asChild>
-                    <RouterLink to="/app/register">Get Started</RouterLink>
+                    <RouterLink to="/app/register">
+                      {t("landing.pricing.free_plan.cta")}
+                    </RouterLink>
                   </Button>
 
                   <p className="mt-2 text-xs text-center text-muted-foreground">
-                    No credit card required
+                    {t("landing.pricing.free_plan.no_card")}
                   </p>
                 </CardContent>
               </Card>
             </motion.div>
 
-            {/* Add-ons */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -556,70 +472,39 @@ export default function LandingPage() {
             >
               <Card className="h-full transition-all bg-card/50 backdrop-blur-sm hover:shadow-md border-primary/10 hover:border-primary/30">
                 <CardHeader>
-                  <CardTitle>Optional Add-ons</CardTitle>
+                  <CardTitle>{t("landing.pricing.addons.title")}</CardTitle>
                   <CardDescription>
-                    Enhance your experience with these premium features
+                    {t("landing.pricing.addons.description")}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                    {/* Custom Domain */}
-                    <div className="relative p-4 border rounded-lg bg-background/50 group">
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-semibold">Custom Domain</h3>
-                        <span className="font-bold text-primary">$10/mo</span>
+                    {addOnCards.map(({ key, withTooltip }) => (
+                      <div
+                        key={key}
+                        className={cn(
+                          "relative p-4 border rounded-lg bg-background/50",
+                          "group"
+                        )}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <h3 className="font-semibold">
+                            {t(`landing.pricing.addons.items.${key}.title`)}
+                          </h3>
+                          <span className="font-bold text-primary">
+                            {t(`landing.pricing.addons.items.${key}.price`)}
+                          </span>
+                        </div>
+                        <p className="mb-4 text-sm text-muted-foreground">
+                          {t(`landing.pricing.addons.items.${key}.description`)}
+                        </p>
+                        {withTooltip && (
+                          <div className="absolute left-0 -top-2 -translate-y-full w-48 rounded-md bg-popover p-2 text-sm text-popover-foreground shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                            {t(`landing.pricing.addons.items.${key}.tooltip`)}
+                          </div>
+                        )}
                       </div>
-                      <p className="mb-4 text-sm text-muted-foreground">
-                        Use your own domain for short links
-                      </p>
-                      <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                        Replace our domain with your own branded domain for a
-                        professional look
-                      </div>
-                    </div>
-
-                    {/* No Redirects */}
-                    <div className="p-4 border rounded-lg bg-background/50">
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-semibold">No Redirects</h3>
-                        <span className="font-bold text-primary">$10/mo</span>
-                      </div>
-                      <p className="mb-4 text-sm text-muted-foreground">
-                        Remove the 5% redirect to our links
-                      </p>
-                      {/* <Button variant="outline" className="w-full" asChild>
-                        <RouterLink to="/app/register">Add to plan</RouterLink>
-                      </Button> */}
-                    </div>
-
-                    {/* Customer Support */}
-                    <div className="p-4 border rounded-lg bg-background/50">
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-semibold">Customer Support</h3>
-                        <span className="font-bold text-primary">$50/mo</span>
-                      </div>
-                      <p className="mb-4 text-sm text-muted-foreground">
-                        Get priority support from our team
-                      </p>
-                      {/* <Button variant="outline" className="w-full" asChild>
-                        <RouterLink to="/app/register">Add to plan</RouterLink>
-                      </Button> */}
-                    </div>
-
-                    {/* Analytics Retention */}
-                    <div className="relative p-4 border rounded-lg bg-background/50 group">
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-semibold">Extended Analytics</h3>
-                        <span className="font-bold text-primary">$20/year</span>
-                      </div>
-                      <p className="mb-4 text-sm text-muted-foreground">
-                        Keep your analytics data beyond the first year
-                      </p>
-                      <div className="absolute left-0 -top-2 translate-y-[-100%] w-48 bg-popover text-popover-foreground text-sm p-2 rounded-md shadow-md opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                        Access historical data older than one year for long-term
-                        analysis
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
@@ -628,7 +513,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
       <section className="px-4 py-20 bg-primary/5">
         <motion.div
           className="container max-w-3xl mx-auto text-center"
@@ -638,60 +522,65 @@ export default function LandingPage() {
           transition={{ duration: 0.6 }}
         >
           <h2 className="mb-6 text-3xl font-bold md:text-4xl">
-            Ready to Optimize Your Affiliate Revenue?
+            {t("landing.cta.title")}
           </h2>
           <p className="mb-8 text-xl text-muted-foreground">
-            Join thousands of influencers who are increasing their conversions
-            with our platform.
+            {t("landing.cta.subtitle")}
           </p>
           <Button size="lg" className="px-8" asChild>
-            <RouterLink to="/app/register">Create Free Account</RouterLink>
+            <RouterLink to="/app/register">
+              {t("landing.cta.cta")}
+            </RouterLink>
           </Button>
           <p className="mt-4 text-sm text-muted-foreground">
-            No credit card required • Set up in minutes
+            {t("landing.cta.disclaimer")}
           </p>
         </motion.div>
       </section>
 
-      {/* Footer */}
       <footer className="px-4 py-12 border-t">
         <div className="container mx-auto">
           <div className="flex flex-col items-center justify-between md:flex-row">
             <div className="flex items-center gap-2 mb-6 md:mb-0">
-              <img src="/images/logo.avif" alt="Logo" className="w-auto h-8" />
-              <span className="font-semibold">rflnk</span>
+              <img
+                src="/images/logo.avif"
+                alt={t("landing.header.logo_alt")}
+                className="w-auto h-8"
+              />
+              <span className="font-semibold">{t("app.name")}</span>
             </div>
             <div className="flex flex-col gap-6 text-center md:flex-row md:gap-12 md:text-left">
               <RouterLink
                 to="/app/login"
                 className="transition-colors text-muted-foreground hover:text-foreground"
               >
-                Login
+                {t("landing.footer.login")}
               </RouterLink>
               <RouterLink
                 to="/register"
                 className="transition-colors text-muted-foreground hover:text-foreground"
               >
-                Sign Up
+                {t("landing.footer.sign_up")}
               </RouterLink>
               <a
                 href="#features"
                 className="transition-colors text-muted-foreground hover:text-foreground"
               >
-                Features
+                {t("landing.footer.features")}
               </a>
               <a
                 href="#benefits"
                 className="transition-colors text-muted-foreground hover:text-foreground"
               >
-                Benefits
+                {t("landing.footer.benefits")}
               </a>
             </div>
           </div>
           <div className="pt-8 mt-8 text-sm text-center border-t text-muted-foreground">
-            &copy; {new Date().getFullYear()}{" "}
-            <a href="https://pleiades.solutions">Pleiades.solutions</a>. All
-            rights reserved.
+            &copy; {new Date().getFullYear()} {" "}
+            <a href="https://pleiades.solutions">Pleiades.solutions</a>. {t(
+              "landing.footer.rights"
+            )}
           </div>
         </div>
       </footer>

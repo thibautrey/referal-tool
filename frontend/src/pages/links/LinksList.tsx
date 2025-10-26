@@ -37,6 +37,7 @@ import { ReferralLink } from "../types";
 import { api } from "@/lib/api";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { useAppTranslation } from "@/i18n";
 
 const glassCardStyle =
   "bg-opacity-30 backdrop-blur-lg border-opacity-20 bg-gradient-to-br from-white/30 to-white/10 dark:from-gray-800/40 dark:to-gray-900/30 shadow-[0_8px_32px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.15)] transition-all duration-300";
@@ -85,6 +86,7 @@ export function LinksList({
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [errorState, setErrorState] = useState<string | null>(null);
   const previousProjectId = useRef<number | null>(null);
+  const { t, i18n } = useAppTranslation();
 
   useEffect(() => {
     if (previousProjectId.current === projectId) {
@@ -145,27 +147,14 @@ export function LinksList({
 
         console.error("Error fetching links:", err);
 
-        // Format error message
-        let errorMessage = "Unable to load links";
-        if (err instanceof Error) {
+        let errorMessage = t("links.list.load_error");
+        if (err instanceof Error && err.message) {
           errorMessage = err.message;
-        } else if (typeof err === "object" && err !== null) {
-          const errorObj = err as Record<string, { name?: string } | string>;
-          if (
-            typeof errorObj.error === "object" &&
-            errorObj.error?.name === "PrismaClientValidationError"
-          ) {
-            errorMessage =
-              "Database validation error. Please contact support.";
-          } else if (typeof errorObj.message === "string") {
-            errorMessage = errorObj.message;
-          }
         }
 
         setErrorState(errorMessage);
         if (onError) onError(errorMessage);
 
-        // Set default values
         setLinks([]);
         setTotalPages(1);
         setCurrentPage(1);
@@ -175,7 +164,7 @@ export function LinksList({
         }
       }
     },
-    [projectId, onError]
+    [projectId, onError, t]
   );
 
   useEffect(() => {
@@ -212,16 +201,16 @@ export function LinksList({
     try {
       await api.deleteLink(projectId, id);
       setLinks(links.filter((link) => link.id !== parseInt(id)));
-      toast.success("Link deleted successfully");
+      toast.success(t("links.list.delete_success"));
     } catch {
-      toast.error("An error occurred while deleting the link");
+      toast.error(t("links.list.delete_error"));
     }
   };
 
   const handleCopyLink = (shortCode: string) => {
     const fullUrl = `${window.location.protocol}//${currentDomain}/l/${shortCode}`;
     navigator.clipboard.writeText(fullUrl);
-    toast.success("Link copied to clipboard");
+    toast.success(t("links.list.copy_success"));
   };
   const handleEditClick = (link: ReferralLink) => {
     onEditLinkClick?.(link);
@@ -231,13 +220,13 @@ export function LinksList({
     try {
       const date =
         dateString instanceof Date ? dateString : new Date(dateString);
-      return date.toLocaleDateString("en-US", {
+      return date.toLocaleDateString(i18n.language, {
         year: "numeric",
         month: "short",
         day: "numeric",
       });
     } catch {
-      return "Invalid date";
+      return "";
     }
   };
 
@@ -270,16 +259,14 @@ export function LinksList({
             <div className="p-4 rounded-full bg-destructive/10 backdrop-blur-sm">
               <AlertCircle className="h-8 w-8 text-destructive" />
             </div>
-            <h3 className="text-lg font-medium">Error Loading Links</h3>
-            <p className="text-muted-foreground max-w-md mx-auto">
-              {errorState}
-            </p>
+            <h3 className="text-lg font-medium">{t("links.list.load_error")}</h3>
+            <p className="text-muted-foreground max-w-md mx-auto">{errorState}</p>
             <Button
               variant="glass"
               className="ring-1 ring-white/10 hover:ring-white/20"
               onClick={() => fetchLinks(1, sortField, sortOrder)}
             >
-              Try Again
+              {t("links.list.load_error_cta")}
             </Button>
           </CardContent>
         </Card>
@@ -295,13 +282,13 @@ export function LinksList({
             <div className="p-4 rounded-full bg-muted/30 backdrop-blur-sm">
               <Plus className="h-8 w-8 text-primary/70" />
             </div>
-            <h3 className="text-lg font-medium">No links</h3>
+            <h3 className="text-lg font-medium">{t("links.list.empty_title")}</h3>
             <p className="text-muted-foreground">
-              Start by creating your first referral link
+              {t("links.list.empty_description")}
             </p>
             <Button onClick={onAddLinkClick}>
               <Plus className="h-4 w-4" />
-              Create link
+              {t("links.list.create")}
             </Button>
           </CardContent>
         </Card>
@@ -312,10 +299,12 @@ export function LinksList({
   return (
     <AnimatedCard className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold tracking-tight"></h2>
+        <h2 className="text-2xl font-semibold tracking-tight">
+          {t("links.list.title")}
+        </h2>
         <Button onClick={onAddLinkClick}>
           <Plus className="h-4 w-4" />
-          Create link
+          {t("links.list.create")}
         </Button>
       </div>
 
@@ -325,19 +314,28 @@ export function LinksList({
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent border-b border-white/10">
-                  <TableHead className="font-semibold">Name</TableHead>
-                  <TableHead className="font-semibold">Referral URL</TableHead>
-                  <TableHead className="font-semibold">Short URL</TableHead>
+                  <TableHead className="font-semibold">
+                    {t("links.list.name")}
+                  </TableHead>
+                  <TableHead className="font-semibold">
+                    {t("links.list.referral_url")}
+                  </TableHead>
+                  <TableHead className="font-semibold">
+                    {t("links.list.short_url")}
+                  </TableHead>
                   <TableHead className="font-semibold text-right">
-                    Clicks
+                    {t("links.list.clicks")}
                   </TableHead>
                   <TableHead
                     className="font-semibold cursor-pointer select-none"
                     onClick={() => handleSort("createdAt")}
                   >
-                    Creation date {getSortIcon("createdAt")}
+                    {t("links.list.created_at")}{" "}
+                    {getSortIcon("createdAt")}
                   </TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-right">
+                    {t("links.list.actions")}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -366,7 +364,8 @@ export function LinksList({
                           size="sm"
                           className="h-8 w-8 p-0 ml-1"
                           onClick={() => handleCopyLink(link.shortCode)}
-                          title="Copy link"
+                          title={t("links.list.copy")}
+                          aria-label={t("links.list.copy")}
                         >
                           <Copy className="h-3.5 w-3.5" />
                         </Button>
@@ -383,6 +382,7 @@ export function LinksList({
                           size="sm"
                           className="h-8 w-8 p-0"
                           onClick={() => handleEditClick(link)}
+                          aria-label={t("links.breadcrumb.edit")}
                         >
                           <Edit className="h-3.5 w-3.5" />
                         </Button>
@@ -392,27 +392,31 @@ export function LinksList({
                               variant="ghost"
                               size="sm"
                               className="h-8 w-8 p-0 hover:text-destructive"
+                              aria-label={t("links.list.delete_confirm")}
                             >
                               <Trash className="h-3.5 w-3.5" />
                             </Button>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Delete link</AlertDialogTitle>
+                              <AlertDialogTitle>
+                                {t("links.list.delete_title")}
+                              </AlertDialogTitle>
                               <AlertDialogDescription>
-                                Are you sure you want to delete this link? This
-                                action cannot be undone.
+                                {t("links.list.delete_description")}
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogCancel>
+                                {t("links.list.cancel")}
+                              </AlertDialogCancel>
                               <AlertDialogAction
                                 className="bg-destructive hover:bg-destructive/90"
                                 onClick={() =>
                                   handleDeleteLink(link.id.toString())
                                 }
                               >
-                                Delete
+                                {t("links.list.delete_confirm")}
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
@@ -427,7 +431,10 @@ export function LinksList({
         </CardContent>
         <CardFooter className="flex items-center justify-between py-4 border-t border-white/10">
           <div className="text-sm text-muted-foreground">
-            Page {currentPage} of {totalPages}
+            {t("links.list.page_info", {
+              current: currentPage,
+              total: totalPages,
+            })}
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -436,6 +443,7 @@ export function LinksList({
               className="ring-1 ring-white/10 hover:ring-white/20"
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage <= 1}
+              aria-label={t("links.list.previous")}
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -445,6 +453,7 @@ export function LinksList({
               className="ring-1 ring-white/10 hover:ring-white/20"
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage >= totalPages}
+              aria-label={t("links.list.next")}
             >
               <ChevronRight className="h-4 w-4" />
             </Button>

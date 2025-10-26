@@ -10,13 +10,14 @@ import { useEffect, useState } from "react";
 
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { useAppTranslation } from "@/i18n";
 import { useTheme } from "next-themes";
 
 export default function GeneralSettings() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const { t } = useAppTranslation();
 
-  // Prevent hydration issues
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -25,28 +26,30 @@ export default function GeneralSettings() {
     return null;
   }
 
+  const handleThemeChange = (value: string) => {
+    setTheme(value);
+    toast.success(t("settings.general.theme_updated"));
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>General Settings</CardTitle>
-        <CardDescription>
-          Manage general settings for your account
-        </CardDescription>
+        <CardTitle>{t("settings.general.title")}</CardTitle>
+        <CardDescription>{t("settings.general.description")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-4">
           <div>
-            <h3 className="text-lg font-medium">Theme</h3>
+            <h3 className="text-lg font-medium">
+              {t("settings.general.theme_title")}
+            </h3>
             <p className="text-sm text-muted-foreground">
-              Choose your preferred theme
+              {t("settings.general.theme_description")}
             </p>
           </div>
           <RadioGroup
             defaultValue={theme}
-            onValueChange={(value) => {
-              setTheme(value);
-              toast.success("Theme updated");
-            }}
+            onValueChange={handleThemeChange}
             className="grid max-w-md grid-cols-3 gap-4"
           >
             <div>
@@ -81,7 +84,7 @@ export default function GeneralSettings() {
                   <path d="m6.34 17.66-1.41 1.41" />
                   <path d="m19.07 4.93-1.41 1.41" />
                 </svg>
-                <span>Light</span>
+                <span>{t("settings.general.themes.light")}</span>
               </Label>
             </div>
 
@@ -105,7 +108,7 @@ export default function GeneralSettings() {
                 >
                   <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
                 </svg>
-                <span>Dark</span>
+                <span>{t("settings.general.themes.dark")}</span>
               </Label>
             </div>
 
@@ -135,7 +138,7 @@ export default function GeneralSettings() {
                   <line x1="8" x2="16" y1="21" y2="21" />
                   <line x1="12" x2="12" y1="17" y2="21" />
                 </svg>
-                <span>System</span>
+                <span>{t("settings.general.themes.system")}</span>
               </Label>
             </div>
           </RadioGroup>

@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
+import { useAppTranslation } from "@/i18n";
 import { useState } from "react";
 
 export interface GeoRule {
@@ -35,6 +36,7 @@ interface GeoTargetingProps {
 
 export function GeoTargeting({ rules, onRulesChange }: GeoTargetingProps) {
   const [searchTerm, setSearchTerm] = useState("");
+  const { t } = useAppTranslation();
 
   const handleAddGeoRule = () => {
     onRulesChange([
@@ -57,7 +59,6 @@ export function GeoTargeting({ rules, onRulesChange }: GeoTargetingProps) {
       countries =
         AVAILABLE_COUNTRIES[value as keyof typeof AVAILABLE_COUNTRIES] || [];
     } else if (rule.countries.length > 0) {
-      // Preserve countries if switching to custom mode
       countries = rule.countries;
     }
 
@@ -94,9 +95,15 @@ export function GeoTargeting({ rules, onRulesChange }: GeoTargetingProps) {
       <div className="flex items-center justify-center">
         <Button variant="outline" size="sm" onClick={handleAddGeoRule}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Rule
+          {t("links.form.geo.add_rule")}
         </Button>
       </div>
+
+      {rules.length === 0 && (
+        <p className="text-sm text-muted-foreground text-center">
+          {t("links.form.geo.no_rules")}
+        </p>
+      )}
 
       {rules.map((rule, index) => (
         <div key={index} className="space-y-2 p-4 border rounded-lg">
@@ -106,17 +113,33 @@ export function GeoTargeting({ rules, onRulesChange }: GeoTargetingProps) {
               onValueChange={(value) => handleRegionChange(value, rule, index)}
             >
               <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Select region" />
+                <SelectValue placeholder={t("links.form.geo.placeholders.region")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="europe">European Union</SelectItem>
-                <SelectItem value="northAmerica">North America</SelectItem>
-                <SelectItem value="asia">Asia</SelectItem>
-                <SelectItem value="middleEast">Middle East</SelectItem>
-                <SelectItem value="africa">Africa</SelectItem>
-                <SelectItem value="southAmerica">South America</SelectItem>
-                <SelectItem value="oceania">Oceania</SelectItem>
-                <SelectItem value="custom">Custom Countries</SelectItem>
+                <SelectItem value="europe">
+                  {t("links.form.geo.regions.europe")}
+                </SelectItem>
+                <SelectItem value="northAmerica">
+                  {t("links.form.geo.regions.northAmerica")}
+                </SelectItem>
+                <SelectItem value="asia">
+                  {t("links.form.geo.regions.asia")}
+                </SelectItem>
+                <SelectItem value="middleEast">
+                  {t("links.form.geo.regions.middleEast")}
+                </SelectItem>
+                <SelectItem value="africa">
+                  {t("links.form.geo.regions.africa")}
+                </SelectItem>
+                <SelectItem value="southAmerica">
+                  {t("links.form.geo.regions.southAmerica")}
+                </SelectItem>
+                <SelectItem value="oceania">
+                  {t("links.form.geo.regions.oceania")}
+                </SelectItem>
+                <SelectItem value="custom">
+                  {t("links.form.geo.regions.custom")}
+                </SelectItem>
               </SelectContent>
             </Select>
             <Button
@@ -124,12 +147,12 @@ export function GeoTargeting({ rules, onRulesChange }: GeoTargetingProps) {
               size="sm"
               onClick={() => handleRemoveGeoRule(index)}
             >
-              Remove
+              {t("links.form.geo.remove_rule")}
             </Button>
           </div>
 
           <Input
-            placeholder="Alternative URL for this region"
+            placeholder={t("links.form.geo.placeholders.redirect_url")}
             value={rule.redirectUrl}
             onChange={(e) => {
               const updatedRule = { ...rule, redirectUrl: e.target.value };
@@ -141,7 +164,7 @@ export function GeoTargeting({ rules, onRulesChange }: GeoTargetingProps) {
 
           {(rule.region === "custom" || !rule.region) && (
             <div className="mt-2">
-              <Label>Selected Countries</Label>
+              <Label>{t("links.form.geo.labels.selected")}</Label>
               <div className="flex flex-wrap gap-2 mb-4">
                 {rule.countries.map((country) => {
                   const countryOption = COUNTRY_OPTIONS.find(
@@ -163,6 +186,7 @@ export function GeoTargeting({ rules, onRulesChange }: GeoTargetingProps) {
                           );
                           handleCountryChange(newCountries, rule, index);
                         }}
+                        aria-label={t("links.form.geo.remove_rule")}
                       >
                         ×
                       </Button>
@@ -171,35 +195,30 @@ export function GeoTargeting({ rules, onRulesChange }: GeoTargetingProps) {
                 })}
               </div>
 
-              <Label>Add Countries</Label>
+              <Label>{t("links.form.geo.labels.add")}</Label>
               <Command className="rounded-md border shadow-sm mt-2">
                 <CommandInput
-                  placeholder="Search for a country..."
+                  placeholder={t("links.form.geo.placeholders.search")}
                   value={searchTerm}
                   onValueChange={setSearchTerm}
                   className="px-2 py-1"
                 />
                 {searchTerm.length > 0 && (
                   <CommandList className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md border bg-popover shadow-md z-50">
-                    <CommandEmpty>No results found.</CommandEmpty>
+                    <CommandEmpty>{t("links.form.geo.no_results")}</CommandEmpty>
                     <CommandGroup>
-                      {getFilteredCountryOptions(rule.countries).map(
-                        (option) => (
-                          <CommandItem
-                            key={option.value}
-                            onSelect={() => {
-                              setSearchTerm("");
-                              const newCountries = [
-                                ...rule.countries,
-                                option.value,
-                              ];
-                              handleCountryChange(newCountries, rule, index);
-                            }}
-                          >
-                            {option.label}
-                          </CommandItem>
-                        )
-                      )}
+                      {getFilteredCountryOptions(rule.countries).map((option) => (
+                        <CommandItem
+                          key={option.value}
+                          onSelect={() => {
+                            setSearchTerm("");
+                            const newCountries = [...rule.countries, option.value];
+                            handleCountryChange(newCountries, rule, index);
+                          }}
+                        >
+                          {option.label}
+                        </CommandItem>
+                      ))}
                     </CommandGroup>
                   </CommandList>
                 )}
@@ -211,14 +230,15 @@ export function GeoTargeting({ rules, onRulesChange }: GeoTargetingProps) {
             rule.region &&
             rule.countries.length > 0 && (
               <div className="text-sm text-muted-foreground mt-2">
-                Applies to:{" "}
-                {rule.countries
-                  .map(
-                    (countryCode) =>
-                      COUNTRY_OPTIONS.find((c) => c.value === countryCode)
-                        ?.label
-                  )
-                  .join(", ")}
+                {t("links.form.geo.applies_to", {
+                  countries: rule.countries
+                    .map(
+                      (countryCode) =>
+                        COUNTRY_OPTIONS.find((c) => c.value === countryCode)?.label
+                    )
+                    .filter(Boolean)
+                    .join(", "),
+                })}
               </div>
             )}
         </div>

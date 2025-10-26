@@ -14,6 +14,7 @@ import type { GeoRule } from "./AddLinkForm/GeoTargeting";
 import { LinkCard } from "@/components/ui/link-card";
 import { cn } from "@/lib/utils";
 import { detectRegionFromCountries } from "./utils";
+import { useAppTranslation } from "@/i18n";
 
 interface LinkPreviewProps {
   linkUrl?: string;
@@ -32,17 +33,14 @@ interface LinkPreviewProps {
   };
 }
 
-const getRegionName = (region: string): string => {
-  const regionMap: Record<string, string> = {
-    europe: "European Union",
-    northAmerica: "North America",
-    asia: "Asia",
-    middleEast: "Middle East",
-    africa: "Africa",
-    southAmerica: "South America",
-    oceania: "Oceania",
-  };
-  return regionMap[region] || region;
+const regionKeyMap: Record<string, string> = {
+  europe: "europe",
+  northAmerica: "northAmerica",
+  asia: "asia",
+  middleEast: "middleEast",
+  africa: "africa",
+  southAmerica: "southAmerica",
+  oceania: "oceania",
 };
 
 const isValidGeoRule = (rule: GeoRule): boolean => {
@@ -88,14 +86,24 @@ const RuleSection = ({
   </div>
 );
 
-const GeoRuleItem = ({ rule, index }: { rule: GeoRule; index: number }) => (
+const GeoRuleItem = ({
+  rule,
+  index,
+  getRegionLabel,
+  t,
+}: {
+  rule: GeoRule;
+  index: number;
+  getRegionLabel: (region: string) => string;
+  t: ReturnType<typeof useAppTranslation>["t"];
+}) => (
   <div className="space-y-2">
     <div className="space-y-1 text-sm">
       {!rule.region ||
       rule.region === "custom" ||
       !detectRegionFromCountries(rule.countries) ? (
         <>
-          <div className="font-medium">Custom Countries:</div>
+          <div className="font-medium">{t("links.form.preview.custom_countries")}</div>
           <div className="font-mono text-xs text-muted-foreground">
             {rule.countries
               .map(
@@ -108,7 +116,7 @@ const GeoRuleItem = ({ rule, index }: { rule: GeoRule; index: number }) => (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger className="font-medium">
-              {getRegionName(detectRegionFromCountries(rule.countries))}
+              {getRegionLabel(detectRegionFromCountries(rule.countries) || "")}
             </TooltipTrigger>
             <TooltipContent>
               <p className="font-mono text-xs">
@@ -131,14 +139,18 @@ const GeoRuleItem = ({ rule, index }: { rule: GeoRule; index: number }) => (
 const DeviceRuleItem = ({
   rule,
   index,
+  t,
 }: {
   rule: DeviceRule;
   index: number;
+  t: ReturnType<typeof useAppTranslation>["t"];
 }) => (
   <div className="space-y-2">
     <div className="text-sm">
       <div className="font-medium">
-        {rule.deviceType === "all" ? "All Devices" : rule.deviceType}
+        {rule.deviceType === "all"
+          ? t("links.form.device.device_types.all")
+          : rule.deviceType}
         {rule.os && rule.os !== "any" && ` • ${rule.os}`}
         {rule.browser && rule.browser !== "any" && ` • ${rule.browser}`}
       </div>
@@ -147,7 +159,6 @@ const DeviceRuleItem = ({
   </div>
 );
 
-// Helper function to construct URL with UTM parameters
 const constructUrlWithUtm = (
   baseUrl: string,
   utmParams?: LinkPreviewProps["utmParameters"]
@@ -183,6 +194,13 @@ export const LinkPreview = ({
   const [debouncedLinkUrl, setDebouncedLinkUrl] = useState(linkUrl);
   const [debouncedGeoRules, setDebouncedGeoRules] = useState(geoRules);
   const [debouncedDeviceRules, setDebouncedDeviceRules] = useState(deviceRules);
+  const { t } = useAppTranslation();
+
+  const getRegionLabel = (region: string) => {
+    const key = regionKeyMap[region];
+    if (!key) return region;
+    return t(`links.form.geo.regions.${key}`);
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -223,22 +241,27 @@ export const LinkPreview = ({
         {isPasswordProtected && (
           <Badge variant="secondary" className="absolute top-2 right-2 gap-1.5">
             <Lock className="w-3 h-3" />
-            Protected
+            {t("links.form.preview.protected")}
           </Badge>
         )}
       </div>
 
-      {/* Rules Summary */}
       <div className="mt-6 space-y-4">
         {validGeoRules.length > 0 && (
           <RuleSection
             icon={<Globe className="w-4 h-4 text-primary" />}
-            title="Geo Rules"
+            title={t("links.form.preview.geo_rules")}
             isPrimary
-            subtitle="Takes precedence"
+            subtitle={t("links.form.preview.takes_precedence")}
           >
             {validGeoRules.map((rule, i) => (
-              <GeoRuleItem key={i} rule={rule} index={i} />
+              <GeoRuleItem
+                key={i}
+                rule={rule}
+                index={i}
+                getRegionLabel={getRegionLabel}
+                t={t}
+              />
             ))}
           </RuleSection>
         )}
@@ -246,10 +269,10 @@ export const LinkPreview = ({
         {debouncedDeviceRules.length > 0 && (
           <RuleSection
             icon={<Smartphone className="w-4 h-4 text-muted-foreground" />}
-            title="Device Rules"
+            title={t("links.form.preview.device_rules")}
           >
             {debouncedDeviceRules.map((rule, i) => (
-              <DeviceRuleItem key={i} rule={rule} index={i} />
+              <DeviceRuleItem key={i} rule={rule} index={i} t={t} />
             ))}
           </RuleSection>
         )}
@@ -257,36 +280,46 @@ export const LinkPreview = ({
         {hasUtmParameters && (
           <RuleSection
             icon={<Tag className="w-4 h-4 text-muted-foreground" />}
-            title="UTM Parameters"
+            title={t("links.form.preview.utm_parameters")}
           >
             <div className="space-y-2 text-sm">
               {utmParameters?.utmSource && (
                 <div>
-                  <span className="font-medium">Source:</span>{" "}
+                  <span className="font-medium">
+                    {t("links.form.preview.utm_labels.source")}:
+                  </span>{" "}
                   {utmParameters.utmSource}
                 </div>
               )}
               {utmParameters?.utmMedium && (
                 <div>
-                  <span className="font-medium">Medium:</span>{" "}
+                  <span className="font-medium">
+                    {t("links.form.preview.utm_labels.medium")}:
+                  </span>{" "}
                   {utmParameters.utmMedium}
                 </div>
               )}
               {utmParameters?.utmCampaign && (
                 <div>
-                  <span className="font-medium">Campaign:</span>{" "}
+                  <span className="font-medium">
+                    {t("links.form.preview.utm_labels.campaign")}:
+                  </span>{" "}
                   {utmParameters.utmCampaign}
                 </div>
               )}
               {utmParameters?.utmTerm && (
                 <div>
-                  <span className="font-medium">Terms:</span>{" "}
+                  <span className="font-medium">
+                    {t("links.form.preview.utm_labels.terms")}:
+                  </span>{" "}
                   {utmParameters.utmTerm}
                 </div>
               )}
               {utmParameters?.utmContent && (
                 <div>
-                  <span className="font-medium">Content:</span>{" "}
+                  <span className="font-medium">
+                    {t("links.form.preview.utm_labels.content")}:
+                  </span>{" "}
                   {utmParameters.utmContent}
                 </div>
               )}
