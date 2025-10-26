@@ -70,6 +70,13 @@ export interface Project {
   updatedAt: string;
 }
 
+export interface ProjectMember {
+  id: number;
+  email: string;
+  name?: string;
+  role?: string;
+}
+
 // Class to manage API calls
 class Api {
   private baseUrl: string;
@@ -272,6 +279,30 @@ class Api {
     }
   ): Promise<ApiResponse<Project>> {
     return this.put<Project, typeof data>(`/projects/${projectId}`, data);
+  }
+
+  async deleteProject(projectId: number): Promise<ApiResponse<void>> {
+    return this.delete<void>(`/projects/${projectId}`);
+  }
+
+  async getProjectMembers(
+    projectId: number
+  ): Promise<ApiResponse<ProjectMember[]>> {
+    return this.get<ProjectMember[]>(`/projects/${projectId}/members`);
+  }
+
+  async addProjectMember(
+    projectId: number,
+    email: string
+  ): Promise<ApiResponse<ProjectMember>> {
+    return this.post<ProjectMember>(`/projects/${projectId}/members`, { email });
+  }
+
+  async removeProjectMember(
+    projectId: number,
+    memberId: number
+  ): Promise<ApiResponse<void>> {
+    return this.delete<void>(`/projects/${projectId}/members/${memberId}`);
   }
 
   async updateLink(
