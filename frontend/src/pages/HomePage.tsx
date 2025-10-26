@@ -17,12 +17,13 @@ import {
 } from "@/components/ui/card";
 import { useEffect, useState } from "react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LineChart } from "@/components/ui/charts";
 import { Link } from "react-router-dom";
 import { ReferralLink } from "./types";
 import { Skeleton } from "@/components/ui/skeleton";
-import { api } from "@/lib/api";
+import { Project, api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { useProject } from "@/contexts/project-context";
@@ -72,10 +73,12 @@ export default function HomePage() {
     recentClicks: [],
   });
   const [topLinks, setTopLinks] = useState<ReferralLink[]>([]);
+  const [projectDetails, setProjectDetails] = useState<Project | null>(null);
 
   const fetchDashboardData = async () => {
     if (!currentProjectId) {
       setIsLoading(false);
+      setProjectDetails(null);
       return;
     }
 
@@ -83,8 +86,12 @@ export default function HomePage() {
       setIsLoading(true);
       setError(null);
 
-      // Charger les statistiques du projet
-      const projectStats = await api.getProjectStats(currentProjectId, "week");
+      // Charger les statistiques du projet et les informations détaillées
+      const [projectStats, projectInfo] = await Promise.all([
+        api.getProjectStats(currentProjectId, "week"),
+        api.getProject(currentProjectId),
+      ]);
+      setProjectDetails(projectInfo);
 
       try {
         // Charger les liens - traité séparément pour éviter qu'une erreur ici
@@ -150,6 +157,7 @@ export default function HomePage() {
       }
 
       setError(errorMessage);
+      setProjectDetails(null);
     } finally {
       setIsLoading(false);
     }
@@ -158,6 +166,22 @@ export default function HomePage() {
   useEffect(() => {
     fetchDashboardData();
   }, [currentProjectId]);
+
+  const cardsStartIndex = projectDetails ? 1 : 0;
+  const ownerName = projectDetails?.owner
+    ? [projectDetails.owner.firstName, projectDetails.owner.lastName]
+        .filter(Boolean)
+        .join(" ")
+    : "";
+  const ownerDisplay =
+    ownerName || projectDetails?.owner?.email || "Unknown owner";
+  const formatDate = (value?: string) =>
+    value ? new Date(value).toLocaleDateString() : "-";
+  const roleLabel = projectDetails?.role
+    ? `${projectDetails.role.charAt(0)}${projectDetails.role
+        .slice(1)
+        .toLowerCase()}`
+    : null;
 
   if (isLoading) {
     return (
@@ -248,9 +272,63 @@ export default function HomePage() {
       <h1 className="text-3xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">
         Dashboard
       </h1>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {projectDetails && (
         <AnimatedCard index={0}>
-          <Card className={cn(glassCardStyle, "group hover:-translate-y-1")}>
+          <Card
+            className={cn(
+              glassCardStyle,
+              "group hover:-translate-y-1 transition-transform"
+            )}
+          >
+            <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-2xl">
+                  {projectDetails.name}
+                  {roleLabel && (
+                    <Badge className="uppercase tracking-wide" variant="secondary">
+                      {roleLabel}
+                    </Badge>
+                  )}
+                </CardTitle>
+                <CardDescription>
+                  Currently selected project overview
+                </CardDescription>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Project ID: #{projectDetails.id}
+              </div>
+            </CardHeader>
+            <CardContent className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <p className="text-sm text-muted-foreground">Owner</p>
+                <p className="font-medium">{ownerDisplay}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Role</p>
+                <p className="font-medium">{roleLabel ?? "Member"}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Created</p>
+                <p className="font-medium">{formatDate(projectDetails.createdAt)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Last updated</p>
+                <p className="font-medium">{formatDate(projectDetails.updatedAt)}</p>
+              </div>
+            </CardContent>
+            <CardFooter>
+              <p className="text-sm text-muted-foreground">
+                {projectDetails.description
+                  ? projectDetails.description
+                  : "No description has been added for this project yet."}
+              </p>
+            </CardFooter>
+          </Card>
+        </AnimatedCard>
+      )}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <AnimatedCard index={cardsStartIndex}>
+          <Card className={cn(glassCardStyle, "group hover:-translate-y-1")}> 
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 Referal links
@@ -278,8 +356,8 @@ export default function HomePage() {
           </Card>
         </AnimatedCard>
 
-        <AnimatedCard index={1}>
-          <Card className={cn(glassCardStyle, "group hover:-translate-y-1")}>
+        <AnimatedCard index={cardsStartIndex + 1}>
+          <Card className={cn(glassCardStyle, "group hover:-translate-y-1")}> 
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 Total clicks
@@ -307,7 +385,7 @@ export default function HomePage() {
           </Card>
         </AnimatedCard>
 
-        <AnimatedCard index={2}>
+        <AnimatedCard index={cardsStartIndex + 2}>
           <Card className={cn(glassCardStyle, "group hover:-translate-y-1")}>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
@@ -335,7 +413,7 @@ export default function HomePage() {
           </Card>
         </AnimatedCard>
 
-        <AnimatedCard index={3}>
+        <AnimatedCard index={cardsStartIndex + 3}>
           <Card
             className={cn(
               glassCardStyle,
@@ -367,7 +445,7 @@ export default function HomePage() {
           </Card>
         </AnimatedCard>
 
-        <AnimatedCard index={4}>
+        <AnimatedCard index={cardsStartIndex + 4}>
           <Card className={cn(glassCardStyle, "group hover:-translate-y-1")}>
             <CardHeader>
               <CardTitle>Best links</CardTitle>

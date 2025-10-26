@@ -63,11 +63,21 @@ export interface DashboardStats {
   topLinks: { linkId: number; visits: number; details: ReferralLink }[];
 }
 
+export interface ProjectOwner {
+  id: number;
+  email: string;
+  firstName?: string | null;
+  lastName?: string | null;
+}
+
 export interface Project {
   id: number;
   name: string;
+  description?: string | null;
   createdAt: string;
   updatedAt: string;
+  role?: string;
+  owner?: ProjectOwner | null;
 }
 
 export interface ProjectMemberUser {
@@ -287,6 +297,11 @@ class Api {
     return response.data;
   }
 
+  async getProject(projectId: number): Promise<Project> {
+    const response = await this.get<Project>(`/projects/${projectId}`);
+    return response.data;
+  }
+
   // Method to update a project
   async updateProject(
     projectId: number,
@@ -401,6 +416,15 @@ class Api {
 
   async getProjects(): Promise<ApiResponse<Project[]>> {
     return this.get<Project[]>("/projects");
+  }
+
+  async createProject(
+    data: { name: string; description?: string | null }
+  ): Promise<ApiResponse<Project>> {
+    return this.post<Project, { name: string; description?: string | null }>(
+      "/projects",
+      data
+    );
   }
 
   // Method to update user's theme preference
