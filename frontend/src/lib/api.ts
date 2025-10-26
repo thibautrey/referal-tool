@@ -80,11 +80,28 @@ export interface Project {
   owner?: ProjectOwner | null;
 }
 
-export interface ProjectMember {
+export interface ProjectMemberUser {
   id: number;
   email: string;
-  name?: string;
-  role?: string;
+  firstName: string | null;
+  lastName: string | null;
+}
+
+export interface ProjectMember {
+  id: number;
+  role: string;
+  createdAt: string;
+  user: ProjectMemberUser;
+}
+
+export interface ProjectMembersResponse {
+  owner: {
+    id: number;
+    email: string;
+    firstName: string | null;
+    lastName: string | null;
+  };
+  members: ProjectMember[];
 }
 
 // Class to manage API calls
@@ -302,8 +319,10 @@ class Api {
 
   async getProjectMembers(
     projectId: number
-  ): Promise<ApiResponse<ProjectMember[]>> {
-    return this.get<ProjectMember[]>(`/projects/${projectId}/members`);
+  ): Promise<ApiResponse<ProjectMembersResponse>> {
+    return this.get<ProjectMembersResponse>(
+      `/projects/${projectId}/members`
+    );
   }
 
   async addProjectMember(

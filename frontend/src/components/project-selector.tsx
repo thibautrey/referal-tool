@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Settings } from "lucide-react";
 import { api } from "@/lib/api";
-import type { Project, ProjectMember } from "@/lib/api";
+import type { Project, ProjectMember, ProjectMembersResponse } from "@/lib/api";
 import { useProject } from "@/contexts/project-context";
 
 export function ProjectSelector() {
@@ -32,6 +32,8 @@ export function ProjectSelector() {
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameError, setRenameError] = useState<string | null>(null);
   const [renameSuccess, setRenameSuccess] = useState<string | null>(null);
+  const [projectOwner, setProjectOwner] =
+    useState<ProjectMembersResponse["owner"] | null>(null);
   const [members, setMembers] = useState<ProjectMember[]>([]);
   const [isMembersLoading, setIsMembersLoading] = useState(false);
   const [memberError, setMemberError] = useState<string | null>(null);
@@ -99,6 +101,7 @@ export function ProjectSelector() {
   };
 
   const resetModalState = () => {
+    setProjectOwner(null);
     setMembers([]);
     setMemberError(null);
     setInviteEmail("");
@@ -144,12 +147,25 @@ export function ProjectSelector() {
     return "An error occurred";
   };
 
+  const getDisplayName = (
+    firstName: string | null | undefined,
+    lastName: string | null | undefined,
+    fallback: string
+  ) => {
+    const fullName = [firstName, lastName]
+      .map((part) => (part ?? "").trim())
+      .filter((part) => part.length > 0)
+      .join(" ");
+    return fullName.length > 0 ? fullName : fallback;
+  };
+
   const loadMembers = async (projectId: number) => {
     setIsMembersLoading(true);
     setMemberError(null);
     try {
       const response = await api.getProjectMembers(projectId);
-      setMembers(response.data);
+      setProjectOwner(response.data?.owner ?? null);
+      setMembers(response.data?.members ?? []);
     } catch (error) {
       setMemberError(getErrorMessage(error));
     } finally {
@@ -167,6 +183,7 @@ export function ProjectSelector() {
       setRenameSuccess(null);
       setMemberError(null);
       setInviteError(null);
+      setProjectOwner(null);
       setMembers([]);
       setIsEditingModalOpen(true);
       void loadMembers(currentProject.id);
@@ -473,12 +490,34 @@ export function ProjectSelector() {
               )}
               {isMembersLoading ? (
                 <p className="text-sm text-muted-foreground">Loading members…</p>
-              ) : members.length === 0 ? (
+              ) : !projectOwner && members.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
                   No members found for this project.
                 </p>
               ) : (
                 <ul className="space-y-2">
+                  {projectOwner && (
+                    <li
+                      key={`owner-${projectOwner.id}`}
+                      className="flex items-center justify-between rounded-md border border-border px-3 py-2"
+                    >
+                      <div>
+                        <p className="text-sm font-medium">
+                          {getDisplayName(
+                            projectOwner.firstName,
+                            projectOwner.lastName,
+                            projectOwner.email
+                          )}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {projectOwner.email}
+                        </p>
+                      </div>
+                      <span className="text-xs font-medium text-muted-foreground">
+                        Owner
+                      </span>
+                    </li>
+                  )}
                   {members.map((member) => (
                     <li
                       key={member.id}
@@ -486,13 +525,15 @@ export function ProjectSelector() {
                     >
                       <div>
                         <p className="text-sm font-medium">
-                          {member.name || member.email}
+                          {getDisplayName(
+                            member.user?.firstName ?? null,
+                            member.user?.lastName ?? null,
+                            member.user?.email ?? ""
+                          )}
                         </p>
-                        {member.name && (
-                          <p className="text-xs text-muted-foreground">
-                            {member.email}
-                          </p>
-                        )}
+                        <p className="text-xs text-muted-foreground">
+                          {member.user?.email}
+                        </p>
                       </div>
                       <Button
                         variant="ghost"
