@@ -303,11 +303,11 @@
     }
   },
   "links": {
-    "title_list": "Liens de parrainage",
+    "title_list": "Liens",
     "title_create": "Créer un lien",
     "title_edit": "Modifier le lien",
     "breadcrumb": {
-      "list": "Liens de parrainage",
+      "list": "Liens",
       "create": "Créer un lien",
       "edit": "Modifier le lien"
     },
@@ -453,7 +453,7 @@
           "cpc": "CPC",
           "display": "Display",
           "affiliate": "Affiliation",
-          "referral": "Parrainage",
+          "referral": "Recommandation",
           "organic": "Naturel"
         },
         "preview_label": "URL de prévisualisation"
@@ -513,12 +513,12 @@
       }
     },
     "list": {
-      "title": "Liens de parrainage",
+      "title": "Liens",
       "empty_title": "Aucun lien",
-      "empty_description": "Commencez par créer votre premier lien de parrainage",
+      "empty_description": "Commencez par créer votre premier lien",
       "create": "Créer un lien",
       "name": "Nom",
-      "referral_url": "URL de parrainage",
+      "referral_url": "URL du lien",
       "short_url": "URL courte",
       "clicks": "Clics",
       "created_at": "Date de création",
@@ -548,7 +548,7 @@
     "empty_description": "Créez votre premier lien pour visualiser des statistiques",
     "header": {
       "title": "Performance des liens",
-      "subtitle": "Statistiques et performances de tous vos liens de parrainage.",
+      "subtitle": "Statistiques et performances de tous vos liens.",
       "total_clicks": "Clics totaux",
       "number_of_links": "Nombre de liens"
     },
