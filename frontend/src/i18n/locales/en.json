@@ -1,0 +1,781 @@
+{
+  "app": {
+    "name": "rflnk",
+    "alpha_badge": "alpha",
+    "alpha_tooltip": "This is an alpha version. Some features may not be available yet or might be unstable. We appreciate your feedback!",
+    "loading": "Loading translations...",
+    "menu": "Menu"
+  },
+  "common": {
+    "login": "Login",
+    "logout": "Log out",
+    "sign_up": "Sign Up",
+    "sign_in": "Sign in",
+    "sign_in_progress": "Signing in...",
+    "email": "Email address",
+    "password": "Password",
+    "forgot_password": "Forgot password?",
+    "dashboard": "Dashboard",
+    "go_to_app": "Go to App",
+    "go_to_dashboard": "Go to Dashboard",
+    "create": "Create",
+    "edit": "Edit",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "loading": "Loading...",
+    "actions": "Actions",
+    "search": "Search",
+    "unknown": "Unknown",
+    "yes": "Yes",
+    "no": "No",
+    "required_indicator": "Required",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "close": "Close"
+  },
+  "landing": {
+    "header": {
+      "logo_alt": "Logo",
+      "tagline": "rflnk",
+      "nav": {
+        "features": "Features",
+        "benefits": "Benefits",
+        "pricing": "Pricing",
+        "login": "Login",
+        "sign_up": "Sign Up",
+        "dashboard": "Go to App"
+      }
+    },
+    "hero": {
+      "title": "Optimize Your Affiliate Links",
+      "subtitle": "Increase your affiliate revenue with our intelligent link management platform, designed for influencers and marketers.",
+      "cta_authenticated": "Go to Dashboard",
+      "cta_primary": "Get Started Free",
+      "cta_secondary": "Login"
+    },
+    "features": {
+      "title": "Powerful Features for Creators",
+      "subtitle": "Everything you need to optimize your affiliate strategy and boost your revenue.",
+      "items": {
+        "smart_geo_routing": {
+          "title": "Smart Geographic Routing",
+          "description": "Automatically direct users to country-specific stores or content based on their location"
+        },
+        "advanced_targeting": {
+          "title": "Advanced Targeting",
+          "description": "Create custom rules based on location, device, time, and more"
+        },
+        "deep_linking": {
+          "title": "Deep Linking",
+          "description": "Send mobile users directly to apps, desktop users to web versions"
+        },
+        "link_protection": {
+          "title": "Link Protection",
+          "description": "Set passwords, expiration dates, and IP restrictions for your links"
+        },
+        "smart_scheduling": {
+          "title": "Smart Scheduling",
+          "description": "Schedule links to activate or deactivate automatically"
+        },
+        "multi_platform": {
+          "title": "Multi-Platform Support",
+          "description": "Works with major platforms like Amazon, Shopify, and more"
+        },
+        "realtime_analytics": {
+          "title": "Real-Time Analytics",
+          "description": "Track clicks, locations, devices, and conversion rates"
+        },
+        "no_limits": {
+          "title": "No Traffic Limits",
+          "description": "Handle unlimited clicks with no throttling or restrictions"
+        },
+        "performance_insights": {
+          "title": "Performance Insights",
+          "description": "Get detailed analytics and reports to optimize your campaigns"
+        }
+      }
+    },
+    "benefits": {
+      "title": "Influencer Benefits",
+      "subtitle": "Maximize your affiliate revenue with tools adapted to your international audience.",
+      "section_title": "Increase Your Conversions",
+      "steps": {
+        "local_markets": {
+          "title": "Adaptation to Local Markets",
+          "description": "Automatically redirect your visitors to platforms suited to their country to maximize conversion chances."
+        },
+        "real_time": {
+          "title": "Real-Time Optimization",
+          "description": "Analyze the performance of your links and quickly adjust your strategies with real-time data."
+        },
+        "campaign_management": {
+          "title": "Simplified Campaign Management",
+          "description": "An intuitive interface allows you to easily manage all your affiliate links and projects."
+        }
+      }
+    },
+    "pricing": {
+      "title": "Simple Pricing",
+      "subtitle": "Start for free with our basic plan. Enhance your experience with optional add-ons.",
+      "free_plan": {
+        "title": "Free",
+        "description": "Get started with no commitment",
+        "price": "$0",
+        "cta": "Get Started",
+        "no_card": "No credit card required",
+        "features": {
+          "unlimited_links": "Unlimited short links",
+          "unlimited_clicks": "Unlimited clicks",
+          "geo_customization": "Geographic customization",
+          "device_tagging": "Device tagging",
+          "password_protection": "Password protection",
+          "link_expiration": "Link expiration and scheduling",
+          "deeplinks": "Deeplinks support",
+          "performance_analytics": "Performance analytics",
+          "analytics_retention": "1 year analytics retention",
+          "traffic_share": "5% traffic redirects to our links",
+          "no_support": "No dedicated support"
+        },
+        "tooltips": {
+          "unlimited_links": "Create as many short links as you need without any limitations",
+          "geo_customization": "Route users to different URLs based on their location",
+          "device_tagging": "Redirect users depending on their device type or browser",
+          "password_protection": "Secure your links with custom passwords",
+          "link_expiration": "Set links to automatically expire after a specific date or schedule redirections to start working at a certain time",
+          "deeplinks": "Create links that open specific screens in mobile apps",
+          "performance_analytics": "Track clicks, conversions and other key metrics",
+          "analytics_retention": "Access your analytics data for up to one year",
+          "traffic_share": "For 5% of clicks on major retail links (Amazon, Walmart), we'll add our affiliate code. Your links will work exactly the same, and all other links remain untouched.",
+          "no_support": "Support through community forums and documentation",
+          "unlimited_clicks": "Handle unlimited traffic without throttling"
+        }
+      },
+      "addons": {
+        "title": "Optional Add-ons",
+        "description": "Enhance your experience with these premium features",
+        "items": {
+          "custom_domain": {
+            "title": "Custom Domain",
+            "price": "$10/mo",
+            "description": "Use your own domain for short links",
+            "tooltip": "Replace our domain with your own branded domain for a professional look"
+          },
+          "no_redirects": {
+            "title": "No Redirects",
+            "price": "$10/mo",
+            "description": "Remove the 5% redirect to our links"
+          },
+          "support": {
+            "title": "Customer Support",
+            "price": "$50/mo",
+            "description": "Get priority support from our team"
+          },
+          "analytics": {
+            "title": "Extended Analytics",
+            "price": "$20/year",
+            "description": "Keep your analytics data beyond the first year",
+            "tooltip": "Access historical data older than one year for long-term analysis"
+          }
+        }
+      }
+    },
+    "cta": {
+      "title": "Ready to Optimize Your Affiliate Revenue?",
+      "subtitle": "Join thousands of influencers who are increasing their conversions with our platform.",
+      "cta": "Create Free Account",
+      "disclaimer": "No credit card required • Set up in minutes"
+    },
+    "footer": {
+      "login": "Login",
+      "sign_up": "Sign Up",
+      "features": "Features",
+      "benefits": "Benefits",
+      "rights": "All rights reserved."
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Login",
+      "description": "Sign in to your account to access your affiliations.",
+      "otp_label": "Authentication code",
+      "otp_placeholder": "Enter the 6-digit code",
+      "require_otp": "Two-factor authentication required",
+      "left_title": "Optimize your affiliations",
+      "left_description": "Our tool helps influencers improve their conversions by allowing them to configure different affiliate links for the same product.",
+      "highlights": {
+        "geo": {
+          "title": "Geographic customization",
+          "description": "Adapt your links based on your users' location to maximize impact."
+        },
+        "rules": {
+          "title": "Intelligent rules",
+          "description": "Create rules that automatically determine which link is used based on the user's profile."
+        },
+        "analytics": {
+          "title": "Performance analysis",
+          "description": "Track conversions and optimize your affiliate strategy in real-time."
+        }
+      },
+      "register_prompt": "Don't have an account?",
+      "register_link": "Create account",
+      "back_to_login": "Back to login",
+      "email_placeholder": "name@example.com",
+      "password_placeholder": "••••••••"
+    },
+    "password_validation": {
+      "title": "Password protected link",
+      "description": "This link is protected. Please enter the password to continue.",
+      "placeholder": "Enter password",
+      "submit": "Continue",
+      "validating": "Validating...",
+      "invalid": "Invalid password",
+      "error": "An error occurred"
+    },
+    "forgot_password": {
+      "title": "Forgot password",
+      "description": "Enter your email to receive a password reset link",
+      "placeholder": "name@example.com",
+      "submit": "Send reset link",
+      "sending": "Sending...",
+      "return_to_login": "Return to login",
+      "submitted": {
+        "title": "Check your inbox",
+        "description": "If an account is associated with this email, you will receive instructions to reset your password.",
+        "helper": "For security reasons, we do not disclose if an email is registered in our system. If you don't receive an email within a few minutes, please check your spam folder."
+      }
+    },
+    "register": {
+      "title": "Create account",
+      "description": "Register to start managing your affiliate links",
+      "email_placeholder": "name@example.com",
+      "confirm_password_label": "Confirm password",
+      "creating": "Creating account...",
+      "submit": "Create account",
+      "login_prompt": "Already have an account?",
+      "login_link": "Sign in",
+      "toast": {
+        "success": "Account created successfully",
+        "error": "Failed to create account"
+      },
+      "hero": {
+        "title": "Join our platform",
+        "description": "Create an account to start optimizing your affiliate marketing strategy and boost your conversion rates.",
+        "features": {
+          "geo": {
+            "title": "Geographic customization",
+            "description": "Adapt your links based on your users' location to maximize impact."
+          },
+          "rules": {
+            "title": "Intelligent rules",
+            "description": "Create rules that automatically determine which link is used based on the user's profile."
+          },
+          "analytics": {
+            "title": "Performance analysis",
+            "description": "Track conversions and optimize your affiliate strategy in real-time."
+          }
+        }
+      },
+      "validation": {
+        "mismatch": "Passwords do not match"
+      }
+    },
+    "reset_password": {
+      "title": "Reset password",
+      "description": "Enter your new password below",
+      "password_label": "New password",
+      "confirm_label": "Confirm password",
+      "submit": "Reset password",
+      "submitting": "Resetting...",
+      "return_to_login": "Return to login",
+      "toast": {
+        "success": "Password reset successfully",
+        "error": "Failed to reset password. The link may be invalid or expired."
+      },
+      "invalid": {
+        "title": "Invalid reset link",
+        "description": "The password reset link is invalid or has expired.",
+        "cta": "Request a new link"
+      },
+      "validation": {
+        "mismatch": "Passwords do not match"
+      }
+    }
+  },
+  "links": {
+    "title_list": "Referral Links",
+    "title_create": "Create Link",
+    "title_edit": "Edit Link",
+    "breadcrumb": {
+      "list": "Referral Links",
+      "create": "Create Link",
+      "edit": "Edit Link"
+    },
+    "empty": {
+      "title": "No links available",
+      "description": "Create your first referral link to start seeing analytics"
+    },
+    "errors": {
+      "load": "Failed to load links data",
+      "save": "Failed to save link",
+      "invalid_response": "Invalid response from server",
+      "fetch_link": "Failed to fetch link data"
+    },
+    "notifications": {
+      "created": "Link created successfully",
+      "updated": "Link updated successfully"
+    },
+    "actions": {
+      "add": "Create Link",
+      "save": "Save",
+      "saving": "Saving..."
+    },
+    "filters": {
+      "search_placeholder": "Search links..."
+    },
+    "form": {
+      "basic": {
+        "title": "Basic Settings",
+        "description": "Configure the essential information for your referral link.",
+        "name_label": "Link name",
+        "name_placeholder": "Summer campaign",
+        "url_label": "Destination URL",
+        "url_placeholder": "https://example.com/product",
+        "shortcode_label": "Short code",
+        "shortcode_helper": "This code will be used to generate the short link.",
+        "shortcode_generate": "Generate",
+        "availability": {
+          "checking": "Checking availability...",
+          "available": "This short code is available",
+          "unavailable": "This short code is not available"
+        },
+        "preview": {
+          "label": "Preview",
+          "copy": "Copy",
+          "copied": "Copied!"
+        },
+        "shortcode_placeholder": "Enter your custom code"
+      },
+      "geo": {
+        "title": "Geographic Targeting",
+        "description": "Create redirection rules based on the visitor's country or region.",
+        "add_rule": "Add rule",
+        "redirect_url_label": "Redirect URL",
+        "redirect_url_placeholder": "https://example.com/fr",
+        "countries_label": "Countries",
+        "countries_placeholder": "Select countries",
+        "region_label": "Region",
+        "delete_rule": "Delete",
+        "no_rules": "No geographic rules configured yet",
+        "placeholders": {
+          "region": "Select region",
+          "redirect_url": "Alternative URL for this region",
+          "search": "Search for a country..."
+        },
+        "labels": {
+          "selected": "Selected Countries",
+          "add": "Add Countries"
+        },
+        "regions": {
+          "europe": "European Union",
+          "northAmerica": "North America",
+          "asia": "Asia",
+          "middleEast": "Middle East",
+          "africa": "Africa",
+          "southAmerica": "South America",
+          "oceania": "Oceania",
+          "custom": "Custom Countries"
+        },
+        "no_results": "No results found.",
+        "remove_rule": "Remove",
+        "applies_to": "Applies to: {{countries}}"
+      },
+      "device": {
+        "title": "Device Targeting",
+        "description": "Redirect users based on their device type.",
+        "add_rule": "Add device rule",
+        "device_type_label": "Device type",
+        "redirect_url_label": "Redirect URL",
+        "redirect_url_placeholder": "https://m.example.com",
+        "devices_label": "Devices",
+        "delete_rule": "Delete",
+        "no_rules": "No device rules configured yet",
+        "placeholders": {
+          "device_type": "Select device type",
+          "redirect_url": "Enter redirect URL",
+          "os": "Operating System",
+          "os_version": "OS Version (e.g., 14.0)",
+          "browser": "Browser",
+          "browser_version": "Browser Version (e.g., 90)"
+        },
+        "device_types": {
+          "all": "All Devices",
+          "mobile": "Mobile",
+          "tablet": "Tablet",
+          "desktop": "Desktop"
+        },
+        "options": {
+          "any_os": "Any OS",
+          "any_browser": "Any Browser"
+        }
+      },
+      "utm": {
+        "title": "UTM Parameters",
+        "description": "Add tracking parameters to analyze campaign performance.",
+        "fields": {
+          "source": "UTM Source",
+          "medium": "UTM Medium",
+          "campaign": "UTM Campaign",
+          "term": "UTM Term",
+          "content": "UTM Content",
+          "term_optional": "Keywords (Optional)",
+          "content_optional": "Content (Optional)"
+        },
+        "presets": {
+          "facebook": "Facebook",
+          "instagram": "Instagram",
+          "linkedin": "LinkedIn",
+          "twitter": "Twitter",
+          "google": "Google",
+          "email": "Email",
+          "display": "Display"
+        },
+        "placeholders": {
+          "source": "e.g., google, facebook, newsletter",
+          "campaign": "e.g., summer_sale, black_friday",
+          "term": "e.g., running shoes, blue dress",
+          "content": "e.g., logolink, textlink"
+        },
+        "medium_placeholder": "Select medium",
+        "medium_options": {
+          "social": "Social",
+          "email": "Email",
+          "cpc": "CPC",
+          "display": "Display",
+          "affiliate": "Affiliate",
+          "referral": "Referral",
+          "organic": "Organic"
+        },
+        "preview_label": "Preview URL"
+      },
+      "password": {
+        "title": "Password Protection",
+        "description": "Require a password before redirecting to the destination URL.",
+        "enable_label": "Enable password protection",
+        "password_label": "Password",
+        "password_placeholder": "Enter a password",
+        "show": "Show",
+        "hide": "Hide"
+      },
+      "preview": {
+        "title": "Link Preview",
+        "loading": "Generating preview...",
+        "base_url": "Base URL",
+        "short_url": "Short URL",
+        "copy_success": "Short link copied to clipboard",
+        "protected": "Protected",
+        "geo_rules": "Geo Rules",
+        "device_rules": "Device Rules",
+        "utm_parameters": "UTM Parameters",
+        "takes_precedence": "Takes precedence",
+        "custom_countries": "Custom Countries",
+        "utm_labels": {
+          "source": "Source",
+          "medium": "Medium",
+          "campaign": "Campaign",
+          "terms": "Terms",
+          "content": "Content"
+        },
+        "qr": {
+          "title": "QR Code",
+          "download": "Download QR Code"
+        }
+      },
+      "tabs": {
+        "geo": "Geo Targeting",
+        "device": "Device",
+        "time_expire": "Time Expire",
+        "time_start": "Time Start",
+        "password": "Password Protection",
+        "utm": "UTM"
+      },
+      "coming_soon": {
+        "time_expire": "Time expiry coming soon",
+        "time_start": "Time start coming soon"
+      },
+      "errors": {
+        "missing_required": "Base URL and name are required",
+        "shortcode": "A valid short code is required",
+        "password": "Password must be at least 6 characters long when password protection is enabled"
+      },
+      "messages": {
+        "fetch_error": "Failed to fetch link data"
+      }
+    },
+    "list": {
+      "title": "Referral Links",
+      "empty_title": "No links",
+      "empty_description": "Start by creating your first referral link",
+      "create": "Create link",
+      "name": "Name",
+      "referral_url": "Referral URL",
+      "short_url": "Short URL",
+      "clicks": "Clicks",
+      "created_at": "Creation date",
+      "actions": "Actions",
+      "copy": "Copy link",
+      "copy_success": "Link copied to clipboard",
+      "delete_success": "Link deleted successfully",
+      "delete_error": "An error occurred while deleting the link",
+      "load_error": "Unable to load links",
+      "load_error_description": "Please verify your connection or contact support if the problem persists.",
+      "load_error_cta": "Try Again",
+      "delete_title": "Delete link",
+      "delete_description": "Are you sure you want to delete this link? This action cannot be undone.",
+      "delete_confirm": "Delete",
+      "cancel": "Cancel",
+      "page_info": "Page {{current}} of {{total}}",
+      "previous": "Previous page",
+      "next": "Next page"
+    }
+  },
+  "analytics": {
+    "no_project_title": "No Project Selected",
+    "no_project_description": "Please select a project to view analytics",
+    "error_title": "Error",
+    "error_description": "Please try again later or contact support if the issue persists.",
+    "empty_title": "No analytics data available",
+    "empty_description": "Create your first referral link to start seeing analytics",
+    "header": {
+      "title": "Links Performance",
+      "subtitle": "Statistics and performance of all your referral links.",
+      "total_clicks": "Total Clicks",
+      "number_of_links": "Number of Links"
+    },
+    "filters": {
+      "link_label": "Select a link",
+      "all_links": "All links",
+      "time_label": "Time period",
+      "day": "Day",
+      "week": "Week",
+      "month": "Month",
+      "year": "Year"
+    },
+    "tabs": {
+      "visits": "Visits",
+      "countries": "Countries",
+      "rules": "Rules"
+    },
+    "charts": {
+      "visits_over_time": "Visits Over Time",
+      "distribution_country": "Distribution by Country",
+      "top_countries": "Top Countries",
+      "rules_performance": "Redirection Rules Performance",
+      "value_visits": "{{count}} visits",
+      "rule_label": "Rule {{id}} ({{url}})",
+      "rule_fallback": "Rule {{id}}"
+    },
+    "details": {
+      "title": "Detailed Analytics",
+      "subtitle": "View detailed performance by link and time period."
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "tabs": {
+      "general": "General",
+      "profile": "Profile",
+      "security": "Security",
+      "notifications": "Notifications",
+      "api_keys": "API Keys"
+    },
+    "language_selector": {
+      "label": "Language",
+      "helper": "Choose the language used in the application",
+      "toast": "Language updated"
+    },
+    "general": {
+      "title": "General Settings",
+      "description": "Manage general settings for your account",
+      "theme_title": "Theme",
+      "theme_description": "Choose your preferred theme",
+      "theme_updated": "Theme updated",
+      "themes": {
+        "light": "Light",
+        "dark": "Dark",
+        "system": "System"
+      }
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Manage your notification preferences",
+      "empty": "Notification options will be displayed here."
+    },
+    "profile": {
+      "title": "User Profile",
+      "description": "Update your personal information so teammates can recognize you.",
+      "first_name": "First name",
+      "last_name": "Last name",
+      "email": "Email address",
+      "first_placeholder": "Jane",
+      "last_placeholder": "Doe",
+      "email_placeholder": "name@example.com",
+      "save": "Save changes",
+      "saving": "Saving"
+    },
+    "security": {
+      "password": {
+        "title": "Change Password",
+        "description": "Update your password to keep your account secure.",
+        "current_label": "Current password",
+        "new_label": "New password",
+        "new_helper": "Password must be at least 8 characters.",
+        "confirm_label": "Confirm password",
+        "submit": "Update password",
+        "mismatch": "Passwords do not match"
+      },
+      "two_factor": {
+        "title": "Two-Factor Authentication (2FA)",
+        "description": "Strengthen your account security with an additional verification step.",
+        "disabled_label": "2FA is currently disabled",
+        "enable": "Enable 2FA",
+        "instructions": {
+          "title": "Important instructions",
+          "body": "Scan the QR code with an authenticator app like Google Authenticator, Authy, or Microsoft Authenticator. Keep your backup codes in a safe place in case you lose access to your phone."
+        },
+        "secret_label": "Secret key (if you can't scan the QR code):",
+        "secret_unavailable": "Secret key not available",
+        "regenerate": "Regenerate 2FA setup",
+        "otp_label": "Enter the 6-digit code",
+        "otp_placeholder": "123456",
+        "verify": "Verify and enable 2FA",
+        "enabled": {
+          "title": "2FA enabled",
+          "description": "Your account is protected by two-factor authentication."
+        },
+        "disable": "Disable 2FA",
+        "disable_description": "This action will disable two-factor authentication on your account. Your account will be less secure. Are you sure you want to continue?",
+        "confirm_password": "Confirm your password"
+      },
+      "backup_codes": {
+        "title": "Backup codes",
+        "description": "Keep these codes in a safe place. They will allow you to log in if you lose access to your authenticator app.",
+        "show": "Show backup codes",
+        "copy_all": "Copy all codes"
+      }
+    },
+    "api_keys": {
+      "placeholder": "Key name",
+      "create": "Create",
+      "empty": "No API keys created yet."
+    }
+  },
+  "validation": {
+    "required": "This field is required",
+    "invalid_type": "Invalid value (expected {{expected}}, received {{received}})",
+    "email": "Enter a valid email address",
+    "url": "Enter a valid URL",
+    "string_min": "Must contain at least {{min}} characters",
+    "string_max": "Must contain at most {{max}} characters",
+    "number_min": "Must be greater than or equal to {{min}}",
+    "number_max": "Must be less than or equal to {{max}}",
+    "array_min": "Select at least {{min}} options",
+    "array_max": "Select at most {{max}} options",
+    "invalid_enum": "Please select one of the available options"
+  },
+  "toasts": {
+    "language_updated": "Language updated"
+  },
+  "language": {
+    "en": "English",
+    "fr": "French"
+  },
+  "project_selector": {
+    "errors": {
+      "generic": "An error occurred"
+    },
+    "rename": {
+      "success": "Project name updated successfully.",
+      "title": "Rename project",
+      "description": "Update the project name for all collaborators.",
+      "saving": "Saving...",
+      "submit": "Save"
+    },
+    "invite": {
+      "email_required": "Please enter an email address.",
+      "placeholder": "Invite by email",
+      "inviting": "Inviting...",
+      "submit": "Invite"
+    },
+    "create": {
+      "name_required": "Please enter a project name.",
+      "title": "Create new project",
+      "name_label": "Project name",
+      "name_placeholder": "Enter a project name",
+      "description_label": "Description",
+      "description_placeholder": "Add a short description",
+      "creating": "Creating...",
+      "submit": "Create project"
+    },
+    "optional": "(optional)",
+    "loading": "Loading...",
+    "placeholder": "Select a project",
+    "actions": {
+      "create": "Create project",
+      "edit": "Edit project"
+    },
+    "edit": {
+      "title": "Project settings"
+    },
+    "members": {
+      "title": "Members",
+      "description": "Manage who has access to this project.",
+      "loading": "Loading members…",
+      "empty": "No members found for this project.",
+      "owner": "Owner",
+      "removing": "Removing...",
+      "remove": "Remove"
+    },
+    "delete": {
+      "title": "Delete project",
+      "description": "Permanently remove this project and all associated data.",
+      "deleting": "Deleting...",
+      "submit": "Delete project"
+    }
+  },
+  "sidebar": {
+    "dashboard": {
+      "label": "Dashboard",
+      "tooltip": "Home"
+    },
+    "links": {
+      "label": "Links",
+      "tooltip": "Links"
+    },
+    "analytics": {
+      "label": "Analytics",
+      "tooltip": "Analytics"
+    },
+    "settings": {
+      "label": "Settings",
+      "tooltip": "Settings"
+    },
+    "user": {
+      "welcome_prefix": "Welcome "
+    }
+  },
+  "news": {
+    "placeholder": {
+      "title": "Title",
+      "description": "Description"
+    },
+    "completed": "You're all caught up!",
+    "actions": {
+      "read_more": "Read more",
+      "dismiss": "Dismiss"
+    }
+  },
+  "theme": {
+    "toggle": "Toggle theme"
+  }
+}

@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useTips } from "@/hooks/use-tips";
+import { useAppTranslation } from "@/i18n";
 
 const OFFSET_FACTOR = 4;
 const SCALE_FACTOR = 0.03;
@@ -14,6 +15,7 @@ export function News() {
   const { tips, dismissTip, isLoading } = useTips();
   const cardCount = tips.length;
   const [showCompleted, setShowCompleted] = React.useState(cardCount > 0);
+  const { t } = useAppTranslation();
 
   React.useEffect(() => {
     let timeout: NodeJS.Timeout | undefined = undefined;
@@ -66,7 +68,10 @@ export function News() {
           </div>
         ))}
         <div className="pointer-events-none invisible" aria-hidden>
-          <NewsCard title="Title" description="Description" />
+          <NewsCard
+            title={t("news.placeholder.title")}
+            description={t("news.placeholder.description")}
+          />
         </div>
         {showCompleted && !cardCount && (
           <div
@@ -76,7 +81,7 @@ export function News() {
             <div className="animate-fade-in absolute inset-0 rounded-lg border border-neutral-300 [animation-delay:2.3s] [animation-direction:reverse] [animation-duration:0.2s]" />
             {/* <AnimatedLogo className="w-1/3" /> */}
             <span className="animate-fade-in text-xs font-medium text-muted-foreground [animation-delay:2.3s] [animation-direction:reverse] [animation-duration:0.2s]">
-              You're all caught up!
+              {t("news.completed")}
             </span>
           </div>
         )}
@@ -103,6 +108,7 @@ function NewsCard({
   active?: boolean;
 }) {
   const { isMobile } = useMediaQuery();
+  const { t } = useAppTranslation();
 
   const ref = React.useRef<HTMLDivElement>(null);
   const drag = React.useRef<{
@@ -248,7 +254,7 @@ function NewsCard({
                 rel="noopener noreferrer"
                 className="font-medium text-muted-foreground hover:text-foreground transition-colors duration-75"
               >
-                Read more
+                {t("news.actions.read_more")}
               </a>
             )}
             <button
@@ -256,7 +262,7 @@ function NewsCard({
               onClick={dismiss}
               className="text-muted-foreground hover:text-foreground transition-colors duration-75"
             >
-              Dismiss
+              {t("news.actions.dismiss")}
             </button>
           </div>
         </div>

@@ -21,6 +21,7 @@ import { Plus, Settings } from "lucide-react";
 import { api } from "@/lib/api";
 import type { Project, ProjectMember, ProjectMembersResponse } from "@/lib/api";
 import { useProject } from "@/contexts/project-context";
+import { useAppTranslation } from "@/i18n";
 
 export function ProjectSelector() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -50,6 +51,7 @@ export function ProjectSelector() {
   const [createProjectError, setCreateProjectError] = useState<string | null>(
     null
   );
+  const { t } = useAppTranslation();
 
   useEffect(() => {
     const initializeProjects = async () => {
@@ -139,12 +141,12 @@ export function ProjectSelector() {
 
   const getErrorMessage = (error: unknown) => {
     if (error && typeof error === "object" && "message" in error) {
-      return (error as { message?: string }).message || "An error occurred";
+      return (error as { message?: string }).message || t("project_selector.errors.generic");
     }
     if (error instanceof Error) {
       return error.message;
     }
-    return "An error occurred";
+    return t("project_selector.errors.generic");
   };
 
   const getDisplayName = (
@@ -198,7 +200,7 @@ export function ProjectSelector() {
     try {
       await api.updateProject(editingProjectId, { name: editingName });
       await refreshProjects();
-      setRenameSuccess("Project name updated successfully.");
+      setRenameSuccess(t("project_selector.rename.success"));
     } catch (error) {
       console.error("Failed to update project", error);
       setRenameError(getErrorMessage(error));
@@ -213,7 +215,7 @@ export function ProjectSelector() {
     }
     const email = inviteEmail.trim();
     if (!email) {
-      setInviteError("Please enter an email address.");
+      setInviteError(t("project_selector.invite.email_required"));
       return;
     }
     setInviteError(null);
@@ -283,7 +285,7 @@ export function ProjectSelector() {
   const handleCreateProject = async () => {
     const trimmedName = newProjectName.trim();
     if (!trimmedName) {
-      setCreateProjectError("Please enter a project name.");
+      setCreateProjectError(t("project_selector.create.name_required"));
       return;
     }
 
@@ -333,7 +335,11 @@ export function ProjectSelector() {
       >
         <SelectTrigger className="border-0 bg-background/50">
           <SelectValue
-            placeholder={isLoading ? "Loading..." : "Select a project"}
+            placeholder={
+              isLoading
+                ? t("project_selector.loading")
+                : t("project_selector.placeholder")
+            }
           />
         </SelectTrigger>
         <SelectContent>
@@ -348,7 +354,7 @@ export function ProjectSelector() {
         onClick={openCreateModal}
         variant="ghost"
         size="icon"
-        aria-label="Create Project"
+        aria-label={t("project_selector.actions.create")}
       >
         <Plus className="w-4 h-4" />
       </Button>
@@ -356,7 +362,7 @@ export function ProjectSelector() {
         onClick={openEditModal}
         variant="ghost"
         size="icon"
-        aria-label="Edit Project"
+        aria-label={t("project_selector.actions.edit")}
       >
         <Settings className="w-4 h-4" />
       </Button>
@@ -373,7 +379,7 @@ export function ProjectSelector() {
       >
         <DialogContent className="max-w-lg space-y-6">
           <DialogHeader>
-            <DialogTitle>Create new project</DialogTitle>
+            <DialogTitle>{t("project_selector.create.title")}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -382,13 +388,13 @@ export function ProjectSelector() {
                 htmlFor="new-project-name"
                 className="text-sm font-medium"
               >
-                Project name
+                {t("project_selector.create.name_label")}
               </label>
               <Input
                 id="new-project-name"
                 value={newProjectName}
                 onChange={(e) => setNewProjectName(e.target.value)}
-                placeholder="Enter a project name"
+                placeholder={t("project_selector.create.name_placeholder")}
                 disabled={isCreatingProject}
                 autoFocus
               />
@@ -398,13 +404,16 @@ export function ProjectSelector() {
                 htmlFor="new-project-description"
                 className="text-sm font-medium"
               >
-                Description <span className="text-muted-foreground">(optional)</span>
+                {t("project_selector.create.description_label")} {" "}
+                <span className="text-muted-foreground">
+                  {t("project_selector.optional")}
+                </span>
               </label>
               <Textarea
                 id="new-project-description"
                 value={newProjectDescription}
                 onChange={(e) => setNewProjectDescription(e.target.value)}
-                placeholder="Add a short description"
+                placeholder={t("project_selector.create.description_placeholder")}
                 disabled={isCreatingProject}
               />
             </div>
@@ -419,7 +428,7 @@ export function ProjectSelector() {
               onClick={closeCreateModal}
               disabled={isCreatingProject}
             >
-              Cancel
+              {t("common.cancel")}
             </Button>
             <Button
               onClick={handleCreateProject}
@@ -427,7 +436,9 @@ export function ProjectSelector() {
                 isCreatingProject || newProjectName.trim().length === 0
               }
             >
-              {isCreatingProject ? "Creating..." : "Create project"}
+              {isCreatingProject
+                ? t("project_selector.create.creating")
+                : t("project_selector.create.submit")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -445,28 +456,32 @@ export function ProjectSelector() {
       >
         <DialogContent className="max-w-lg space-y-6">
           <DialogHeader>
-            <DialogTitle>Project settings</DialogTitle>
+            <DialogTitle>{t("project_selector.edit.title")}</DialogTitle>
           </DialogHeader>
 
           <section className="space-y-3">
             <div>
-              <h3 className="text-lg font-semibold">Rename project</h3>
+              <h3 className="text-lg font-semibold">
+                {t("project_selector.rename.title")}
+              </h3>
               <p className="text-sm text-muted-foreground">
-                Update the project name for all collaborators.
+                {t("project_selector.rename.description")}
               </p>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
               <Input
                 value={editingName}
                 onChange={(e) => setEditingName(e.target.value)}
-                placeholder="Project name"
+                placeholder={t("project_selector.create.name_label")}
                 disabled={isRenaming}
               />
               <Button
                 onClick={handleEditSubmit}
                 disabled={isRenaming || editingName.trim().length === 0}
               >
-                {isRenaming ? "Saving..." : "Save"}
+                {isRenaming
+                  ? t("project_selector.rename.saving")
+                  : t("project_selector.rename.submit")}
               </Button>
             </div>
             {renameError && (
@@ -479,9 +494,11 @@ export function ProjectSelector() {
 
           <section className="space-y-3">
             <div>
-              <h3 className="text-lg font-semibold">Members</h3>
+              <h3 className="text-lg font-semibold">
+                {t("project_selector.members.title")}
+              </h3>
               <p className="text-sm text-muted-foreground">
-                Manage who has access to this project.
+                {t("project_selector.members.description")}
               </p>
             </div>
             <div className="space-y-2">
@@ -489,10 +506,12 @@ export function ProjectSelector() {
                 <p className="text-sm text-destructive">{memberError}</p>
               )}
               {isMembersLoading ? (
-                <p className="text-sm text-muted-foreground">Loading members…</p>
+                <p className="text-sm text-muted-foreground">
+                  {t("project_selector.members.loading")}
+                </p>
               ) : !projectOwner && members.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
-                  No members found for this project.
+                  {t("project_selector.members.empty")}
                 </p>
               ) : (
                 <ul className="space-y-2">
@@ -514,7 +533,7 @@ export function ProjectSelector() {
                         </p>
                       </div>
                       <span className="text-xs font-medium text-muted-foreground">
-                        Owner
+                        {t("project_selector.members.owner")}
                       </span>
                     </li>
                   )}
@@ -542,8 +561,8 @@ export function ProjectSelector() {
                         disabled={removingMemberId === member.id}
                       >
                         {removingMemberId === member.id
-                          ? "Removing..."
-                          : "Remove"}
+                          ? t("project_selector.members.removing")
+                          : t("project_selector.members.remove")}
                       </Button>
                     </li>
                   ))}
@@ -555,12 +574,14 @@ export function ProjectSelector() {
               <Input
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
-                placeholder="Invite by email"
+                placeholder={t("project_selector.invite.placeholder")}
                 type="email"
                 disabled={isInviting}
               />
               <Button onClick={handleInviteSubmit} disabled={isInviting}>
-                {isInviting ? "Inviting..." : "Invite"}
+                {isInviting
+                  ? t("project_selector.invite.inviting")
+                  : t("project_selector.invite.submit")}
               </Button>
             </div>
             {inviteError && (
@@ -571,10 +592,10 @@ export function ProjectSelector() {
           <section className="space-y-3">
             <div>
               <h3 className="text-lg font-semibold text-destructive">
-                Delete project
+                {t("project_selector.delete.title")}
               </h3>
               <p className="text-sm text-muted-foreground">
-                Permanently remove this project and all associated data.
+                {t("project_selector.delete.description")}
               </p>
             </div>
             {deleteError && (
@@ -585,13 +606,15 @@ export function ProjectSelector() {
               onClick={handleDeleteProject}
               disabled={isDeletingProject}
             >
-              {isDeletingProject ? "Deleting..." : "Delete project"}
+              {isDeletingProject
+                ? t("project_selector.delete.deleting")
+                : t("project_selector.delete.submit")}
             </Button>
           </section>
 
           <DialogFooter>
             <Button variant="outline" onClick={closeEditModal}>
-              Close
+              {t("common.close")}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -8,12 +8,15 @@ import {
 } from "@/components/ui/dialog";
 import { Download, QrCode } from "lucide-react";
 import QRCode from "react-qr-code";
+import { useAppTranslation } from "@/i18n";
 
 interface QRCodeDialogProps {
   url: string;
 }
 
 export const QRCodeDialog = ({ url }: QRCodeDialogProps) => {
+  const { t } = useAppTranslation();
+
   const downloadQRCode = () => {
     const svg = document.getElementById("qr-code");
     if (!svg) return;
@@ -48,13 +51,13 @@ export const QRCodeDialog = ({ url }: QRCodeDialogProps) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon" className="h-8 w-8">
+        <Button variant="outline" size="icon" className="h-8 w-8" aria-label={t("links.form.preview.qr.title")}>
           <QrCode className="h-4 w-4" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>QR Code</DialogTitle>
+          <DialogTitle>{t("links.form.preview.qr.title")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="flex justify-center p-4 bg-white rounded">
@@ -62,7 +65,7 @@ export const QRCodeDialog = ({ url }: QRCodeDialogProps) => {
           </div>
           <Button variant="outline" onClick={downloadQRCode} className="w-full">
             <Download className="h-4 w-4 mr-2" />
-            Download QR Code
+            {t("links.form.preview.qr.download")}
           </Button>
         </div>
       </DialogContent>

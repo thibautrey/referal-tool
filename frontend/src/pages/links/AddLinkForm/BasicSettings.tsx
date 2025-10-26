@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { generateRandomCode } from "./utils";
 import { useRef } from "react";
 import { QRCodeDialog } from "@/components/QRCodeDialog";
+import { useAppTranslation } from "@/i18n";
 
 interface BasicSettingsProps {
   linkName: string;
@@ -33,6 +34,7 @@ export function BasicSettings({
   onShortCodeChange,
 }: BasicSettingsProps) {
   const shortCodeInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useAppTranslation();
 
   const regenerateShortCode = () => {
     onShortCodeChange(generateRandomCode());
@@ -40,31 +42,31 @@ export function BasicSettings({
 
   const copyShortCode = () => {
     navigator.clipboard.writeText(`${currentDomain}/l/${shortCode}`);
-    toast.success("Short link copied to clipboard");
+    toast.success(t("links.form.preview.copy_success"));
   };
 
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="linkName">Link Name</Label>
+        <Label htmlFor="linkName">{t("links.form.basic.name_label")}</Label>
         <Input
           id="linkName"
-          placeholder="My Link"
+          placeholder={t("links.form.basic.name_placeholder")}
           value={linkName}
           onChange={(e) => onLinkNameChange(e.target.value)}
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="baseUrl">Base URL</Label>
+        <Label htmlFor="baseUrl">{t("links.form.basic.url_label")}</Label>
         <Input
           id="baseUrl"
-          placeholder="https://example.com/ref?id=your-id"
+          placeholder={t("links.form.basic.url_placeholder")}
           value={baseUrl}
           onChange={(e) => onBaseUrlChange(e.target.value)}
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="shortCode">Short Code</Label>
+        <Label htmlFor="shortCode">{t("links.form.basic.shortcode_label")}</Label>
         {isEditMode ? (
           <div className="flex items-center border rounded-md px-3 py-2 bg-muted">
             <span className="text-muted-foreground">{currentDomain}/l/</span>
@@ -75,7 +77,8 @@ export function BasicSettings({
                 size="icon"
                 className="h-8 w-8"
                 onClick={copyShortCode}
-                title="Copy short link"
+                title={t("links.form.basic.preview.copy")}
+                aria-label={t("links.form.basic.preview.copy")}
               >
                 <Copy className="h-4 w-4" />
               </Button>
@@ -101,7 +104,7 @@ export function BasicSettings({
                     onShortCodeChange(e.target.value.toLowerCase())
                   }
                   className="flex-1 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-0"
-                  placeholder="Enter your custom code"
+                  placeholder={t("links.form.basic.shortcode_placeholder")}
                 />
                 <div className="flex">
                   <Button
@@ -109,7 +112,8 @@ export function BasicSettings({
                     size="icon"
                     className="h-8 w-8"
                     onClick={copyShortCode}
-                    title="Copy short link"
+                    title={t("links.form.basic.preview.copy")}
+                    aria-label={t("links.form.basic.preview.copy")}
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
@@ -121,7 +125,8 @@ export function BasicSettings({
               variant="outline"
               size="icon"
               onClick={regenerateShortCode}
-              title="Generate new code"
+              title={t("links.form.basic.shortcode_generate")}
+              aria-label={t("links.form.basic.shortcode_generate")}
             >
               <RefreshCw className="h-4 w-4" />
             </Button>
@@ -129,14 +134,17 @@ export function BasicSettings({
         )}
         {!isShortCodeAvailable && (
           <p className="text-sm text-red-500 mt-1">
-            This short code is already taken. Please choose a different one.
+            {t("links.form.basic.availability.unavailable")}
           </p>
         )}
         {isCheckingShortCode && (
           <p className="text-sm text-muted-foreground mt-1">
-            Checking availability...
+            {t("links.form.basic.availability.checking")}
           </p>
         )}
+        <p className="text-sm text-muted-foreground">
+          {t("links.form.basic.shortcode_helper")}
+        </p>
       </div>
     </div>
   );

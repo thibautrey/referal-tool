@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { OtpSetupData } from "@/lib/auth";
 import QRCode from "react-qr-code";
 import { Switch } from "@/components/ui/switch";
+import { useAppTranslation } from "@/i18n";
 import { useAuth } from "@/contexts/AuthContext";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -36,13 +37,18 @@ import { zodResolver } from "@hookform/resolvers/zod";
 // Password change validation schema
 const passwordSchema = z
   .object({
-    currentPassword: z.string().min(1, "Current password is required"),
-    newPassword: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z.string().min(8, "Please confirm your password"),
+    currentPassword: z.string().min(1),
+    newPassword: z.string().min(8),
+    confirmPassword: z.string().min(1),
   })
-  .refine((data) => data.newPassword === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ["confirmPassword"],
+  .superRefine((data, ctx) => {
+    if (data.newPassword !== data.confirmPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["confirmPassword"],
+        params: { i18nKey: "settings.security.password.mismatch" },
+      });
+    }
   });
 
 // OTP verification validation schema
@@ -52,7 +58,7 @@ const otpSchema = z.object({
 
 // OTP disabling validation schema
 const disableOtpSchema = z.object({
-  password: z.string().min(1, "Password is required"),
+  password: z.string().min(1),
 });
 
 export default function SecuritySettings() {
@@ -64,6 +70,7 @@ export default function SecuritySettings() {
     disableOTP,
     getBackupCodes,
   } = useAuth();
+  const { t } = useAppTranslation();
   const [isProcessing, setIsProcessing] = useState(false);
   const [otpSetupData, setOtpSetupData] = useState<OtpSetupData | null>(null);
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
@@ -302,10 +309,10 @@ export default function SecuritySettings() {
         <div className="space-y-6">
           <div>
             <h2 className="text-2xl font-bold tracking-tight">
-              Change Password
+              {t("settings.security.password.title")}
             </h2>
             <p className="text-muted-foreground mt-2">
-              Update your password to keep your account secure
+              {t("settings.security.password.description")}
             </p>
           </div>
 
@@ -319,7 +326,9 @@ export default function SecuritySettings() {
                 name="currentPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Current Password</FormLabel>
+                    <FormLabel>
+                      {t("settings.security.password.current_label")}
+                    </FormLabel>
                     <FormControl>
                       <Input type="password" {...field} />
                     </FormControl>
@@ -332,12 +341,14 @@ export default function SecuritySettings() {
                 name="newPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>New Password</FormLabel>
+                    <FormLabel>
+                      {t("settings.security.password.new_label")}
+                    </FormLabel>
                     <FormControl>
                       <Input type="password" {...field} />
                     </FormControl>
                     <FormDescription>
-                      Password must be at least 8 characters
+                      {t("settings.security.password.new_helper")}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -348,7 +359,9 @@ export default function SecuritySettings() {
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Confirm Password</FormLabel>
+                    <FormLabel>
+                      {t("settings.security.password.confirm_label")}
+                    </FormLabel>
                     <FormControl>
                       <Input type="password" {...field} />
                     </FormControl>
@@ -360,7 +373,7 @@ export default function SecuritySettings() {
                 {isProcessing && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Update Password
+                {t("settings.security.password.submit")}
               </Button>
             </form>
           </Form>
@@ -370,11 +383,10 @@ export default function SecuritySettings() {
       <TabsContent value="2fa" className="space-y-8">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
-            Two-Factor Authentication (2FA)
+            {t("settings.security.two_factor.title")}
           </h2>
           <p className="text-muted-foreground mt-2">
-            Strengthen your account security with an additional verification
-            step
+            {t("settings.security.two_factor.description")}
           </p>
         </div>
 
@@ -384,7 +396,7 @@ export default function SecuritySettings() {
               <div className="flex items-center space-x-2">
                 <Switch id="2fa" disabled={true} />
                 <label htmlFor="2fa" className="text-sm font-medium">
-                  2FA is currently disabled
+                  {t("settings.security.two_factor.disabled_label")}
                 </label>
               </div>
               {/* Utiliser div au lieu de button pour éviter le rechargement */}
@@ -402,7 +414,7 @@ export default function SecuritySettings() {
                 {isProcessing && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
-                Enable 2FA
+                {t("settings.security.two_factor.enable")}
               </div>
             </div>
           )}
@@ -411,12 +423,11 @@ export default function SecuritySettings() {
             <div className="space-y-8 max-w-lg">
               <Alert>
                 <AlertTriangle className="h-4 w-4" />
-                <AlertTitle>Important Instructions</AlertTitle>
+                <AlertTitle>
+                  {t("settings.security.two_factor.instructions.title")}
+                </AlertTitle>
                 <AlertDescription>
-                  Scan the QR code with an authenticator app like Google
-                  Authenticator, Authy, or Microsoft Authenticator. Keep your
-                  backup codes in a safe place in case you lose access to your
-                  phone.
+                  {t("settings.security.two_factor.instructions.body")}
                 </AlertDescription>
               </Alert>
 
@@ -429,7 +440,7 @@ export default function SecuritySettings() {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <p className="text-sm font-medium">
-                    Secret key (if you can't scan the QR code):
+                    {t("settings.security.two_factor.secret_label")}
                   </p>
                   <Button
                     variant="outline"
@@ -440,12 +451,12 @@ export default function SecuritySettings() {
                     {secretCopied ? (
                       <>
                         <Check className="h-3.5 w-3.5 mr-1 text-green-500" />
-                        Copied!
+                        {t("common.copied")}
                       </>
                     ) : (
                       <>
                         <Copy className="h-3.5 w-3.5 mr-1" />
-                        Copy
+                        {t("common.copy")}
                       </>
                     )}
                   </Button>
@@ -457,7 +468,7 @@ export default function SecuritySettings() {
                 ) : (
                   <div className="space-y-2">
                     <p className="p-3 bg-secondary text-secondary-foreground rounded text-center text-red-500">
-                      Secret key not available
+                      {t("settings.security.two_factor.secret_unavailable")}
                     </p>
                     <Button
                       onClick={refetchOtpData}
@@ -467,7 +478,7 @@ export default function SecuritySettings() {
                       {isProcessing ? (
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       ) : null}
-                      Regenerate 2FA Setup
+                      {t("settings.security.two_factor.regenerate")}
                     </Button>
                   </div>
                 )}
@@ -483,12 +494,16 @@ export default function SecuritySettings() {
                     name="otp"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Enter the 6-digit code</FormLabel>
+                        <FormLabel>
+                          {t("settings.security.two_factor.otp_label")}
+                        </FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             maxLength={6}
-                            placeholder="123456"
+                            placeholder={t(
+                              "settings.security.two_factor.otp_placeholder"
+                            )}
                             inputMode="numeric"
                             pattern="[0-9]*"
                           />
@@ -501,7 +516,7 @@ export default function SecuritySettings() {
                     {isProcessing && (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     )}
-                    Verify and Enable 2FA
+                    {t("settings.security.two_factor.verify")}
                   </Button>
                 </form>
               </Form>
@@ -512,28 +527,32 @@ export default function SecuritySettings() {
             <div className="space-y-6 max-w-lg">
               <Alert className="bg-green-50 border-green-200">
                 <Check className="h-4 w-4 text-green-500" />
-                <AlertTitle>2FA Enabled</AlertTitle>
+                <AlertTitle>
+                  {t("settings.security.two_factor.enabled.title")}
+                </AlertTitle>
                 <AlertDescription>
-                  Your account is protected by two-factor authentication.
+                  {t("settings.security.two_factor.enabled.description")}
                 </AlertDescription>
               </Alert>
 
               <div className="flex justify-between items-center">
                 <Button variant="outline" onClick={handleGetBackupCodes}>
-                  Show Backup Codes
+                  {t("settings.security.backup_codes.show")}
                 </Button>
 
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="destructive">Disable 2FA</Button>
+                    <Button variant="destructive">
+                      {t("settings.security.two_factor.disable")}
+                    </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Disable 2FA</AlertDialogTitle>
+                      <AlertDialogTitle>
+                        {t("settings.security.two_factor.disable")}
+                      </AlertDialogTitle>
                       <AlertDialogDescription>
-                        This action will disable two-factor authentication on
-                        your account. Your account will be less secure. Are you
-                        sure you want to continue?
+                        {t("settings.security.two_factor.disable_description")}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <Form {...disableOtpForm}>
@@ -547,7 +566,9 @@ export default function SecuritySettings() {
                           name="password"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Confirm your password</FormLabel>
+                              <FormLabel>
+                                {t("settings.security.two_factor.confirm_password")}
+                              </FormLabel>
                               <FormControl>
                                 <Input type="password" {...field} />
                               </FormControl>
@@ -556,7 +577,9 @@ export default function SecuritySettings() {
                           )}
                         />
                         <AlertDialogFooter className="mt-4">
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogCancel>
+                            {t("common.cancel")}
+                          </AlertDialogCancel>
                           <AlertDialogAction asChild>
                             <Button
                               type="submit"
@@ -566,7 +589,7 @@ export default function SecuritySettings() {
                               {isProcessing && (
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                               )}
-                              Disable
+                              {t("settings.security.two_factor.disable")}
                             </Button>
                           </AlertDialogAction>
                         </AlertDialogFooter>
@@ -581,10 +604,11 @@ export default function SecuritySettings() {
           {showBackupCodes && backupCodes.length > 0 && (
             <div className="mt-8 border rounded-lg p-6 space-y-4 max-w-lg">
               <div>
-                <h3 className="text-lg font-semibold">Backup Codes</h3>
+                <h3 className="text-lg font-semibold">
+                  {t("settings.security.backup_codes.title")}
+                </h3>
                 <p className="text-muted-foreground text-sm mt-1">
-                  Keep these codes in a safe place. They will allow you to log
-                  in if you lose access to your authenticator app.
+                  {t("settings.security.backup_codes.description")}
                 </p>
               </div>
 
@@ -605,7 +629,7 @@ export default function SecuritySettings() {
                 className="w-full"
               >
                 <Copy className="h-4 w-4 mr-2" />
-                Copy All Codes
+                {t("settings.security.backup_codes.copy_all")}
               </Button>
             </div>
           )}

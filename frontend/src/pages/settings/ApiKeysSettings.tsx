@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { apiKeyService, ApiKey } from "@/services/apiKeyService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAppTranslation } from "@/i18n";
 
 export default function ApiKeysSettings() {
   const [keys, setKeys] = useState<ApiKey[]>([]);
   const [name, setName] = useState("");
+  const { t } = useAppTranslation();
 
   const loadKeys = async () => {
     try {
@@ -40,38 +42,51 @@ export default function ApiKeysSettings() {
     }
   };
 
+  const isCreateDisabled = useMemo(
+    () => name.trim().length === 0,
+    [name]
+  );
+
   return (
     <div className="space-y-4">
-      <div className="flex space-x-2">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
         <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Key name"
+          placeholder={t("settings.api_keys.placeholder")}
         />
-        <Button onClick={handleCreate}>Create</Button>
+        <Button onClick={handleCreate} disabled={isCreateDisabled}>
+          {t("settings.api_keys.create")}
+        </Button>
       </div>
 
-      <ul className="space-y-2">
-        {keys.map((k) => (
-          <li
-            key={k.id}
-            className="flex items-center justify-between rounded border p-2"
-          >
-            <div>
-              <div className="font-medium">{k.name}</div>
-              <div className="break-all text-sm text-muted-foreground">
-                {k.key}
-              </div>
-            </div>
-            <Button
-              variant="destructive"
-              onClick={() => handleDelete(k.id)}
+      {keys.length === 0 ? (
+        <p className="text-sm text-muted-foreground">
+          {t("settings.api_keys.empty")}
+        </p>
+      ) : (
+        <ul className="space-y-2">
+          {keys.map((k) => (
+            <li
+              key={k.id}
+              className="flex items-center justify-between rounded border p-2"
             >
-              Delete
-            </Button>
-          </li>
-        ))}
-      </ul>
+              <div>
+                <div className="font-medium">{k.name}</div>
+                <div className="break-all text-sm text-muted-foreground">
+                  {k.key}
+                </div>
+              </div>
+              <Button
+                variant="destructive"
+                onClick={() => handleDelete(k.id)}
+              >
+                {t("common.delete")}
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

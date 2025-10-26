@@ -1,0 +1,781 @@
+{
+  "app": {
+    "name": "rflnk",
+    "alpha_badge": "alpha",
+    "alpha_tooltip": "Il s'agit d'une version alpha. Certaines fonctionnalités peuvent être manquantes ou instables. Merci pour vos retours !",
+    "loading": "Chargement des traductions...",
+    "menu": "Menu"
+  },
+  "common": {
+    "login": "Connexion",
+    "logout": "Déconnexion",
+    "sign_up": "Inscription",
+    "sign_in": "Se connecter",
+    "sign_in_progress": "Connexion en cours...",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "forgot_password": "Mot de passe oublié ?",
+    "dashboard": "Tableau de bord",
+    "go_to_app": "Aller à l'application",
+    "go_to_dashboard": "Aller au tableau de bord",
+    "create": "Créer",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "loading": "Chargement...",
+    "actions": "Actions",
+    "search": "Rechercher",
+    "unknown": "Inconnu",
+    "yes": "Oui",
+    "no": "Non",
+    "required_indicator": "Obligatoire",
+    "copy": "Copier",
+    "copied": "Copié !",
+    "close": "Fermer"
+  },
+  "landing": {
+    "header": {
+      "logo_alt": "Logo",
+      "tagline": "rflnk",
+      "nav": {
+        "features": "Fonctionnalités",
+        "benefits": "Avantages",
+        "pricing": "Tarifs",
+        "login": "Connexion",
+        "sign_up": "Inscription",
+        "dashboard": "Accéder à l'application"
+      }
+    },
+    "hero": {
+      "title": "Optimisez vos liens d'affiliation",
+      "subtitle": "Augmentez vos revenus d'affiliation avec notre plateforme intelligente de gestion de liens, conçue pour les influenceurs et les marketeurs.",
+      "cta_authenticated": "Aller au tableau de bord",
+      "cta_primary": "Commencer gratuitement",
+      "cta_secondary": "Connexion"
+    },
+    "features": {
+      "title": "Des fonctionnalités puissantes pour les créateurs",
+      "subtitle": "Tout ce dont vous avez besoin pour optimiser votre stratégie d'affiliation et booster vos revenus.",
+      "items": {
+        "smart_geo_routing": {
+          "title": "Routage géographique intelligent",
+          "description": "Dirigez automatiquement les utilisateurs vers les boutiques ou contenus adaptés à leur pays"
+        },
+        "advanced_targeting": {
+          "title": "Ciblage avancé",
+          "description": "Créez des règles personnalisées selon la localisation, l'appareil, l'heure et plus encore"
+        },
+        "deep_linking": {
+          "title": "Deep linking",
+          "description": "Envoyez les utilisateurs mobiles vers les applications et les utilisateurs desktop vers les versions web"
+        },
+        "link_protection": {
+          "title": "Protection des liens",
+          "description": "Définissez des mots de passe, des dates d'expiration et des restrictions IP pour vos liens"
+        },
+        "smart_scheduling": {
+          "title": "Programmation intelligente",
+          "description": "Planifiez l'activation ou la désactivation automatique de vos liens"
+        },
+        "multi_platform": {
+          "title": "Compatibilité multi-plateformes",
+          "description": "Fonctionne avec les principales plateformes comme Amazon, Shopify et bien d'autres"
+        },
+        "realtime_analytics": {
+          "title": "Analyses en temps réel",
+          "description": "Suivez les clics, les localisations, les appareils et les taux de conversion"
+        },
+        "no_limits": {
+          "title": "Aucune limite de trafic",
+          "description": "Gérez un nombre illimité de clics sans restrictions ni bridage"
+        },
+        "performance_insights": {
+          "title": "Analyse des performances",
+          "description": "Obtenez des analyses détaillées et des rapports pour optimiser vos campagnes"
+        }
+      }
+    },
+    "benefits": {
+      "title": "Avantages pour les influenceurs",
+      "subtitle": "Maximisez vos revenus d'affiliation avec des outils adaptés à votre audience internationale.",
+      "section_title": "Augmentez vos conversions",
+      "steps": {
+        "local_markets": {
+          "title": "Adaptation aux marchés locaux",
+          "description": "Redirigez automatiquement vos visiteurs vers les plateformes adaptées à leur pays pour maximiser les conversions."
+        },
+        "real_time": {
+          "title": "Optimisation en temps réel",
+          "description": "Analysez les performances de vos liens et ajustez rapidement vos stratégies grâce à des données en temps réel."
+        },
+        "campaign_management": {
+          "title": "Gestion de campagnes simplifiée",
+          "description": "Une interface intuitive vous permet de gérer facilement tous vos liens et projets d'affiliation."
+        }
+      }
+    },
+    "pricing": {
+      "title": "Tarification simple",
+      "subtitle": "Commencez gratuitement avec notre offre de base. Améliorez votre expérience avec des options complémentaires.",
+      "free_plan": {
+        "title": "Gratuit",
+        "description": "Démarrez sans engagement",
+        "price": "0 $",
+        "cta": "Commencer",
+        "no_card": "Aucune carte bancaire requise",
+        "features": {
+          "unlimited_links": "Liens courts illimités",
+          "unlimited_clicks": "Clics illimités",
+          "geo_customization": "Personnalisation géographique",
+          "device_tagging": "Ciblage par appareil",
+          "password_protection": "Protection par mot de passe",
+          "link_expiration": "Expiration et programmation des liens",
+          "deeplinks": "Support des deep links",
+          "performance_analytics": "Analyse des performances",
+          "analytics_retention": "Rétention des analyses pendant 1 an",
+          "traffic_share": "5 % du trafic redirigé vers nos liens",
+          "no_support": "Pas de support dédié"
+        },
+        "tooltips": {
+          "unlimited_links": "Créez autant de liens courts que nécessaire sans aucune limite",
+          "geo_customization": "Redirigez les utilisateurs vers des URL différentes selon leur localisation",
+          "device_tagging": "Redirigez les utilisateurs en fonction de leur type d'appareil ou de leur navigateur",
+          "password_protection": "Sécurisez vos liens avec des mots de passe personnalisés",
+          "link_expiration": "Programmez l'expiration de vos liens ou l'activation à une date précise",
+          "deeplinks": "Créez des liens qui ouvrent des écrans spécifiques dans les applications mobiles",
+          "performance_analytics": "Suivez les clics, conversions et autres indicateurs clés",
+          "analytics_retention": "Accédez à vos données d'analyse pendant un an",
+          "traffic_share": "Pour 5 % des clics sur les principaux revendeurs (Amazon, Walmart), nous ajoutons notre code affilié. Vos liens fonctionnent exactement de la même manière et les autres liens ne sont pas modifiés.",
+          "no_support": "Support via la communauté et la documentation",
+          "unlimited_clicks": "Gérez un trafic illimité sans bridage"
+        }
+      },
+      "addons": {
+        "title": "Options complémentaires",
+        "description": "Améliorez votre expérience avec ces fonctionnalités premium",
+        "items": {
+          "custom_domain": {
+            "title": "Domaine personnalisé",
+            "price": "10 $/mois",
+            "description": "Utilisez votre propre domaine pour les liens courts",
+            "tooltip": "Remplacez notre domaine par le vôtre pour une image professionnelle"
+          },
+          "no_redirects": {
+            "title": "Sans redirections",
+            "price": "10 $/mois",
+            "description": "Supprimez la redirection de 5 % vers nos liens"
+          },
+          "support": {
+            "title": "Support client",
+            "price": "50 $/mois",
+            "description": "Bénéficiez d'un support prioritaire de notre équipe"
+          },
+          "analytics": {
+            "title": "Analyses étendues",
+            "price": "20 $/an",
+            "description": "Conservez vos données d'analyse au-delà de la première année",
+            "tooltip": "Accédez à l'historique des données de plus d'un an pour vos analyses à long terme"
+          }
+        }
+      }
+    },
+    "cta": {
+      "title": "Prêt à optimiser vos revenus d'affiliation ?",
+      "subtitle": "Rejoignez des milliers d'influenceurs qui augmentent leurs conversions grâce à notre plateforme.",
+      "cta": "Créer un compte gratuit",
+      "disclaimer": "Aucune carte bancaire requise • Configuration en quelques minutes"
+    },
+    "footer": {
+      "login": "Connexion",
+      "sign_up": "Inscription",
+      "features": "Fonctionnalités",
+      "benefits": "Avantages",
+      "rights": "Tous droits réservés."
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Connexion",
+      "description": "Connectez-vous pour accéder à vos affiliations.",
+      "otp_label": "Code d'authentification",
+      "otp_placeholder": "Saisissez le code à 6 chiffres",
+      "require_otp": "Authentification à deux facteurs requise",
+      "left_title": "Optimisez vos affiliations",
+      "left_description": "Notre outil aide les influenceurs à améliorer leurs conversions en configurant différents liens affiliés pour un même produit.",
+      "highlights": {
+        "geo": {
+          "title": "Personnalisation géographique",
+          "description": "Adaptez vos liens à la localisation de vos utilisateurs pour maximiser l'impact."
+        },
+        "rules": {
+          "title": "Règles intelligentes",
+          "description": "Créez des règles qui déterminent automatiquement quel lien est utilisé selon le profil de l'utilisateur."
+        },
+        "analytics": {
+          "title": "Analyse des performances",
+          "description": "Suivez vos conversions et optimisez votre stratégie d'affiliation en temps réel."
+        }
+      },
+      "register_prompt": "Pas encore de compte ?",
+      "register_link": "Créer un compte",
+      "back_to_login": "Retour à la connexion",
+      "email_placeholder": "nom@example.com",
+      "password_placeholder": "••••••••"
+    },
+    "password_validation": {
+      "title": "Lien protégé par mot de passe",
+      "description": "Ce lien est protégé. Veuillez saisir le mot de passe pour continuer.",
+      "placeholder": "Saisir le mot de passe",
+      "submit": "Continuer",
+      "validating": "Validation...",
+      "invalid": "Mot de passe invalide",
+      "error": "Une erreur est survenue"
+    },
+    "forgot_password": {
+      "title": "Mot de passe oublié",
+      "description": "Entrez votre e-mail pour recevoir un lien de réinitialisation.",
+      "placeholder": "nom@exemple.com",
+      "submit": "Envoyer le lien de réinitialisation",
+      "sending": "Envoi en cours...",
+      "return_to_login": "Retour à la connexion",
+      "submitted": {
+        "title": "Vérifiez votre boîte mail",
+        "description": "Si un compte est associé à cet e-mail, vous recevrez les instructions pour réinitialiser votre mot de passe.",
+        "helper": "Pour des raisons de sécurité, nous n'indiquons pas si un e-mail est enregistré dans notre système. Si vous ne recevez pas d'e-mail sous quelques minutes, vérifiez vos spams."
+      }
+    },
+    "register": {
+      "title": "Créer un compte",
+      "description": "Inscrivez-vous pour commencer à gérer vos liens d'affiliation.",
+      "email_placeholder": "nom@exemple.com",
+      "confirm_password_label": "Confirmez le mot de passe",
+      "creating": "Création du compte...",
+      "submit": "Créer un compte",
+      "login_prompt": "Vous avez déjà un compte ?",
+      "login_link": "Se connecter",
+      "toast": {
+        "success": "Compte créé avec succès",
+        "error": "Échec de la création du compte"
+      },
+      "hero": {
+        "title": "Rejoignez notre plateforme",
+        "description": "Créez un compte pour optimiser votre stratégie d'affiliation et augmenter vos taux de conversion.",
+        "features": {
+          "geo": {
+            "title": "Personnalisation géographique",
+            "description": "Adaptez vos liens en fonction de la localisation de vos utilisateurs pour maximiser l'impact."
+          },
+          "rules": {
+            "title": "Règles intelligentes",
+            "description": "Créez des règles qui déterminent automatiquement quel lien utiliser selon le profil de l'utilisateur."
+          },
+          "analytics": {
+            "title": "Analyse des performances",
+            "description": "Suivez les conversions et optimisez votre stratégie d'affiliation en temps réel."
+          }
+        }
+      },
+      "validation": {
+        "mismatch": "Les mots de passe ne correspondent pas"
+      }
+    },
+    "reset_password": {
+      "title": "Réinitialiser le mot de passe",
+      "description": "Saisissez votre nouveau mot de passe ci-dessous.",
+      "password_label": "Nouveau mot de passe",
+      "confirm_label": "Confirmez le mot de passe",
+      "submit": "Réinitialiser le mot de passe",
+      "submitting": "Réinitialisation...",
+      "return_to_login": "Retour à la connexion",
+      "toast": {
+        "success": "Mot de passe réinitialisé avec succès",
+        "error": "Échec de la réinitialisation du mot de passe. Le lien est peut-être invalide ou expiré."
+      },
+      "invalid": {
+        "title": "Lien de réinitialisation invalide",
+        "description": "Le lien de réinitialisation du mot de passe est invalide ou a expiré.",
+        "cta": "Demander un nouveau lien"
+      },
+      "validation": {
+        "mismatch": "Les mots de passe ne correspondent pas"
+      }
+    }
+  },
+  "links": {
+    "title_list": "Liens de parrainage",
+    "title_create": "Créer un lien",
+    "title_edit": "Modifier le lien",
+    "breadcrumb": {
+      "list": "Liens de parrainage",
+      "create": "Créer un lien",
+      "edit": "Modifier le lien"
+    },
+    "empty": {
+      "title": "Aucun lien disponible",
+      "description": "Créez votre premier lien pour afficher des statistiques"
+    },
+    "errors": {
+      "load": "Impossible de charger les liens",
+      "save": "Échec de l'enregistrement du lien",
+      "invalid_response": "Réponse du serveur invalide",
+      "fetch_link": "Impossible de récupérer les données du lien"
+    },
+    "notifications": {
+      "created": "Lien créé avec succès",
+      "updated": "Lien mis à jour avec succès"
+    },
+    "actions": {
+      "add": "Créer un lien",
+      "save": "Enregistrer",
+      "saving": "Enregistrement..."
+    },
+    "filters": {
+      "search_placeholder": "Rechercher des liens..."
+    },
+    "form": {
+      "basic": {
+        "title": "Paramètres de base",
+        "description": "Configurez les informations essentielles de votre lien.",
+        "name_label": "Nom du lien",
+        "name_placeholder": "Campagne été",
+        "url_label": "URL de destination",
+        "url_placeholder": "https://exemple.com/produit",
+        "shortcode_label": "Code court",
+        "shortcode_helper": "Ce code sera utilisé pour générer le lien court.",
+        "shortcode_generate": "Générer",
+        "availability": {
+          "checking": "Vérification en cours...",
+          "available": "Ce code court est disponible",
+          "unavailable": "Ce code court n'est pas disponible"
+        },
+        "preview": {
+          "label": "Aperçu",
+          "copy": "Copier",
+          "copied": "Copié !"
+        },
+        "shortcode_placeholder": "Saisissez votre code personnalisé"
+      },
+      "geo": {
+        "title": "Ciblage géographique",
+        "description": "Créez des règles de redirection selon le pays ou la région du visiteur.",
+        "add_rule": "Ajouter une règle",
+        "redirect_url_label": "URL de redirection",
+        "redirect_url_placeholder": "https://exemple.com/fr",
+        "countries_label": "Pays",
+        "countries_placeholder": "Sélectionnez des pays",
+        "region_label": "Région",
+        "delete_rule": "Supprimer",
+        "no_rules": "Aucune règle géographique configurée",
+        "placeholders": {
+          "region": "Sélectionnez une région",
+          "redirect_url": "URL alternative pour cette région",
+          "search": "Rechercher un pays..."
+        },
+        "labels": {
+          "selected": "Pays sélectionnés",
+          "add": "Ajouter des pays"
+        },
+        "regions": {
+          "europe": "Union européenne",
+          "northAmerica": "Amérique du Nord",
+          "asia": "Asie",
+          "middleEast": "Moyen-Orient",
+          "africa": "Afrique",
+          "southAmerica": "Amérique du Sud",
+          "oceania": "Océanie",
+          "custom": "Pays personnalisés"
+        },
+        "no_results": "Aucun résultat.",
+        "remove_rule": "Supprimer",
+        "applies_to": "S’applique à : {{countries}}"
+      },
+      "device": {
+        "title": "Ciblage par appareil",
+        "description": "Redirigez les utilisateurs selon leur type d'appareil.",
+        "add_rule": "Ajouter une règle d'appareil",
+        "device_type_label": "Type d'appareil",
+        "redirect_url_label": "URL de redirection",
+        "redirect_url_placeholder": "https://m.exemple.com",
+        "devices_label": "Appareils",
+        "delete_rule": "Supprimer",
+        "no_rules": "Aucune règle d'appareil configurée",
+        "placeholders": {
+          "device_type": "Sélectionnez un type d'appareil",
+          "redirect_url": "Saisissez l'URL de redirection",
+          "os": "Système d'exploitation",
+          "os_version": "Version de l'OS (ex : 14.0)",
+          "browser": "Navigateur",
+          "browser_version": "Version du navigateur (ex : 90)"
+        },
+        "device_types": {
+          "all": "Tous les appareils",
+          "mobile": "Mobile",
+          "tablet": "Tablette",
+          "desktop": "Ordinateur"
+        },
+        "options": {
+          "any_os": "Tout OS",
+          "any_browser": "Tout navigateur"
+        }
+      },
+      "utm": {
+        "title": "Paramètres UTM",
+        "description": "Ajoutez des paramètres de suivi pour analyser les performances de vos campagnes.",
+        "fields": {
+          "source": "Source UTM",
+          "medium": "Support UTM",
+          "campaign": "Campagne UTM",
+          "term": "Terme UTM",
+          "content": "Contenu UTM",
+          "term_optional": "Mots-clés (optionnel)",
+          "content_optional": "Contenu (optionnel)"
+        },
+        "presets": {
+          "facebook": "Facebook",
+          "instagram": "Instagram",
+          "linkedin": "LinkedIn",
+          "twitter": "Twitter",
+          "google": "Google",
+          "email": "Email",
+          "display": "Display"
+        },
+        "placeholders": {
+          "source": "ex. : google, facebook, newsletter",
+          "campaign": "ex. : soldes_été, black_friday",
+          "term": "ex. : chaussures running, robe bleue",
+          "content": "ex. : logolink, textlink"
+        },
+        "medium_placeholder": "Sélectionnez un support",
+        "medium_options": {
+          "social": "Social",
+          "email": "Email",
+          "cpc": "CPC",
+          "display": "Display",
+          "affiliate": "Affiliation",
+          "referral": "Parrainage",
+          "organic": "Naturel"
+        },
+        "preview_label": "URL de prévisualisation"
+      },
+      "password": {
+        "title": "Protection par mot de passe",
+        "description": "Demandez un mot de passe avant de rediriger vers l'URL de destination.",
+        "enable_label": "Activer la protection par mot de passe",
+        "password_label": "Mot de passe",
+        "password_placeholder": "Saisissez un mot de passe",
+        "show": "Afficher",
+        "hide": "Masquer"
+      },
+      "preview": {
+        "title": "Aperçu du lien",
+        "loading": "Génération de l'aperçu...",
+        "base_url": "URL de base",
+        "short_url": "URL courte",
+        "copy_success": "Lien court copié dans le presse-papiers",
+        "protected": "Protégé",
+        "geo_rules": "Règles géographiques",
+        "device_rules": "Règles appareils",
+        "utm_parameters": "Paramètres UTM",
+        "takes_precedence": "Prioritaire",
+        "custom_countries": "Pays personnalisés",
+        "utm_labels": {
+          "source": "Source",
+          "medium": "Support",
+          "campaign": "Campagne",
+          "terms": "Termes",
+          "content": "Contenu"
+        },
+        "qr": {
+          "title": "Code QR",
+          "download": "Télécharger le code QR"
+        }
+      },
+      "tabs": {
+        "geo": "Ciblage géographique",
+        "device": "Appareil",
+        "time_expire": "Expiration",
+        "time_start": "Activation",
+        "password": "Protection par mot de passe",
+        "utm": "UTM"
+      },
+      "coming_soon": {
+        "time_expire": "Expiration prochainement",
+        "time_start": "Activation prochainement"
+      },
+      "errors": {
+        "missing_required": "L'URL de base et le nom sont obligatoires",
+        "shortcode": "Un code court valide est requis",
+        "password": "Le mot de passe doit contenir au moins 6 caractères lorsque la protection est activée"
+      },
+      "messages": {
+        "fetch_error": "Impossible de récupérer les données du lien"
+      }
+    },
+    "list": {
+      "title": "Liens de parrainage",
+      "empty_title": "Aucun lien",
+      "empty_description": "Commencez par créer votre premier lien de parrainage",
+      "create": "Créer un lien",
+      "name": "Nom",
+      "referral_url": "URL de parrainage",
+      "short_url": "URL courte",
+      "clicks": "Clics",
+      "created_at": "Date de création",
+      "actions": "Actions",
+      "copy": "Copier le lien",
+      "copy_success": "Lien copié dans le presse-papiers",
+      "delete_success": "Lien supprimé avec succès",
+      "delete_error": "Une erreur est survenue lors de la suppression du lien",
+      "load_error": "Impossible de charger les liens",
+      "load_error_description": "Vérifiez votre connexion ou contactez le support si le problème persiste.",
+      "load_error_cta": "Réessayer",
+      "delete_title": "Supprimer le lien",
+      "delete_description": "Voulez-vous vraiment supprimer ce lien ? Cette action est irréversible.",
+      "delete_confirm": "Supprimer",
+      "cancel": "Annuler",
+      "page_info": "Page {{current}} sur {{total}}",
+      "previous": "Page précédente",
+      "next": "Page suivante"
+    }
+  },
+  "analytics": {
+    "no_project_title": "Aucun projet sélectionné",
+    "no_project_description": "Sélectionnez un projet pour afficher les analyses",
+    "error_title": "Erreur",
+    "error_description": "Veuillez réessayer plus tard ou contacter le support si le problème persiste.",
+    "empty_title": "Aucune donnée analytique disponible",
+    "empty_description": "Créez votre premier lien pour visualiser des statistiques",
+    "header": {
+      "title": "Performance des liens",
+      "subtitle": "Statistiques et performances de tous vos liens de parrainage.",
+      "total_clicks": "Clics totaux",
+      "number_of_links": "Nombre de liens"
+    },
+    "filters": {
+      "link_label": "Sélectionner un lien",
+      "all_links": "Tous les liens",
+      "time_label": "Période",
+      "day": "Jour",
+      "week": "Semaine",
+      "month": "Mois",
+      "year": "Année"
+    },
+    "tabs": {
+      "visits": "Visites",
+      "countries": "Pays",
+      "rules": "Règles"
+    },
+    "charts": {
+      "visits_over_time": "Visites dans le temps",
+      "distribution_country": "Répartition par pays",
+      "top_countries": "Meilleurs pays",
+      "rules_performance": "Performance des règles de redirection",
+      "value_visits": "{{count}} visites",
+      "rule_label": "Règle {{id}} ({{url}})",
+      "rule_fallback": "Règle {{id}}"
+    },
+    "details": {
+      "title": "Analyses détaillées",
+      "subtitle": "Consultez les performances détaillées par lien et par période."
+    }
+  },
+  "settings": {
+    "title": "Paramètres",
+    "tabs": {
+      "general": "Général",
+      "profile": "Profil",
+      "security": "Sécurité",
+      "notifications": "Notifications",
+      "api_keys": "Clés API"
+    },
+    "language_selector": {
+      "label": "Langue",
+      "helper": "Choisissez la langue utilisée dans l'application",
+      "toast": "Langue mise à jour"
+    },
+    "general": {
+      "title": "Paramètres généraux",
+      "description": "Gérez les paramètres généraux de votre compte",
+      "theme_title": "Thème",
+      "theme_description": "Choisissez votre thème préféré",
+      "theme_updated": "Thème mis à jour",
+      "themes": {
+        "light": "Clair",
+        "dark": "Sombre",
+        "system": "Système"
+      }
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Gérez vos préférences de notification",
+      "empty": "Les options de notification seront affichées ici."
+    },
+    "profile": {
+      "title": "Profil utilisateur",
+      "description": "Mettez à jour vos informations personnelles pour que votre équipe vous reconnaisse.",
+      "first_name": "Prénom",
+      "last_name": "Nom",
+      "email": "Adresse e-mail",
+      "first_placeholder": "Jeanne",
+      "last_placeholder": "Dupont",
+      "email_placeholder": "nom@example.com",
+      "save": "Enregistrer les modifications",
+      "saving": "Enregistrement"
+    },
+    "security": {
+      "password": {
+        "title": "Modifier le mot de passe",
+        "description": "Mettez à jour votre mot de passe pour sécuriser votre compte.",
+        "current_label": "Mot de passe actuel",
+        "new_label": "Nouveau mot de passe",
+        "new_helper": "Le mot de passe doit contenir au moins 8 caractères.",
+        "confirm_label": "Confirmer le mot de passe",
+        "submit": "Mettre à jour le mot de passe",
+        "mismatch": "Les mots de passe ne correspondent pas"
+      },
+      "two_factor": {
+        "title": "Authentification à deux facteurs (2FA)",
+        "description": "Renforcez la sécurité de votre compte avec une vérification supplémentaire.",
+        "disabled_label": "La 2FA est actuellement désactivée",
+        "enable": "Activer la 2FA",
+        "instructions": {
+          "title": "Instructions importantes",
+          "body": "Scannez le QR code avec une application d'authentification comme Google Authenticator, Authy ou Microsoft Authenticator. Conservez vos codes de secours en lieu sûr si vous perdez l'accès à votre téléphone."
+        },
+        "secret_label": "Clé secrète (si vous ne pouvez pas scanner le QR code) :",
+        "secret_unavailable": "Clé secrète indisponible",
+        "regenerate": "Régénérer la configuration 2FA",
+        "otp_label": "Saisissez le code à 6 chiffres",
+        "otp_placeholder": "123456",
+        "verify": "Vérifier et activer la 2FA",
+        "enabled": {
+          "title": "2FA activée",
+          "description": "Votre compte est protégé par l'authentification à deux facteurs."
+        },
+        "disable": "Désactiver la 2FA",
+        "disable_description": "Cette action désactivera l'authentification à deux facteurs sur votre compte. Il sera moins sécurisé. Voulez-vous continuer ?",
+        "confirm_password": "Confirmez votre mot de passe"
+      },
+      "backup_codes": {
+        "title": "Codes de secours",
+        "description": "Conservez ces codes en lieu sûr. Ils vous permettront de vous connecter si vous perdez l'accès à votre application d'authentification.",
+        "show": "Afficher les codes de secours",
+        "copy_all": "Copier tous les codes"
+      }
+    },
+    "api_keys": {
+      "placeholder": "Nom de la clé",
+      "create": "Créer",
+      "empty": "Aucune clé API pour le moment."
+    }
+  },
+  "validation": {
+    "required": "Ce champ est obligatoire",
+    "invalid_type": "Valeur invalide (attendu : {{expected}}, reçu : {{received}})",
+    "email": "Saisissez une adresse e-mail valide",
+    "url": "Saisissez une URL valide",
+    "string_min": "Doit contenir au moins {{min}} caractères",
+    "string_max": "Doit contenir au maximum {{max}} caractères",
+    "number_min": "Doit être supérieur ou égal à {{min}}",
+    "number_max": "Doit être inférieur ou égal à {{max}}",
+    "array_min": "Sélectionnez au moins {{min}} options",
+    "array_max": "Sélectionnez au maximum {{max}} options",
+    "invalid_enum": "Veuillez sélectionner l'une des options disponibles"
+  },
+  "toasts": {
+    "language_updated": "Langue mise à jour"
+  },
+  "language": {
+    "en": "Anglais",
+    "fr": "Français"
+  },
+  "project_selector": {
+    "errors": {
+      "generic": "Une erreur est survenue"
+    },
+    "rename": {
+      "success": "Nom du projet mis à jour avec succès.",
+      "title": "Renommer le projet",
+      "description": "Mettez à jour le nom du projet pour tous les collaborateurs.",
+      "saving": "Enregistrement...",
+      "submit": "Enregistrer"
+    },
+    "invite": {
+      "email_required": "Veuillez saisir une adresse e-mail.",
+      "placeholder": "Inviter par e-mail",
+      "inviting": "Invitation...",
+      "submit": "Inviter"
+    },
+    "create": {
+      "name_required": "Veuillez saisir un nom de projet.",
+      "title": "Créer un nouveau projet",
+      "name_label": "Nom du projet",
+      "name_placeholder": "Entrez un nom de projet",
+      "description_label": "Description",
+      "description_placeholder": "Ajouter une brève description",
+      "creating": "Création...",
+      "submit": "Créer le projet"
+    },
+    "optional": "(facultatif)",
+    "loading": "Chargement...",
+    "placeholder": "Sélectionner un projet",
+    "actions": {
+      "create": "Créer un projet",
+      "edit": "Modifier le projet"
+    },
+    "edit": {
+      "title": "Paramètres du projet"
+    },
+    "members": {
+      "title": "Membres",
+      "description": "Gérez les personnes ayant accès à ce projet.",
+      "loading": "Chargement des membres…",
+      "empty": "Aucun membre trouvé pour ce projet.",
+      "owner": "Propriétaire",
+      "removing": "Suppression...",
+      "remove": "Supprimer"
+    },
+    "delete": {
+      "title": "Supprimer le projet",
+      "description": "Supprimez définitivement ce projet et toutes les données associées.",
+      "deleting": "Suppression...",
+      "submit": "Supprimer le projet"
+    }
+  },
+  "sidebar": {
+    "dashboard": {
+      "label": "Tableau de bord",
+      "tooltip": "Accueil"
+    },
+    "links": {
+      "label": "Liens",
+      "tooltip": "Liens"
+    },
+    "analytics": {
+      "label": "Analyses",
+      "tooltip": "Analyses"
+    },
+    "settings": {
+      "label": "Paramètres",
+      "tooltip": "Paramètres"
+    },
+    "user": {
+      "welcome_prefix": "Bienvenue "
+    }
+  },
+  "news": {
+    "placeholder": {
+      "title": "Titre",
+      "description": "Description"
+    },
+    "completed": "Vous êtes à jour !",
+    "actions": {
+      "read_more": "En savoir plus",
+      "dismiss": "Ignorer"
+    }
+  },
+  "theme": {
+    "toggle": "Changer de thème"
+  }
+}

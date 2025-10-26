@@ -27,6 +27,7 @@ import { api } from "@/lib/api";
 import { detectRegionFromCountries } from "./utils";
 import { generateRandomCode } from "./AddLinkForm/utils";
 import { toast } from "sonner";
+import { useAppTranslation } from "@/i18n";
 import { useSearchParams } from "react-router-dom";
 
 export interface GeoRule {
@@ -62,6 +63,7 @@ export interface AddLinkFormRef {
 export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
   ({ initialData }, ref) => {
     const [searchParams] = useSearchParams();
+    const { t } = useAppTranslation();
     const [linkName, setLinkName] = useState(initialData?.name || "");
     const [baseUrl, setBaseUrl] = useState(initialData?.baseUrl || "");
     const [shortCode, setShortCode] = useState(
@@ -145,7 +147,6 @@ export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
             setBaseUrl(data.baseUrl);
             setShortCode(data.shortCode);
 
-            // Handle rules properly
             if (data.rules && Array.isArray(data.rules)) {
               const parsedRules = data.rules.map((rule) => {
                 const countries = Array.isArray(rule.countries)
@@ -166,7 +167,6 @@ export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
               setGeoRules(parsedRules);
             }
 
-            // Handle device rules if they exist
             if (data.deviceRules && Array.isArray(data.deviceRules)) {
               setDeviceRules(
                 data.deviceRules.map((rule) => ({
@@ -177,14 +177,14 @@ export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
               );
             }
           } catch {
-            toast.error("Failed to fetch link data");
+            toast.error(t("links.form.messages.fetch_error"));
             setGeoRules([]);
           }
         };
 
         fetchLinkData();
       }
-    }, [id, isEditMode, initialData]);
+    }, [id, isEditMode, initialData, t]);
 
     useEffect(() => {
       setCurrentDomain(window.location.origin);
@@ -204,9 +204,6 @@ export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
           setIsCheckingShortCode(true);
 
           try {
-            interface ShortCodeResponse {
-              available: boolean;
-            }
             interface ShortCodeResponse {
               available: boolean;
             }
@@ -268,20 +265,21 @@ export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
     useImperativeHandle(ref, () => ({
       getFormData: () => {
         if (!baseUrl.trim() || !linkName.trim()) {
-          toast.error("Base URL and name are required");
-          throw new Error("Invalid form data");
+          const message = t("links.form.errors.missing_required");
+          toast.error(message);
+          throw new Error(message);
         }
 
         if (!isEditMode && (!shortCode || !isShortCodeAvailable)) {
-          toast.error("A valid short code is required");
-          throw new Error("Invalid form data");
+          const message = t("links.form.errors.shortcode");
+          toast.error(message);
+          throw new Error(message);
         }
 
         if (isPasswordProtected && (!password || password.length < 6)) {
-          toast.error(
-            "Password must be at least 6 characters long when password protection is enabled"
-          );
-          throw new Error("Invalid form data");
+          const message = t("links.form.errors.password");
+          toast.error(message);
+          throw new Error(message);
         }
 
         const validGeoRules = geoRules
@@ -320,12 +318,12 @@ export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
     }));
 
     const tabs = [
-      { title: "Geo Targeting", icon: Globe },
-      { title: "Device", icon: Smartphone },
-      { title: "Time Expire", icon: Clock },
-      { title: "Time Start", icon: Calendar },
-      { title: "Pass Protection", icon: Lock },
-      { title: "UTM", icon: LinkIcon },
+      { title: t("links.form.tabs.geo"), icon: Globe },
+      { title: t("links.form.tabs.device"), icon: Smartphone },
+      { title: t("links.form.tabs.time_expire"), icon: Clock },
+      { title: t("links.form.tabs.time_start"), icon: Calendar },
+      { title: t("links.form.tabs.password"), icon: Lock },
+      { title: t("links.form.tabs.utm"), icon: LinkIcon },
     ];
 
     const renderTabContent = () => {
@@ -344,13 +342,17 @@ export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
         case 2:
           return (
             <div className="p-4 border rounded">
-              <p className="text-muted-foreground">Time expiry coming soon</p>
+              <p className="text-muted-foreground">
+                {t("links.form.coming_soon.time_expire")}
+              </p>
             </div>
           );
         case 3:
           return (
             <div className="p-4 border rounded">
-              <p className="text-muted-foreground">Time start coming soon</p>
+              <p className="text-muted-foreground">
+                {t("links.form.coming_soon.time_start")}
+              </p>
             </div>
           );
         case 4:

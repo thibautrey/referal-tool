@@ -12,6 +12,7 @@ import { ReferralLink } from "./types";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { useAppTranslation } from "@/i18n";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSearchParams } from "react-router-dom";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -32,6 +33,7 @@ export default function LinksPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const formRef = useRef<AddLinkFormRef>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { t } = useAppTranslation();
 
   const checkParams = () => {
     const mode = searchParams.get("mode");
@@ -39,7 +41,6 @@ export default function LinksPage() {
 
     if (mode === "edit" && id) {
       setView("form");
-      // Le lien sera déjà défini par navigateToEditForm
     } else if (mode === "add") {
       setView("form");
       setEditingLink(null);
@@ -93,10 +94,9 @@ export default function LinksPage() {
         response = await api.createLink(currentProjectId!, linkData);
       }
       if (response?.status !== 200) {
-        throw new Error("Invalid response from server");
+        throw new Error(t("links.errors.invalid_response"));
       }
 
-      // Parse the JSON strings in rules and deviceRules if needed
       const processedResponse = {
         ...response.data,
         rules: response.data.rules.map((rule) => ({
@@ -121,18 +121,21 @@ export default function LinksPage() {
             link.id === formData.id ? processedResponse : link
           )
         );
-        toast.success("Link updated successfully");
+        toast.success(t("links.notifications.updated"));
       } else {
         setLinks([...links, processedResponse]);
-        toast.success("Link created successfully");
+        toast.success(t("links.notifications.created"));
       }
 
       navigateToList();
     } catch (err) {
       console.error("Error saving link:", err);
       const errorMessage =
-        err instanceof Error ? err.message : "Failed to save link";
+        err instanceof Error && err.message
+          ? err.message
+          : t("links.errors.save");
       toast.error(errorMessage);
+      setError(errorMessage);
     }
   };
 
@@ -148,6 +151,13 @@ export default function LinksPage() {
     }
   };
 
+  const pageTitle =
+    view === "list"
+      ? t("links.title_list")
+      : editingLink
+      ? t("links.title_edit")
+      : t("links.title_create");
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -155,17 +165,11 @@ export default function LinksPage() {
       className="space-y-6"
     >
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold tracking-tight">
-          {view === "list"
-            ? "Referral Links"
-            : editingLink
-            ? "Edit Link"
-            : "Create Link"}
-        </h1>
+        <h1 className="text-3xl font-bold tracking-tight">{pageTitle}</h1>
       </div>
 
       <div className="flex justify-between items-center">
-        <nav className="flex items-center space-x-4" aria-label="Breadcrumb">
+        <nav className="flex items-center space-x-4" aria-label={t("links.breadcrumb.list")}>
           <ol className="inline-flex items-center space-x-1 md:space-x-3">
             {view === "form" && (
               <li className="inline-flex items-center">
@@ -176,22 +180,22 @@ export default function LinksPage() {
                   className="inline-flex items-center"
                 >
                   <Home className="w-4 h-4 mr-2" />
-                  Referral Links
+                  {t("links.breadcrumb.list")}
                 </Button>
               </li>
             )}
 
             {view === "form" && (
-              <>
-                <li>
-                  <div className="flex items-center">
-                    <ChevronRight className="w-4 h-4 text-gray-400" />
-                    <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">
-                      {editingLink ? "Edit Link" : "Create Link"}
-                    </span>
-                  </div>
-                </li>
-              </>
+              <li>
+                <div className="flex items-center">
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                  <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">
+                    {editingLink
+                      ? t("links.breadcrumb.edit")
+                      : t("links.breadcrumb.create")}
+                  </span>
+                </div>
+              </li>
             )}
           </ol>
         </nav>
@@ -209,7 +213,11 @@ export default function LinksPage() {
             ) : (
               <Plus className="h-4 w-4 mr-2" />
             )}
-            {editingLink ? "Save Changes" : "Add Link"}
+            {isSubmitting
+              ? t("links.actions.saving")
+              : editingLink
+              ? t("links.actions.save")
+              : t("links.actions.add")}
           </Button>
         )}
       </div>
@@ -217,11 +225,11 @@ export default function LinksPage() {
       {error && (
         <Alert variant="destructive" className={cn("mb-4", glassCardStyle)}>
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
+          <AlertTitle>{t("analytics.error_title")}</AlertTitle>
           <AlertDescription>
             {error}
             <div className="mt-2 text-sm">
-              <p>Please try again or contact support if this issue persists.</p>
+              <p>{t("analytics.error_description")}</p>
             </div>
           </AlertDescription>
         </Alert>
@@ -233,9 +241,9 @@ export default function LinksPage() {
             {!currentProjectId && (
               <Alert className={cn("mb-4", glassCardStyle)}>
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>No Project Selected</AlertTitle>
+                <AlertTitle>{t("analytics.no_project_title")}</AlertTitle>
                 <AlertDescription>
-                  Please select a project to view links
+                  {t("analytics.no_project_description")}
                 </AlertDescription>
               </Alert>
             )}

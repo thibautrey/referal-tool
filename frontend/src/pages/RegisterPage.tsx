@@ -19,6 +19,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { useAppTranslation } from "@/i18n";
 import { useAuth } from "@/contexts/AuthContext";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -27,15 +28,18 @@ import { zodResolver } from "@hookform/resolvers/zod";
 // Validation schema for registration form
 const registerSchema = z
   .object({
-    email: z.string().email("Invalid email address"),
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z
-      .string()
-      .min(8, "Password must be at least 8 characters"),
+    email: z.string().email(),
+    password: z.string().min(8),
+    confirmPassword: z.string().min(8),
   })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
-    path: ["confirmPassword"],
+  .superRefine((data, ctx) => {
+    if (data.password !== data.confirmPassword) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["confirmPassword"],
+        params: { i18nKey: "auth.register.validation.mismatch" },
+      });
+    }
   });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
@@ -43,6 +47,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 export default function RegisterPage() {
   const { signup, isLoading } = useAuth();
   const navigate = useNavigate();
+  const { t } = useAppTranslation();
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -56,11 +61,11 @@ export default function RegisterPage() {
   const onSubmit = async (values: RegisterFormValues) => {
     try {
       await signup(values.email, values.password);
-      toast.success("Account created successfully");
+      toast.success(t("auth.register.toast.success"));
       navigate("/app/login");
     } catch (error: unknown) {
       const err = error as Error;
-      toast.error(err.message || "Failed to create account");
+      toast.error(err.message || t("auth.register.toast.error"));
     }
   };
 
@@ -70,33 +75,29 @@ export default function RegisterPage() {
       <div className="hidden md:flex md:w-1/2 bg-primary/10 flex-col justify-center items-center p-8 text-center">
         <div className="max-w-md mx-auto">
           <h1 className="text-3xl font-bold mb-4 text-primary">
-            Join our platform
+            {t("auth.register.hero.title")}
           </h1>
           <p className="text-lg mb-6">
-            Create an account to start optimizing your affiliate marketing
-            strategy and boost your conversion rates.
+            {t("auth.register.hero.description")}
           </p>
           <div className="grid grid-cols-1 gap-6 mb-8">
             <div className="border border-primary/20 rounded-lg p-4 bg-background/50">
-              <h3 className="font-medium mb-2">Geographic customization</h3>
-              <p>
-                Adapt your links based on your users' location to maximize
-                impact.
-              </p>
+              <h3 className="font-medium mb-2">
+                {t("auth.register.hero.features.geo.title")}
+              </h3>
+              <p>{t("auth.register.hero.features.geo.description")}</p>
             </div>
             <div className="border border-primary/20 rounded-lg p-4 bg-background/50">
-              <h3 className="font-medium mb-2">Intelligent rules</h3>
-              <p>
-                Create rules that automatically determine which link is used
-                based on the user's profile.
-              </p>
+              <h3 className="font-medium mb-2">
+                {t("auth.register.hero.features.rules.title")}
+              </h3>
+              <p>{t("auth.register.hero.features.rules.description")}</p>
             </div>
             <div className="border border-primary/20 rounded-lg p-4 bg-background/50">
-              <h3 className="font-medium mb-2">Performance analysis</h3>
-              <p>
-                Track conversions and optimize your affiliate strategy in
-                real-time.
-              </p>
+              <h3 className="font-medium mb-2">
+                {t("auth.register.hero.features.analytics.title")}
+              </h3>
+              <p>{t("auth.register.hero.features.analytics.description")}</p>
             </div>
           </div>
         </div>
@@ -106,9 +107,9 @@ export default function RegisterPage() {
       <div className="w-full md:w-1/2 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
-            <CardTitle>Create account</CardTitle>
+            <CardTitle>{t("auth.register.title")}</CardTitle>
             <CardDescription>
-              Register to start managing your affiliate links
+              {t("auth.register.description")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -122,10 +123,10 @@ export default function RegisterPage() {
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email address</FormLabel>
+                      <FormLabel>{t("common.email")}</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="name@example.com"
+                          placeholder={t("auth.register.email_placeholder")}
                           type="email"
                           {...field}
                         />
@@ -139,7 +140,7 @@ export default function RegisterPage() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Password</FormLabel>
+                      <FormLabel>{t("common.password")}</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="••••••••"
@@ -156,7 +157,9 @@ export default function RegisterPage() {
                   name="confirmPassword"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Confirm password</FormLabel>
+                      <FormLabel>
+                        {t("auth.register.confirm_password_label")}
+                      </FormLabel>
                       <FormControl>
                         <Input
                           placeholder="••••••••"
@@ -170,21 +173,23 @@ export default function RegisterPage() {
                 />
 
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Creating account..." : "Create account"}
+                  {isLoading
+                    ? t("auth.register.creating")
+                    : t("auth.register.submit")}
                 </Button>
               </form>
             </Form>
           </CardContent>
           <CardFooter className="flex flex-col items-center gap-3">
             <p className="text-sm text-muted-foreground">
-              Already have an account?
+              {t("auth.register.login_prompt")}
             </p>
             <Link to="/app/login" className="w-full">
               <Button
                 variant="outline"
                 className="w-full border-primary hover:bg-primary/10"
               >
-                Sign in
+                {t("auth.register.login_link")}
               </Button>
             </Link>
           </CardFooter>
