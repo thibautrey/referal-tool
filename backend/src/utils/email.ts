@@ -1,9 +1,6 @@
 import { Resend } from "resend";
 import { Locale } from "../lib/i18n";
 
-// Initialize Resend with API key
-const resend = new Resend(process.env.RESEND);
-
 interface EmailOptions {
   to: string | string[];
   subject: string;
@@ -19,6 +16,15 @@ interface EmailOptions {
  * Send an email using Resend.com
  */
 export async function sendEmail(options: EmailOptions): Promise<boolean> {
+  const apiKey = process.env.RESEND ?? process.env.RESEND_API_KEY;
+
+  if (!apiKey) {
+    console.error("Resend API key is not configured (RESEND or RESEND_API_KEY)");
+    return false;
+  }
+
+  const resend = new Resend(apiKey);
+
   try {
     const {
       to,
