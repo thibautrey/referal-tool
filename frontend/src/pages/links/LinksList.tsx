@@ -301,7 +301,7 @@ export function LinksList({
             </p>
             <Button onClick={onAddLinkClick}>
               <Plus className="h-4 w-4" />
-              Add link
+              Create link
             </Button>
           </CardContent>
         </Card>
@@ -315,7 +315,7 @@ export function LinksList({
         <h2 className="text-2xl font-semibold tracking-tight"></h2>
         <Button onClick={onAddLinkClick}>
           <Plus className="h-4 w-4" />
-          Add link
+          Create link
         </Button>
       </div>
 
