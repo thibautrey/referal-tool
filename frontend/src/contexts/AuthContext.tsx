@@ -1,6 +1,6 @@
 import {
   OtpSetupData,
-  User,
+  UpdateProfilePayload,
   changePassword as changePasswordApi,
   disableOTP as disableOTPApi,
   getBackupCodes as getBackupCodesApi,
@@ -11,7 +11,9 @@ import {
   removeDefaultProject,
   setDefaultProject,
   setupOTP as setupOTPApi,
+  updateProfile as updateProfileApi,
   verifyOTP as verifyOTPApi,
+  User,
 } from "@/lib/auth";
 import React, { createContext, useContext, useEffect, useState } from "react";
 
@@ -27,6 +29,7 @@ interface AuthContextType {
   signup: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  updateProfile: (data: UpdateProfilePayload) => Promise<void>;
   changePassword: (
     currentPassword: string,
     newPassword: string
@@ -133,6 +136,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       // Le toast est déjà géré dans la page RegisterPage
     } catch (error) {
       console.error("Signup error:", error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateProfile = async (
+    profileData: UpdateProfilePayload
+  ): Promise<void> => {
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
+    try {
+      setIsLoading(true);
+      const updatedUser = await updateProfileApi(user.id, profileData);
+      setUser((prev) => (prev ? { ...prev, ...updatedUser } : prev));
+      toast.success("Profile updated successfully");
+    } catch (error) {
+      console.error("Profile update error:", error);
+      toast.error("Failed to update profile");
       throw error;
     } finally {
       setIsLoading(false);
@@ -247,6 +271,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     signup,
     logout,
     refreshUser,
+    updateProfile,
     changePassword,
     setupOTP,
     verifyOTP,
