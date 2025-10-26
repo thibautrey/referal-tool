@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/table";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ReferralLink } from "../types";
 import { api } from "@/lib/api";
@@ -230,6 +231,66 @@ export function LinksList({
     }
   };
 
+  const formatDateTime = (dateString?: string | null) => {
+    if (!dateString) return "";
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString(i18n.language, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return "";
+    }
+  };
+
+  const renderExpirationCell = (dateString?: string | null) => {
+    if (!dateString) {
+      return (
+        <span className="text-sm text-muted-foreground">
+          {t("links.list.no_expiration")}
+        </span>
+      );
+    }
+
+    try {
+      const date = new Date(dateString);
+      const formatted = formatDateTime(dateString);
+      const isExpired = date.getTime() <= Date.now();
+
+      if (!formatted) {
+        return (
+          <span className="text-sm text-muted-foreground">
+            {t("links.list.no_expiration")}
+          </span>
+        );
+      }
+
+      return (
+        <div className="flex flex-col gap-1">
+          <span className="text-sm">{formatted}</span>
+          <Badge
+            variant={isExpired ? "destructive" : "secondary"}
+            className="w-fit text-xs font-medium"
+          >
+            {isExpired
+              ? t("links.list.expired")
+              : t("links.list.expires_badge")}
+          </Badge>
+        </div>
+      );
+    } catch {
+      return (
+        <span className="text-sm text-muted-foreground">
+          {t("links.list.no_expiration")}
+        </span>
+      );
+    }
+  };
+
   const getSortIcon = (field: SortField) => {
     if (field !== sortField) return null;
     return sortOrder === "asc" ? (
@@ -333,6 +394,9 @@ export function LinksList({
                     {t("links.list.created_at")}{" "}
                     {getSortIcon("createdAt")}
                   </TableHead>
+                  <TableHead className="font-semibold">
+                    {t("links.list.expiration")}
+                  </TableHead>
                   <TableHead className="text-right">
                     {t("links.list.actions")}
                   </TableHead>
@@ -375,6 +439,7 @@ export function LinksList({
                     <TableCell className="text-muted-foreground">
                       {formatDate(link.createdAt)}
                     </TableCell>
+                    <TableCell>{renderExpirationCell(link.expiresAt)}</TableCell>
                     <TableCell>
                       <div className="flex items-center justify-end gap-2">
                         <Button

@@ -29,6 +29,7 @@ export interface LinkFormData extends UTMParametersType {
   deviceRules: DeviceRule[];
   isPasswordProtected?: boolean;
   password?: string;
+  expiresAt?: string | null;
 }
 
 export type LinkFormProps = {

@@ -7,6 +7,7 @@ export interface CreateLinkDTO {
     redirectUrl: string;
     countries: string[];
   }[];
+  expiresAt?: string | null;
 }
 
 interface Link {

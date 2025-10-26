@@ -354,6 +354,7 @@ class Api {
       utmCampaign?: string;
       utmTerm?: string;
       utmContent?: string;
+      expiresAt?: string | null;
     }
   ): Promise<ApiResponse<ReferralLink>> {
     const transformedData = {
@@ -373,6 +374,7 @@ class Api {
       utmCampaign: data.utmCampaign,
       utmTerm: data.utmTerm,
       utmContent: data.utmContent,
+      expiresAt: data.expiresAt,
     };
     return this.put<ReferralLink>(`/links/${linkId}`, transformedData);
   }
@@ -392,6 +394,7 @@ class Api {
       utmCampaign?: string;
       utmTerm?: string;
       utmContent?: string;
+      expiresAt?: string | null;
     }
   ): Promise<ApiResponse<ReferralLink>> {
     const transformedData = {
@@ -410,6 +413,7 @@ class Api {
       utmCampaign: data.utmCampaign,
       utmTerm: data.utmTerm,
       utmContent: data.utmContent,
+      expiresAt: data.expiresAt,
     };
     return this.post<ReferralLink>("/links", transformedData, projectId);
   }

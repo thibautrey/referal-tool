@@ -162,6 +162,7 @@ export const handleRedirection = async (req: Request, res: Response) => {
           id: true,
           isPasswordProtected: true,
           baseUrl: true,
+          expiresAt: true,
           rules: {
             select: {
               id: true,
@@ -189,6 +190,14 @@ export const handleRedirection = async (req: Request, res: Response) => {
       }
 
       await cacheLinkData(path, linkData);
+    }
+
+    const expirationTimestamp = linkData.expiresAt
+      ? new Date(linkData.expiresAt).getTime()
+      : null;
+
+    if (expirationTimestamp && expirationTimestamp <= Date.now()) {
+      return res.status(410).send(get404Template(translator));
     }
 
     if (linkData.isPasswordProtected) {
