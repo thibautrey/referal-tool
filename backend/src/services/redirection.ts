@@ -167,7 +167,6 @@ export const handleRedirection = async (req: Request, res: Response) => {
               id: true,
               redirectUrl: true,
               countries: true,
-              isExclusive: true,
             },
           },
           deviceRules: {
