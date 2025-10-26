@@ -234,7 +234,7 @@ export function ProjectSelector() {
           console.error("Failed to update last project after deletion", error);
         }
       } else {
-        setCurrentProjectId(undefined);
+        setCurrentProjectId(null);
       }
 
       closeEditModal();
