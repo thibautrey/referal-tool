@@ -1,0 +1,32 @@
+{
+  "appTitle": {
+    "message": "rflnk"
+  },
+  "loginEmailPlaceholder": {
+    "message": "Email"
+  },
+  "loginPasswordPlaceholder": {
+    "message": "Password"
+  },
+  "loginButton": {
+    "message": "Login"
+  },
+  "createLinkNamePlaceholder": {
+    "message": "Link name"
+  },
+  "createLinkUrlPlaceholder": {
+    "message": "Destination URL"
+  },
+  "createButton": {
+    "message": "Create Link"
+  },
+  "loginFailed": {
+    "message": "Login failed"
+  },
+  "createLinkFailed": {
+    "message": "Failed to create link"
+  },
+  "shortLinkCopied": {
+    "message": "Short link copied to clipboard: $1"
+  }
+}

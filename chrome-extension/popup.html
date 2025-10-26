@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>rflnk</title>
+  <title data-i18n-text="appTitle"></title>
   <style>
     body { font-family: sans-serif; padding: 10px; width: 300px; }
     input, button { width: 100%; margin-bottom: 8px; }
@@ -10,16 +10,16 @@
 </head>
 <body>
   <div id="login">
-    <input id="email" type="email" placeholder="Email" />
-    <input id="password" type="password" placeholder="Password" />
-    <button id="loginBtn">Login</button>
+    <input id="email" type="email" data-i18n-placeholder="loginEmailPlaceholder" />
+    <input id="password" type="password" data-i18n-placeholder="loginPasswordPlaceholder" />
+    <button id="loginBtn" type="button" data-i18n-text="loginButton"></button>
   </div>
   <div id="create" style="display:none">
-    <input id="name" placeholder="Link name" />
-    <input id="url" placeholder="Destination URL" />
-    <button id="createBtn">Create Link</button>
+    <input id="name" data-i18n-placeholder="createLinkNamePlaceholder" />
+    <input id="url" data-i18n-placeholder="createLinkUrlPlaceholder" />
+    <button id="createBtn" type="button" data-i18n-text="createButton"></button>
   </div>
-  <div id="result" style="display:none"></div>
+  <div id="result" style="display:none" role="status" aria-live="polite"></div>
   <script src="popup.js"></script>
 </body>
 </html>

@@ -23,12 +23,35 @@ async function apiRequest(endpoint, method, data) {
   return json.data;
 }
 
+function localizePopup() {
+  const title = chrome.i18n.getMessage('appTitle');
+  if (title) {
+    document.title = title;
+  }
+
+  document.querySelectorAll('[data-i18n-text]').forEach(el => {
+    const messageName = el.dataset.i18nText;
+    if (messageName) {
+      el.textContent = chrome.i18n.getMessage(messageName);
+    }
+  });
+
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const messageName = el.dataset.i18nPlaceholder;
+    if (messageName) {
+      el.placeholder = chrome.i18n.getMessage(messageName);
+    }
+  });
+}
+
 function showCreate() {
   document.getElementById('login').style.display = 'none';
   document.getElementById('create').style.display = 'block';
 }
 
 async function init() {
+  localizePopup();
+
   const token = await getStored('token');
   if (token) showCreate();
 
@@ -48,7 +71,7 @@ async function init() {
       if (projects.length) await setStored({ projectId: projects[0].id });
       showCreate();
     } catch (e) {
-      alert('Login failed');
+      alert(chrome.i18n.getMessage('loginFailed'));
     }
   };
 
@@ -58,11 +81,12 @@ async function init() {
     try {
       const link = await apiRequest('/links', 'POST', { name, baseUrl: url, shortCode: '' });
       const shortUrl = `https://rflnk.com/l/${link.shortCode}`;
-      document.getElementById('result').textContent = shortUrl;
-      document.getElementById('result').style.display = 'block';
       await navigator.clipboard.writeText(shortUrl);
+      const resultEl = document.getElementById('result');
+      resultEl.textContent = chrome.i18n.getMessage('shortLinkCopied', shortUrl);
+      resultEl.style.display = 'block';
     } catch (e) {
-      alert('Failed to create link');
+      alert(chrome.i18n.getMessage('createLinkFailed'));
     }
   };
 }
