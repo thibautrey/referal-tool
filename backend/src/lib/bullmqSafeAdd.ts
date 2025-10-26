@@ -1,4 +1,4 @@
-import { Queue, JobsOptions, BulkJobOptions } from "bullmq";
+import { Queue, JobsOptions } from "bullmq";
 import { IncomingMessage, ServerResponse } from "http";
 import { Readable } from "stream";
 
@@ -188,10 +188,12 @@ Queue.prototype.add = function <T = any>(
   return originalAdd.call(this, name, sanitized, opts);
 };
 
+type BulkJob<T> = { name: string; data: T; opts?: JobsOptions };
+
 const originalAddBulk = Queue.prototype.addBulk;
 Queue.prototype.addBulk = function <T = any>(
   this: Queue<T>,
-  jobs: BulkJobOptions[]
+  jobs: BulkJob<T>[]
 ) {
   const sanitizedJobs = jobs.map((job) => ({
     ...job,
