@@ -21,7 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { LineChart } from "@/components/ui/charts";
 import { Link } from "react-router-dom";
-import { ReferralLink } from "./types";
+import { TopLinkSummary } from "./types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Project, api } from "@/lib/api";
 import { cn } from "@/lib/utils";
@@ -72,7 +72,7 @@ export default function HomePage() {
     totalClicks: 0,
     recentClicks: [],
   });
-  const [topLinks, setTopLinks] = useState<ReferralLink[]>([]);
+  const [topLinks, setTopLinks] = useState<TopLinkSummary[]>([]);
   const [projectDetails, setProjectDetails] = useState<Project | null>(null);
 
   const fetchDashboardData = async () => {
@@ -87,47 +87,33 @@ export default function HomePage() {
       setError(null);
 
       // Charger les statistiques du projet et les informations détaillées
-      const [projectStats, projectInfo] = await Promise.all([
+      const [projectStats, projectInfo, dashboardStats] = await Promise.all([
         api.getProjectStats(currentProjectId, "week"),
         api.getProject(currentProjectId),
+        api.getDashboardStats(currentProjectId),
       ]);
       setProjectDetails(projectInfo);
 
-      try {
-        // Charger les liens - traité séparément pour éviter qu'une erreur ici
-        // n'empêche l'affichage des autres données
-        const linksResponse = await api.getLinks(
-          currentProjectId,
-          1,
-          "clicks",
-          "desc"
-        );
+      setStats({
+        totalLinks: dashboardStats?.totalLinks ?? 0,
+        totalClicks: dashboardStats?.totalVisits ?? projectStats.totalVisits,
+        recentClicks: projectStats.visitsByDate.map((item) => ({
+          date: new Date(item.date).toLocaleDateString(),
+          count: item.count,
+        })),
+      });
 
-        setStats({
-          totalLinks: linksResponse?.links?.length || 0,
-          totalClicks: projectStats.totalVisits,
-          recentClicks: projectStats.visitsByDate.map((item) => ({
-            date: new Date(item.date).toLocaleDateString(),
-            count: item.count,
-          })),
-        });
+      const formattedTopLinks = (dashboardStats?.topLinks || [])
+        .map(({ linkId, visits, details }) => ({
+          id: details?.id ?? linkId,
+          name: details?.name ?? `Link #${linkId}`,
+          shortCode: details?.shortCode ?? String(linkId),
+          baseUrl: details?.baseUrl,
+          visits,
+        }))
+        .slice(0, 5);
 
-        // Récupérer les 5 meilleurs liens
-        setTopLinks(linksResponse?.links?.slice(0, 5) || []);
-      } catch (linkError) {
-        console.error("Erreur lors du chargement des liens:", linkError);
-
-        // On continue avec les statistiques mais sans les données de liens
-        setStats({
-          totalLinks: 0,
-          totalClicks: projectStats.totalVisits,
-          recentClicks: projectStats.visitsByDate.map((item) => ({
-            date: new Date(item.date).toLocaleDateString(),
-            count: item.count,
-          })),
-        });
-        setTopLinks([]);
-      }
+      setTopLinks(formattedTopLinks);
     } catch (error) {
       console.error(
         "Erreur lors du chargement des données du tableau de bord:",
@@ -156,6 +142,12 @@ export default function HomePage() {
         }
       }
 
+      setStats({
+        totalLinks: 0,
+        totalClicks: 0,
+        recentClicks: [],
+      });
+      setTopLinks([]);
       setError(errorMessage);
       setProjectDetails(null);
     } finally {
@@ -460,13 +452,15 @@ export default function HomePage() {
                       className="flex items-center justify-between p-3 transition-colors rounded-md bg-white/10 backdrop-blur-md hover:bg-white/20"
                     >
                       <div className="mr-4 truncate">
-                        <p className="font-medium truncate">{link.name}</p>
+                        <p className="font-medium truncate">
+                          {link.name || `Link #${link.id}`}
+                        </p>
                         <p className="text-sm truncate text-muted-foreground">
-                          /{link.shortCode}
+                          /{link.shortCode || link.id}
                         </p>
                       </div>
                       <div className="text-sm font-medium ">
-                        {link?._count?.LinkVisit} clicks
+                        {link.visits.toLocaleString()} clicks
                       </div>
                     </div>
                   ))}

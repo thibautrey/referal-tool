@@ -18,6 +18,14 @@ export interface ReferralLink {
   };
 }
 
+export interface TopLinkSummary {
+  id: number;
+  name: string;
+  shortCode: string;
+  visits: number;
+  baseUrl?: string;
+}
+
 export interface CountryVisit {
   country: string;
   count: number;
