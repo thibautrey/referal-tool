@@ -10,11 +10,17 @@ export const validateProjectAccess = async (
     const userId = req.user?.id;
     const role = req.user?.role;
     const isAdmin = role === "ADMIN";
-    const projectId =
+    const projectIdentifier =
       req.currentProjectId ||
       req.params.projectId ||
+      req.params.id ||
       req.query.projectId ||
+      req.headers["x-project-id"] ||
       req.headers["X-Project-ID"];
+
+    const projectId = projectIdentifier
+      ? parseInt(projectIdentifier as string, 10)
+      : undefined;
 
     if (!projectId) {
       return next();
@@ -24,10 +30,15 @@ export const validateProjectAccess = async (
       return res.status(401).json({ message: "Authentication required" });
     }
 
-    const project = await prisma.project.findFirst({
+    const project = await prisma.project.findUnique({
       where: {
-        id: parseInt(projectId as string),
-        ...(isAdmin ? {} : { userId: userId }),
+        id: projectId,
+      },
+      include: {
+        members: {
+          where: { userId },
+          select: { id: true, role: true, userId: true },
+        },
       },
     });
 
@@ -37,8 +48,23 @@ export const validateProjectAccess = async (
         .json({ message: "Project not found or access denied" });
     }
 
+    const isOwner = project.userId === userId;
+    const membership = project.members[0];
+
+    if (!isAdmin && !isOwner && !membership) {
+      return res
+        .status(403)
+        .json({ message: "Project not found or access denied" });
+    }
+
     // Add validated project to request
     req.validatedProjectId = project.id;
+    req.projectAccess = {
+      role: isAdmin ? "ADMIN" : isOwner ? "OWNER" : membership?.role ?? "MEMBER",
+      isOwner,
+      isAdmin,
+      membershipId: membership?.id,
+    };
     next();
   } catch (error) {
     console.error("Project access validation error:", error);
