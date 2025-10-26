@@ -117,6 +117,36 @@ export interface OtpSetupData {
   backupCodes?: string[];
 }
 
+export type UpdateProfilePayload = Pick<
+  User,
+  "email" | "firstName" | "lastName"
+>;
+
+export type UpdateProfileResponse = Pick<
+  User,
+  "id" | "email" | "firstName" | "lastName" | "role"
+> & {
+  active?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export const updateProfile = async (
+  userId: number,
+  payload: UpdateProfilePayload
+): Promise<UpdateProfileResponse> => {
+  try {
+    const response = await api.put<UpdateProfileResponse>(
+      `/users/${userId}`,
+      payload
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Profile update error:", error);
+    throw error;
+  }
+};
+
 // Configurer l'OTP
 export const setupOTP = async (): Promise<OtpSetupData> => {
   try {
