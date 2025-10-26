@@ -1,0 +1,32 @@
+{
+  "appTitle": {
+    "message": "rflnk"
+  },
+  "loginEmailPlaceholder": {
+    "message": "Courriel"
+  },
+  "loginPasswordPlaceholder": {
+    "message": "Mot de passe"
+  },
+  "loginButton": {
+    "message": "Connexion"
+  },
+  "createLinkNamePlaceholder": {
+    "message": "Nom du lien"
+  },
+  "createLinkUrlPlaceholder": {
+    "message": "URL de destination"
+  },
+  "createButton": {
+    "message": "Créer un lien"
+  },
+  "loginFailed": {
+    "message": "Échec de la connexion"
+  },
+  "createLinkFailed": {
+    "message": "Échec de la création du lien"
+  },
+  "shortLinkCopied": {
+    "message": "Lien court copié dans le presse-papiers : $1"
+  }
+}
