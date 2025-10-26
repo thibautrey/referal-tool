@@ -467,6 +467,15 @@
         "show": "Show",
         "hide": "Hide"
       },
+      "time_expire": {
+        "title": "Link expiration",
+        "description": "Disable this link automatically after the selected date and time.",
+        "enable_label": "Enable link expiration",
+        "date_label": "Expiration date and time",
+        "placeholder": "Select a date and time",
+        "timezone_note": "The expiration uses your current timezone.",
+        "clear": "Remove expiration"
+      },
       "preview": {
         "title": "Link Preview",
         "loading": "Generating preview...",
@@ -479,6 +488,10 @@
         "utm_parameters": "UTM Parameters",
         "takes_precedence": "Takes precedence",
         "custom_countries": "Custom Countries",
+        "expiration": {
+          "active": "Expires on {{date}}",
+          "expired": "Expired on {{date}}"
+        },
         "utm_labels": {
           "source": "Source",
           "medium": "Medium",
@@ -494,19 +507,20 @@
       "tabs": {
         "geo": "Geo Targeting",
         "device": "Device",
-        "time_expire": "Time Expire",
+        "time_expire": "Expiration",
         "time_start": "Time Start",
         "password": "Password Protection",
         "utm": "UTM"
       },
       "coming_soon": {
-        "time_expire": "Time expiry coming soon",
         "time_start": "Time start coming soon"
       },
       "errors": {
         "missing_required": "Base URL and name are required",
         "shortcode": "A valid short code is required",
-        "password": "Password must be at least 6 characters long when password protection is enabled"
+        "password": "Password must be at least 6 characters long when password protection is enabled",
+        "expiration_required": "Select an expiration date before enabling this option",
+        "expiration_invalid": "Enter a valid expiration date"
       },
       "messages": {
         "fetch_error": "Failed to fetch link data"
@@ -522,6 +536,7 @@
       "short_url": "Short URL",
       "clicks": "Clicks",
       "created_at": "Creation date",
+      "expiration": "Expiration",
       "actions": "Actions",
       "copy": "Copy link",
       "copy_success": "Link copied to clipboard",
@@ -536,7 +551,10 @@
       "cancel": "Cancel",
       "page_info": "Page {{current}} of {{total}}",
       "previous": "Previous page",
-      "next": "Next page"
+      "next": "Next page",
+      "no_expiration": "No expiration",
+      "expired": "Expired",
+      "expires_badge": "Scheduled"
     }
   },
   "analytics": {

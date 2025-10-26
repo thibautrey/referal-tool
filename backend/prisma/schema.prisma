@@ -78,6 +78,7 @@ model Link {
     active              Boolean      @default(true)
     isPasswordProtected Boolean      @default(false)
     passwordHash        String?
+    expiresAt           DateTime?
     // UTM Parameters
     utmSource           String?
     utmMedium           String?
@@ -89,6 +90,7 @@ model Link {
     LinkVisit           LinkVisit[]
 
     @@index([projectId])
+    @@index([expiresAt])
 }
 
 model LinkRule {

@@ -198,6 +198,7 @@ export const createLink = async (req: Request, res: Response) => {
       utmCampaign,
       utmTerm,
       utmContent,
+      expiresAt,
     } = req.body;
     const projectId = parseInt(
       req.params.projectId || (req.headers["x-project-id"] as string)
@@ -219,6 +220,20 @@ export const createLink = async (req: Request, res: Response) => {
         return res.status(400).json({
           error: "Password must be at least 6 characters long",
         });
+      }
+    }
+
+    // Parse optional expiration date
+    let expiresAtValue: Date | null | undefined;
+    if (typeof expiresAt !== "undefined") {
+      if (expiresAt === null || expiresAt === "") {
+        expiresAtValue = null;
+      } else {
+        const parsedDate = new Date(expiresAt);
+        if (isNaN(parsedDate.getTime())) {
+          return res.status(400).json({ error: "Invalid expiration date" });
+        }
+        expiresAtValue = parsedDate;
       }
     }
 
@@ -264,6 +279,9 @@ export const createLink = async (req: Request, res: Response) => {
         utmCampaign,
         utmTerm,
         utmContent,
+        ...(typeof expiresAtValue !== "undefined"
+          ? { expiresAt: expiresAtValue }
+          : {}),
       },
     });
 
@@ -359,6 +377,7 @@ export const updateLink = async (req: Request, res: Response) => {
       utmCampaign,
       utmTerm,
       utmContent,
+      expiresAt,
     } = req.body;
     const userId = req.user?.id;
     const isAdmin = req.user?.role === "ADMIN";
@@ -424,6 +443,21 @@ export const updateLink = async (req: Request, res: Response) => {
       };
     }
 
+    let expiresAtValue: Date | null | undefined;
+    if (typeof expiresAt !== "undefined") {
+      if (expiresAt === null || expiresAt === "") {
+        expiresAtValue = null;
+      } else {
+        const parsedDate = new Date(expiresAt);
+        if (isNaN(parsedDate.getTime())) {
+          return res
+            .status(400)
+            .json({ error: "Invalid expiration date" });
+        }
+        expiresAtValue = parsedDate;
+      }
+    }
+
     // Update link basic information including UTM parameters
     const updatedLink = await prisma.link.update({
       where: { id: parseInt(id) },
@@ -437,6 +471,9 @@ export const updateLink = async (req: Request, res: Response) => {
         utmCampaign,
         utmTerm,
         utmContent,
+        ...(typeof expiresAtValue !== "undefined"
+          ? { expiresAt: expiresAtValue }
+          : {}),
       },
     });
 

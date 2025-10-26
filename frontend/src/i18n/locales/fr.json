@@ -467,6 +467,15 @@
         "show": "Afficher",
         "hide": "Masquer"
       },
+      "time_expire": {
+        "title": "Expiration du lien",
+        "description": "Désactivez automatiquement ce lien après la date et l'heure sélectionnées.",
+        "enable_label": "Activer l'expiration du lien",
+        "date_label": "Date et heure d'expiration",
+        "placeholder": "Sélectionnez une date et une heure",
+        "timezone_note": "L'expiration utilise votre fuseau horaire actuel.",
+        "clear": "Supprimer l'expiration"
+      },
       "preview": {
         "title": "Aperçu du lien",
         "loading": "Génération de l'aperçu...",
@@ -479,6 +488,10 @@
         "utm_parameters": "Paramètres UTM",
         "takes_precedence": "Prioritaire",
         "custom_countries": "Pays personnalisés",
+        "expiration": {
+          "active": "Expire le {{date}}",
+          "expired": "Expiré le {{date}}"
+        },
         "utm_labels": {
           "source": "Source",
           "medium": "Support",
@@ -500,13 +513,14 @@
         "utm": "UTM"
       },
       "coming_soon": {
-        "time_expire": "Expiration prochainement",
         "time_start": "Activation prochainement"
       },
       "errors": {
         "missing_required": "L'URL de base et le nom sont obligatoires",
         "shortcode": "Un code court valide est requis",
-        "password": "Le mot de passe doit contenir au moins 6 caractères lorsque la protection est activée"
+        "password": "Le mot de passe doit contenir au moins 6 caractères lorsque la protection est activée",
+        "expiration_required": "Sélectionnez une date d'expiration avant d'activer cette option",
+        "expiration_invalid": "Saisissez une date d'expiration valide"
       },
       "messages": {
         "fetch_error": "Impossible de récupérer les données du lien"
@@ -522,6 +536,7 @@
       "short_url": "URL courte",
       "clicks": "Clics",
       "created_at": "Date de création",
+      "expiration": "Expiration",
       "actions": "Actions",
       "copy": "Copier le lien",
       "copy_success": "Lien copié dans le presse-papiers",
@@ -536,7 +551,10 @@
       "cancel": "Annuler",
       "page_info": "Page {{current}} sur {{total}}",
       "previous": "Page précédente",
-      "next": "Page suivante"
+      "next": "Page suivante",
+      "no_expiration": "Pas d'expiration",
+      "expired": "Expiré",
+      "expires_badge": "Planifié"
     }
   },
   "analytics": {

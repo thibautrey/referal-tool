@@ -156,6 +156,25 @@ describe("Redirection Service Tests", () => {
       expect(res.status).toHaveBeenCalledWith(404);
     });
 
+    test("returns 410 when the link has expired", async () => {
+      const expiredLinkData = {
+        ...mockLinkData,
+        expiresAt: new Date(Date.now() - 60 * 1000).toISOString(),
+      };
+
+      const req = createMockRequest({}) as Request;
+      const res = createMockResponse() as Response;
+
+      mockRedis.setupCacheHit("testlink", expiredLinkData);
+      mockGeolocation.setup("US");
+      mockPrisma.setupFindLink(expiredLinkData);
+
+      await handleRedirection(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(410);
+      expect(res.redirect).not.toHaveBeenCalled();
+    });
+
     test("uses baseUrl when no rules match", async () => {
       const req = createMockRequest({}) as Request;
       const res = createMockResponse() as Response;

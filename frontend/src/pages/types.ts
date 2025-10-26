@@ -11,6 +11,7 @@ export interface ReferralLink {
   conversionRate?: number;
   createdAt: string;
   updatedAt: string;
+  expiresAt?: string | null;
   rules: GeoRule[];
   deviceRules: DeviceRule[]; // Add this line
   _count?: {

@@ -23,6 +23,7 @@ import { GeoTargeting } from "./AddLinkForm/GeoTargeting";
 import { LinkPreview } from "./LinkPreview";
 import { PasswordProtection } from "@/components/links/PasswordProtection";
 import { UTMParameters } from "./AddLinkForm/UTMParameters";
+import { ExpirationSettings } from "./AddLinkForm/ExpirationSettings";
 import { api } from "@/lib/api";
 import { detectRegionFromCountries } from "./utils";
 import { generateRandomCode } from "./AddLinkForm/utils";
@@ -52,6 +53,7 @@ interface AddLinkFormProps {
     utmCampaign?: string;
     utmTerm?: string;
     utmContent?: string;
+    expiresAt?: string | null;
   };
   mode?: "add" | "edit";
 }
@@ -59,6 +61,33 @@ interface AddLinkFormProps {
 export interface AddLinkFormRef {
   getFormData: () => LinkFormData;
 }
+
+const toDateTimeLocalString = (value: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+  const offset = date.getTimezoneOffset();
+  const local = new Date(date.getTime() - offset * 60 * 1000);
+  return local.toISOString().slice(0, 16);
+};
+
+const fromDateTimeLocalString = (value: string | null) => {
+  if (!value) return null;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+  return parsed.toISOString();
+};
+
+const getDefaultExpirationInput = () => {
+  const now = new Date();
+  const fallback = new Date(now.getTime() + 60 * 60 * 1000);
+  const offset = fallback.getTimezoneOffset();
+  const local = new Date(fallback.getTime() - offset * 60 * 1000);
+  return local.toISOString().slice(0, 16);
+};
 
 export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
   ({ initialData }, ref) => {
@@ -93,6 +122,12 @@ export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
       initialData?.isPasswordProtected || false
     );
     const [password, setPassword] = useState("");
+    const [isExpirationEnabled, setIsExpirationEnabled] = useState(
+      Boolean(initialData?.expiresAt)
+    );
+    const [expirationDate, setExpirationDate] = useState<string | null>(
+      initialData?.expiresAt ? toDateTimeLocalString(initialData.expiresAt) : null
+    );
 
     const [utmParameters, setUtmParameters] = useState<UTMParametersType>({
       utmSource: initialData?.utmSource || "",
@@ -176,6 +211,11 @@ export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
                 }))
               );
             }
+
+            setIsExpirationEnabled(Boolean(data.expiresAt));
+            setExpirationDate(
+              data.expiresAt ? toDateTimeLocalString(data.expiresAt) : null
+            );
           } catch {
             toast.error(t("links.form.messages.fetch_error"));
             setGeoRules([]);
@@ -297,6 +337,24 @@ export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
             devices: rule.devices,
           }));
 
+        let expirationIso: string | null = null;
+        if (isExpirationEnabled) {
+          if (!expirationDate) {
+            const message = t("links.form.errors.expiration_required");
+            toast.error(message);
+            throw new Error(message);
+          }
+
+          const parsed = fromDateTimeLocalString(expirationDate);
+          if (!parsed) {
+            const message = t("links.form.errors.expiration_invalid");
+            toast.error(message);
+            throw new Error(message);
+          }
+
+          expirationIso = parsed;
+        }
+
         return {
           ...(isEditMode && { id }),
           name: linkName,
@@ -313,6 +371,7 @@ export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
           advanced: {
             conversionTracking: false,
           },
+          expiresAt: expirationIso,
         };
       },
     }));
@@ -341,11 +400,25 @@ export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
           );
         case 2:
           return (
-            <div className="p-4 border rounded">
-              <p className="text-muted-foreground">
-                {t("links.form.coming_soon.time_expire")}
-              </p>
-            </div>
+            <ExpirationSettings
+              enabled={isExpirationEnabled}
+              value={expirationDate}
+              onToggle={(value) => {
+                setIsExpirationEnabled(value);
+                if (value && !expirationDate) {
+                  setExpirationDate(getDefaultExpirationInput());
+                }
+                if (!value) {
+                  setExpirationDate(null);
+                }
+              }}
+              onChange={(val) => {
+                setExpirationDate(val);
+                if (val) {
+                  setIsExpirationEnabled(true);
+                }
+              }}
+            />
           );
         case 3:
           return (
@@ -420,6 +493,11 @@ export const AddLinkForm = forwardRef<AddLinkFormRef, AddLinkFormProps>(
             shortCodeUrl={`${currentDomain}/l/${shortCode}`}
             isPasswordProtected={isPasswordProtected}
             utmParameters={utmParameters}
+            expiresAt={
+              isExpirationEnabled && expirationDate
+                ? fromDateTimeLocalString(expirationDate)
+                : null
+            }
           />
         </div>
       </div>

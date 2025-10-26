@@ -257,6 +257,7 @@ async function main() {
       shortCode: "fb25",
       projectId: socialProject.id,
       active: true,
+      expiresAt: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000),
     },
   });
 
@@ -288,6 +289,7 @@ async function main() {
       shortCode: "expired",
       projectId: marketingProject.id,
       active: false,
+      expiresAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
       rules: {
         create: {
           redirectUrl: "https://example.com/expired/campaign",

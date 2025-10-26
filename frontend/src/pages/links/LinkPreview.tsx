@@ -1,4 +1,4 @@
-import { Globe, Lock, Smartphone, Tag } from "lucide-react";
+import { Clock, Globe, Lock, Smartphone, Tag } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -31,6 +31,7 @@ interface LinkPreviewProps {
     utmTerm?: string;
     utmContent?: string;
   };
+  expiresAt?: string | null;
 }
 
 const regionKeyMap: Record<string, string> = {
@@ -190,11 +191,12 @@ export const LinkPreview = ({
   onLoad,
   isPasswordProtected,
   utmParameters,
+  expiresAt,
 }: LinkPreviewProps) => {
   const [debouncedLinkUrl, setDebouncedLinkUrl] = useState(linkUrl);
   const [debouncedGeoRules, setDebouncedGeoRules] = useState(geoRules);
   const [debouncedDeviceRules, setDebouncedDeviceRules] = useState(deviceRules);
-  const { t } = useAppTranslation();
+  const { t, i18n } = useAppTranslation();
 
   const getRegionLabel = (region: string) => {
     const key = regionKeyMap[region];
@@ -226,6 +228,27 @@ export const LinkPreview = ({
   const hasUtmParameters =
     utmParameters && Object.values(utmParameters).some(Boolean);
 
+  const expirationInfo = useMemo(() => {
+    if (!expiresAt) return null;
+    const date = new Date(expiresAt);
+    if (Number.isNaN(date.getTime())) {
+      return null;
+    }
+
+    const formatter = new Intl.DateTimeFormat(i18n.language, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    return {
+      formatted: formatter.format(date),
+      isExpired: date.getTime() <= Date.now(),
+    };
+  }, [expiresAt, i18n.language]);
+
   return (
     <>
       <div className="relative">
@@ -238,6 +261,21 @@ export const LinkPreview = ({
           onLoad={handleLoad}
           instanceId="main"
         />
+        {expirationInfo && (
+          <Badge
+            variant={expirationInfo.isExpired ? "destructive" : "secondary"}
+            className="absolute top-2 left-2 gap-1.5"
+          >
+            <Clock className="w-3 h-3" />
+            {expirationInfo.isExpired
+              ? t("links.form.preview.expiration.expired", {
+                  date: expirationInfo.formatted,
+                })
+              : t("links.form.preview.expiration.active", {
+                  date: expirationInfo.formatted,
+                })}
+          </Badge>
+        )}
         {isPasswordProtected && (
           <Badge variant="secondary" className="absolute top-2 right-2 gap-1.5">
             <Lock className="w-3 h-3" />

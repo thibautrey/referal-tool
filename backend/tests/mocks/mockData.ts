@@ -4,6 +4,7 @@ export const mockLinkData = {
   baseUrl: "example.com",
   active: true,
   isPasswordProtected: false,
+  expiresAt: null as string | null,
   rules: [
     {
       id: "1",

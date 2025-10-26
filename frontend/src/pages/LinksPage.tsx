@@ -86,6 +86,14 @@ export default function LinksPage() {
           countries: rule.countries,
         })),
         deviceRules: formData.deviceRules,
+        isPasswordProtected: formData.isPasswordProtected,
+        password: formData.password,
+        utmSource: formData.utmSource,
+        utmMedium: formData.utmMedium,
+        utmCampaign: formData.utmCampaign,
+        utmTerm: formData.utmTerm,
+        utmContent: formData.utmContent,
+        expiresAt: formData.expiresAt,
       };
 
       if (formData.id) {
