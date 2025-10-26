@@ -1,18 +1,19 @@
 export const mockLinkData = {
-  id: "1",
+  id: 1,
   shortCode: "testlink",
   baseUrl: "example.com",
   active: true,
+  isPasswordProtected: false,
   rules: [
     {
       id: "1",
-      linkId: "1",
+      linkId: 1,
       countries: JSON.stringify(["US", "CA"]),
       redirectUrl: "example-us.com",
     },
     {
       id: "2",
-      linkId: "1",
+      linkId: 1,
       countries: JSON.stringify(["FR", "DE"]),
       redirectUrl: "example-eu.com",
     },
@@ -20,13 +21,13 @@ export const mockLinkData = {
   deviceRules: [
     {
       id: "1",
-      linkId: "1",
+      linkId: 1,
       deviceType: "mobile",
       redirectUrl: "example-mobile.com",
     },
     {
       id: "2",
-      linkId: "1",
+      linkId: 1,
       deviceType: "all",
       redirectUrl: "example-all-devices.com",
     },

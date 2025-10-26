@@ -54,11 +54,14 @@ describe("Redirection Service Tests", () => {
 
   describe("handleRedirection", () => {
     test("redirects based on cache hit", async () => {
-      const req = createMockRequest({}) as Request;
+      const req = createMockRequest({
+        userAgent: mockUserAgents.mobile,
+      }) as Request;
       const res = createMockResponse() as Response;
 
       mockRedis.setupCacheHit("testlink");
       mockGeolocation.setup("US");
+      mockPrisma.setupFindLink();
       mockPrisma.setupCreateVisit();
 
       await handleRedirection(req, res);
@@ -77,6 +80,7 @@ describe("Redirection Service Tests", () => {
 
       mockRedis.setupCacheHit("testlink");
       mockGeolocation.setup("US");
+      mockPrisma.setupFindLink();
       mockPrisma.setupCreateVisit();
 
       await handleRedirection(req, res);
@@ -102,6 +106,7 @@ describe("Redirection Service Tests", () => {
 
       mockRedis.setupCacheHit("testlink", customLinkData);
       mockGeolocation.setup("FR");
+      mockPrisma.setupFindLink(customLinkData);
       mockPrisma.setupCreateVisit();
 
       await handleRedirection(req, res);
@@ -161,6 +166,7 @@ describe("Redirection Service Tests", () => {
 
       mockRedis.setupCacheHit("testlink", customLinkData);
       mockGeolocation.setup("JP");
+      mockPrisma.setupFindLink(customLinkData);
       mockPrisma.setupCreateVisit();
 
       await handleRedirection(req, res);

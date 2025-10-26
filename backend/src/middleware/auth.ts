@@ -11,6 +11,7 @@ declare global {
         id: number;
         email: string;
         role: string;
+        locale?: string | null;
       };
     }
   }
@@ -36,6 +37,7 @@ export const authenticateJWT = async (
           id: keyRecord.userId,
           email: keyRecord.user.email,
           role: keyRecord.user.role,
+          locale: keyRecord.user.locale,
         };
         next();
         return;
@@ -65,7 +67,29 @@ export const authenticateJWT = async (
       email: string;
       role: string;
     };
-    req.user = decoded;
+
+    const dbUser = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: {
+        id: true,
+        email: true,
+        role: true,
+        locale: true,
+      },
+    });
+
+    if (!dbUser) {
+      return res.status(401).json({
+        message: "Accès non autorisé. Utilisateur introuvable",
+      });
+    }
+
+    req.user = {
+      id: dbUser.id,
+      email: dbUser.email,
+      role: dbUser.role,
+      locale: dbUser.locale,
+    };
     next();
     return;
   } catch (error) {

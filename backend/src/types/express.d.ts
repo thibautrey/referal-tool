@@ -8,5 +8,6 @@ declare namespace Express {
       isAdmin: boolean;
       membershipId?: number;
     };
+    locale?: import("../lib/i18n").Locale;
   }
 }

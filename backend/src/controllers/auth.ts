@@ -7,34 +7,28 @@ import jwt from "jsonwebtoken";
 import prisma from "../lib/prisma";
 import speakeasy from "speakeasy";
 import { sendEmail } from "../utils/email";
-
-interface ApiResponse {
-  message: string;
-  data?: any;
-  error?: any;
-}
+import { buildLocalizedResponse, createTranslator } from "../lib/i18n";
 
 // Signup
 export const signup: ControllerFunction = async (
   req: Request,
   res: Response
 ) => {
+  const translator = createTranslator({ req });
   try {
     const { email, firstName, lastName, password } = req.body;
 
-    // Vérifier si l'utilisateur existe déjà
     const existingUser = await prisma.user.findUnique({
       where: { email },
     });
 
     if (existingUser) {
-      res.status(400).json({
-        message: "Un utilisateur avec cet email existe déjà",
-      });
+      res
+        .status(400)
+        .json(buildLocalizedResponse(translator, "auth.signup.exists"));
       return;
     }
 
-    // Hasher le mot de passe
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = await prisma.user.create({
@@ -44,6 +38,7 @@ export const signup: ControllerFunction = async (
         lastName,
         password: hashedPassword,
         role: "USER",
+        locale: translator.locale,
       },
       select: {
         id: true,
@@ -52,23 +47,22 @@ export const signup: ControllerFunction = async (
         lastName: true,
         role: true,
         active: true,
+        locale: true,
         createdAt: true,
         updatedAt: true,
       },
     });
 
-    const response: ApiResponse = {
-      message: "Inscription réussie",
+    const response = buildLocalizedResponse(translator, "auth.signup.success", {
       data: newUser,
-    };
+    });
 
     res.status(201).json(response);
     return;
   } catch (error) {
-    res.status(500).json({
-      message: "Erreur lors de l'inscription",
-      error,
-    });
+    res
+      .status(500)
+      .json(buildLocalizedResponse(translator, "auth.signup.error", { error }));
     return;
   }
 };
@@ -78,10 +72,10 @@ export const login: ControllerFunction = async (
   req: Request,
   res: Response
 ) => {
+  let translator = createTranslator({ req });
   try {
     const { email, password, otp } = req.body;
 
-    // Vérifier si l'utilisateur existe
     const user = await prisma.user.findUnique({
       where: { email },
       include: {
@@ -90,38 +84,41 @@ export const login: ControllerFunction = async (
     });
 
     if (!user) {
-      res.status(401).json({
-        message: "Email ou mot de passe incorrect",
-      });
+      res
+        .status(401)
+        .json(
+          buildLocalizedResponse(translator, "auth.login.invalid_credentials")
+        );
       return;
     }
 
-    // Vérifier si l'utilisateur est actif
+    translator = createTranslator({ req, userLocale: user.locale });
+
     if (!user.active) {
-      res.status(401).json({
-        message: "Ce compte est désactivé",
-      });
+      res
+        .status(401)
+        .json(buildLocalizedResponse(translator, "auth.login.account_inactive"));
       return;
     }
 
-    // Vérifier le mot de passe
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      res.status(401).json({
-        message: "Email ou mot de passe incorrect",
-      });
+      res
+        .status(401)
+        .json(
+          buildLocalizedResponse(translator, "auth.login.invalid_credentials")
+        );
       return;
     }
 
     let newProjectCreated;
-    // Vérifier si l'utilisateur a au moins un projet
     if (user.projects.length === 0) {
-      // Créer un projet par défaut
       await prisma.project.create({
         data: {
-          name: "My project",
-          description: "Projet créé automatiquement",
+          name: translator.t("project.default.name"),
+          description: translator.t("project.default.description"),
           userId: user.id,
+          locale: translator.locale,
         },
       });
 
@@ -132,17 +129,16 @@ export const login: ControllerFunction = async (
       });
     }
 
-    // Vérifier l'OTP si activé
     if (user.otpEnabled && user.otpVerified) {
       if (!otp) {
-        res.status(400).json({
-          message: "Code OTP requis",
-          requireOtp: true,
-        });
+        res.status(400).json(
+          buildLocalizedResponse(translator, "auth.login.otp_required", {
+            extra: { requireOtp: true },
+          })
+        );
         return;
       }
 
-      // Vérifier le code OTP
       const isOtpValid = speakeasy.totp.verify({
         secret: user.otpSecret!,
         encoding: "base32",
@@ -150,20 +146,18 @@ export const login: ControllerFunction = async (
       });
 
       if (!isOtpValid) {
-        // Vérifier si c'est un code de secours
         const backupCodes = user.otpBackupCodes
           ? JSON.parse(user.otpBackupCodes)
           : [];
 
         const backupCodeIndex = backupCodes.indexOf(otp);
         if (backupCodeIndex === -1) {
-          res.status(401).json({
-            message: "Code OTP invalide",
-          });
+          res
+            .status(401)
+            .json(buildLocalizedResponse(translator, "auth.otp.invalid"));
           return;
         }
 
-        // Supprimer le code de secours utilisé
         backupCodes.splice(backupCodeIndex, 1);
         await prisma.user.update({
           where: { id: user.id },
@@ -174,7 +168,6 @@ export const login: ControllerFunction = async (
       }
     }
 
-    // Créer le token JWT
     const secret = process.env.JWT_SECRET || "votre_clé_secrète_par_défaut";
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
@@ -183,10 +176,11 @@ export const login: ControllerFunction = async (
     );
 
     const defaultProjectId =
-      user.projects.length > 0 ? user.projects[0].id : newProjectCreated!.id;
+      user.projects.length > 0
+        ? user.projects[0].id
+        : newProjectCreated!.id;
 
-    const response: ApiResponse = {
-      message: "Connexion réussie",
+    const response = buildLocalizedResponse(translator, "auth.login.success", {
       data: {
         token,
         user: {
@@ -196,31 +190,28 @@ export const login: ControllerFunction = async (
           lastName: user.lastName,
           role: user.role,
           defaultProjectId,
+          locale: user.locale ?? translator.locale,
         },
       },
-    };
+    });
 
     res.json(response);
     return;
   } catch (error) {
-    res.status(500).json({
-      message: "Erreur lors de la connexion",
-      error,
-    });
+    res
+      .status(500)
+      .json(buildLocalizedResponse(translator, "auth.login.error", { error }));
     return;
   }
 };
 
 // Logout (côté serveur, principalement pour la gestion des jetons)
 export const logout: ControllerFunction = async (
-  _req: Request,
+  req: Request,
   res: Response
 ) => {
-  // Comme nous utilisons JWT, le logout est géré côté client
-  // Le serveur peut potentiellement gérer une liste noire de jetons
-  res.json({
-    message: "Déconnexion réussie",
-  });
+  const translator = createTranslator({ req, userLocale: req.user?.locale });
+  res.json(buildLocalizedResponse(translator, "auth.logout.success"));
   return;
 };
 
@@ -229,12 +220,13 @@ export const setupOTP: ControllerFunction = async (
   req: Request,
   res: Response
 ) => {
+  let translator = createTranslator({ req, userLocale: req.user?.locale });
   try {
     const userId = req.user?.id;
     if (!userId) {
-      res.status(401).json({
-        message: "Utilisateur non authentifié",
-      });
+      res
+        .status(401)
+        .json(buildLocalizedResponse(translator, "common.errors.unauthenticated"));
       return;
     }
 
@@ -259,20 +251,27 @@ export const setupOTP: ControllerFunction = async (
       },
     });
 
-    res.json({
-      message: "Configuration OTP initiée",
-      data: {
-        otpSecret: secret.base32,
-        otpAuthUrl: secret.otpauth_url,
-        backupCodes,
-      },
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { locale: true },
     });
+
+    translator = createTranslator({ req, userLocale: user?.locale });
+
+    res.json(
+      buildLocalizedResponse(translator, "auth.otp.setup_started", {
+        data: {
+          otpSecret: secret.base32,
+          otpAuthUrl: secret.otpauth_url,
+          backupCodes,
+        },
+      })
+    );
     return;
   } catch (error) {
-    res.status(500).json({
-      message: "Erreur lors de la configuration OTP",
-      error,
-    });
+    res.status(500).json(
+      buildLocalizedResponse(translator, "auth.otp.setup_error", { error })
+    );
     return;
   }
 };
@@ -282,14 +281,15 @@ export const verifyOTP: ControllerFunction = async (
   req: Request,
   res: Response
 ) => {
+  let translator = createTranslator({ req, userLocale: req.user?.locale });
   try {
     const userId = req.user?.id;
     const { token } = req.body;
 
     if (!userId) {
-      res.status(401).json({
-        message: "Utilisateur non authentifié",
-      });
+      res
+        .status(401)
+        .json(buildLocalizedResponse(translator, "common.errors.unauthenticated"));
       return;
     }
 
@@ -297,10 +297,12 @@ export const verifyOTP: ControllerFunction = async (
       where: { id: userId },
     });
 
+    translator = createTranslator({ req, userLocale: user?.locale });
+
     if (!user || !user.otpSecret) {
-      res.status(400).json({
-        message: "Configuration OTP non trouvée",
-      });
+      res
+        .status(400)
+        .json(buildLocalizedResponse(translator, "auth.otp.config_missing"));
       return;
     }
 
@@ -312,9 +314,9 @@ export const verifyOTP: ControllerFunction = async (
     });
 
     if (!verified) {
-      res.status(400).json({
-        message: "Code OTP invalide",
-      });
+      res
+        .status(400)
+        .json(buildLocalizedResponse(translator, "auth.otp.invalid"));
       return;
     }
 
@@ -326,15 +328,12 @@ export const verifyOTP: ControllerFunction = async (
       },
     });
 
-    res.json({
-      message: "OTP vérifié avec succès",
-    });
+    res.json(buildLocalizedResponse(translator, "auth.otp.verified"));
     return;
   } catch (error) {
-    res.status(500).json({
-      message: "Erreur lors de la vérification OTP",
-      error,
-    });
+    res.status(500).json(
+      buildLocalizedResponse(translator, "auth.otp.verify_error", { error })
+    );
     return;
   }
 };
@@ -344,12 +343,13 @@ export const disableOTP: ControllerFunction = async (
   req: Request,
   res: Response
 ) => {
+  const translator = createTranslator({ req, userLocale: req.user?.locale });
   try {
     const userId = req.user?.id;
     if (!userId) {
-      res.status(401).json({
-        message: "Utilisateur non authentifié",
-      });
+      res
+        .status(401)
+        .json(buildLocalizedResponse(translator, "common.errors.unauthenticated"));
       return;
     }
 
@@ -363,15 +363,12 @@ export const disableOTP: ControllerFunction = async (
       },
     });
 
-    res.json({
-      message: "OTP désactivé avec succès",
-    });
+    res.json(buildLocalizedResponse(translator, "auth.otp.disabled"));
     return;
   } catch (error) {
-    res.status(500).json({
-      message: "Erreur lors de la désactivation OTP",
-      error,
-    });
+    res.status(500).json(
+      buildLocalizedResponse(translator, "auth.otp.disable_error", { error })
+    );
     return;
   }
 };
@@ -381,12 +378,13 @@ export const getBackupCodes: ControllerFunction = async (
   req: Request,
   res: Response
 ) => {
+  let translator = createTranslator({ req, userLocale: req.user?.locale });
   try {
     const userId = req.user?.id;
     if (!userId) {
-      res.status(401).json({
-        message: "Utilisateur non authentifié",
-      });
+      res
+        .status(401)
+        .json(buildLocalizedResponse(translator, "common.errors.unauthenticated"));
       return;
     }
 
@@ -394,25 +392,27 @@ export const getBackupCodes: ControllerFunction = async (
       where: { id: userId },
     });
 
+    translator = createTranslator({ req, userLocale: user?.locale });
+
     if (!user || !user.otpBackupCodes) {
-      res.status(400).json({
-        message: "Aucun code de secours trouvé",
-      });
+      res
+        .status(400)
+        .json(buildLocalizedResponse(translator, "auth.otp.backup_missing"));
       return;
     }
 
-    res.json({
-      message: "Codes de secours récupérés",
-      data: {
-        backupCodes: JSON.parse(user.otpBackupCodes),
-      },
-    });
+    res.json(
+      buildLocalizedResponse(translator, "auth.otp.backup_retrieved", {
+        data: {
+          backupCodes: JSON.parse(user.otpBackupCodes),
+        },
+      })
+    );
     return;
   } catch (error) {
-    res.status(500).json({
-      message: "Erreur lors de la récupération des codes de secours",
-      error,
-    });
+    res.status(500).json(
+      buildLocalizedResponse(translator, "auth.otp.backup_error", { error })
+    );
     return;
   }
 };
@@ -422,14 +422,15 @@ export const changePassword: ControllerFunction = async (
   req: Request,
   res: Response
 ) => {
+  let translator = createTranslator({ req, userLocale: req.user?.locale });
   try {
     const userId = req.user?.id;
     const { currentPassword, newPassword } = req.body;
 
     if (!userId) {
-      res.status(401).json({
-        message: "Utilisateur non authentifié",
-      });
+      res
+        .status(401)
+        .json(buildLocalizedResponse(translator, "common.errors.unauthenticated"));
       return;
     }
 
@@ -438,11 +439,13 @@ export const changePassword: ControllerFunction = async (
     });
 
     if (!user) {
-      res.status(404).json({
-        message: "Utilisateur non trouvé",
-      });
+      res
+        .status(404)
+        .json(buildLocalizedResponse(translator, "common.errors.user_not_found"));
       return;
     }
+
+    translator = createTranslator({ req, userLocale: user.locale });
 
     // Vérifier l'ancien mot de passe
     const isPasswordValid = await bcrypt.compare(
@@ -450,9 +453,9 @@ export const changePassword: ControllerFunction = async (
       user.password
     );
     if (!isPasswordValid) {
-      res.status(401).json({
-        message: "Mot de passe actuel incorrect",
-      });
+      res
+        .status(401)
+        .json(buildLocalizedResponse(translator, "auth.password.current_invalid"));
       return;
     }
 
@@ -467,15 +470,12 @@ export const changePassword: ControllerFunction = async (
       },
     });
 
-    res.json({
-      message: "Mot de passe changé avec succès",
-    });
+    res.json(buildLocalizedResponse(translator, "auth.password.changed"));
     return;
   } catch (error) {
-    res.status(500).json({
-      message: "Erreur lors du changement de mot de passe",
-      error,
-    });
+    res.status(500).json(
+      buildLocalizedResponse(translator, "auth.password.change_error", { error })
+    );
     return;
   }
 };
@@ -485,6 +485,7 @@ export const forgotPassword: ControllerFunction = async (
   req: Request,
   res: Response
 ) => {
+  let translator = createTranslator({ req });
   try {
     const { email } = req.body;
 
@@ -493,11 +494,15 @@ export const forgotPassword: ControllerFunction = async (
     });
 
     if (!user) {
-      res.status(500).json({
-        message: "Error while requesting password reset",
-      });
+      res
+        .status(500)
+        .json(
+          buildLocalizedResponse(translator, "auth.password.reset_request_error")
+        );
       return;
     }
+
+    translator = createTranslator({ req, userLocale: user.locale });
 
     // Générer un token de réinitialisation
     const secret = process.env.JWT_SECRET || "votre_clé_secrète_par_défaut";
@@ -507,35 +512,41 @@ export const forgotPassword: ControllerFunction = async (
       { expiresIn: "1h" }
     );
 
+    const resetLink = `${process.env.APP_URL}/app/reset-password?token=${resetToken}`;
+
     // Send email with Resend
     const emailSent = await sendEmail({
       to: user.email,
-      subject: "Password Reset Request",
+      subject: translator.t("email.reset.subject"),
       html: `
-        <p>You requested a password reset.</p>
-        <p>Click the link below to reset your password:</p>
-        <a href="${process.env.APP_URL}/app/reset-password?token=${resetToken}">Reset my password</a>
+        <p>${translator.t("email.reset.intro")}</p>
+        <p>${translator.t("email.reset.instructions")}</p>
+        <a href="${resetLink}">${translator.t("email.reset.link_text")}</a>
       `,
+      locale: translator.locale,
     });
 
     if (!emailSent) {
-      res.status(500).json({
-        message: "Failed to send reset instructions",
-      });
+      res
+        .status(500)
+        .json(
+          buildLocalizedResponse(translator, "auth.password.reset_email_failed")
+        );
       return;
     }
 
-    res.json({
-      message: "Reset instructions sent to your email",
-      // For development purposes only, sending token in response
-      data: { resetToken },
-    });
+    res.json(
+      buildLocalizedResponse(translator, "auth.password.reset_email_sent", {
+        data: { resetToken },
+      })
+    );
     return;
   } catch (error) {
-    res.status(500).json({
-      message: "Error while requesting password reset",
-      error,
-    });
+    res.status(500).json(
+      buildLocalizedResponse(translator, "auth.password.reset_request_error", {
+        error,
+      })
+    );
     return;
   }
 };
@@ -545,6 +556,7 @@ export const resetPassword: ControllerFunction = async (
   req: Request,
   res: Response
 ) => {
+  let translator = createTranslator({ req });
   try {
     const { token, newPassword } = req.body;
     const secret = process.env.JWT_SECRET || "votre_clé_secrète_par_défaut";
@@ -557,9 +569,28 @@ export const resetPassword: ControllerFunction = async (
       };
 
       if (decoded.action !== "reset_password") {
-        res.status(400).json({
-          message: "Token invalide",
-        });
+        res
+          .status(400)
+          .json(
+            buildLocalizedResponse(
+              translator,
+              "auth.password.reset_token_invalid"
+            )
+          );
+        return;
+      }
+
+      const account = await prisma.user.findUnique({
+        where: { id: decoded.id },
+        select: { id: true, locale: true },
+      });
+
+      translator = createTranslator({ req, userLocale: account?.locale });
+
+      if (!account) {
+        res
+          .status(404)
+          .json(buildLocalizedResponse(translator, "common.errors.user_not_found"));
         return;
       }
 
@@ -574,21 +605,23 @@ export const resetPassword: ControllerFunction = async (
         },
       });
 
-      res.json({
-        message: "Mot de passe réinitialisé avec succès",
-      });
+      res.json(buildLocalizedResponse(translator, "auth.password.reset_success"));
       return;
     } catch (error) {
-      res.status(401).json({
-        message: "Token invalide ou expiré",
-      });
+      res
+        .status(401)
+        .json(
+          buildLocalizedResponse(
+            translator,
+            "common.errors.token_invalid_or_expired"
+          )
+        );
       return;
     }
   } catch (error) {
-    res.status(500).json({
-      message: "Erreur lors de la réinitialisation du mot de passe",
-      error,
-    });
+    res.status(500).json(
+      buildLocalizedResponse(translator, "auth.password.reset_error", { error })
+    );
     return;
   }
 };

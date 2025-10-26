@@ -23,11 +23,28 @@ export class GeoRule implements Rule {
 }
 
 export class DeviceRule implements Rule {
-  priority = 50; // Lower priority than geo rules
+  priority: number; // Lower priority than geo rules
 
-  constructor(private rule: any) {}
+  constructor(private rule: any) {
+    this.priority = this.rule.deviceType === "all" ? 40 : 60;
+  }
 
   async execute(context: RuleContext) {
+    const hasDeviceMatch = context.matchedRules.some(
+      (r) => r.type === "device"
+    );
+
+    if (this.rule.deviceType === "all" && hasDeviceMatch) {
+      return;
+    }
+
+    if (
+      this.rule.deviceType === "all" &&
+      context.matchedRules.some((r) => r.type === "geo")
+    ) {
+      return;
+    }
+
     if (
       this.rule.deviceType === "all" ||
       this.rule.deviceType === context.deviceType

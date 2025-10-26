@@ -62,35 +62,37 @@ export const mockGeolocation = {
 };
 
 // Define a jest-like function creator
-const mockFn = () => {
-  const fn = () => {};
-  fn.mockResolvedValue = (val: any) => {
-    Object.assign(fn, { mockReturnValue: () => val });
-    return fn;
-  };
-  return fn;
-};
+const mockFn = () => jest.fn();
 
 // Create typed mock functions for Prisma
-const createPrismaMock = <T>() => {
-  return () => Promise.resolve() as unknown as T;
+const createPrismaMock = <T extends (...args: any[]) => any>() => {
+  return jest.fn() as unknown as jest.MockedFunction<T>;
 };
 
 type PrismaLinkFindFirst = PrismaClient["link"]["findFirst"];
 type PrismaLinkCreate = PrismaClient["linkVisit"]["create"];
+type PrismaLinkFindUnique = PrismaClient["link"]["findUnique"];
+type PrismaLinkRuleFindUnique = PrismaClient["linkRule"]["findUnique"];
 
 export const mockPrisma = {
   setupFindLink: (data = mockLinkData) => {
-    prisma.link.findFirst = createPrismaMock<ReturnType<PrismaLinkFindFirst>>();
-    (prisma.link.findFirst as any).mockResolvedValue(data);
+    prisma.link.findFirst = createPrismaMock<PrismaLinkFindFirst>();
+    (prisma.link.findFirst as jest.Mock).mockResolvedValue({
+      isPasswordProtected: false,
+      ...data,
+    });
+    prisma.link.findUnique = createPrismaMock<PrismaLinkFindUnique>();
+    (prisma.link.findUnique as jest.Mock).mockResolvedValue({ id: data.id });
+    prisma.linkRule.findUnique = createPrismaMock<PrismaLinkRuleFindUnique>();
+    (prisma.linkRule.findUnique as jest.Mock).mockResolvedValue({ id: 1 });
   },
   setupLinkNotFound: () => {
-    prisma.link.findFirst = createPrismaMock<ReturnType<PrismaLinkFindFirst>>();
-    (prisma.link.findFirst as any).mockResolvedValue(null);
+    prisma.link.findFirst = createPrismaMock<PrismaLinkFindFirst>();
+    (prisma.link.findFirst as jest.Mock).mockResolvedValue(null);
   },
   setupCreateVisit: () => {
-    prisma.linkVisit.create = createPrismaMock<ReturnType<PrismaLinkCreate>>();
-    (prisma.linkVisit.create as any).mockResolvedValue({});
+    prisma.linkVisit.create = createPrismaMock<PrismaLinkCreate>();
+    (prisma.linkVisit.create as jest.Mock).mockResolvedValue({});
   },
 };
 
@@ -119,7 +121,7 @@ export const createMockRequest = (options: {
 export const createMockResponse = (): Partial<Response> => {
   const res: Partial<Response> = {
     redirect: mockFn(),
-    status: mockFn().mockResolvedValue(null).mockReturnThis(),
+    status: mockFn().mockReturnThis(),
     send: mockFn(),
     json: mockFn(),
   };

@@ -1,8 +1,10 @@
-export const get404Template = () => `
+import { Translator } from "../lib/i18n";
+
+export const get404Template = (translator: Translator) => `
 <!DOCTYPE html>
-<html>
+<html lang="${translator.locale}">
   <head>
-    <title>Page Not Found - rflnk.com</title>
+    <title>${translator.t("template.404.title")}</title>
     <style>
       body {
         margin: 0;
@@ -56,10 +58,10 @@ export const get404Template = () => `
   </head>
   <body>
     <div class="glass-container">
-      <h1>404</h1>
-      <p>The link you're looking for doesn't seem to exist or might have expired.</p>
-      <p>Please check the URL or contact the person who shared it with you.</p>
-      <a href="/" class="back-button">Return Home</a>
+      <h1>${translator.t("template.404.heading")}</h1>
+      <p>${translator.t("template.404.description_primary")}</p>
+      <p>${translator.t("template.404.description_secondary")}</p>
+      <a href="/" class="back-button">${translator.t("template.404.cta")}</a>
     </div>
   </body>
 </html>

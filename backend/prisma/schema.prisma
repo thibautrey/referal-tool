@@ -18,6 +18,7 @@ model User {
     password           String
     role               Role            @default(USER)
     active             Boolean         @default(true)
+    locale             String?         @default("en")
     otpEnabled         Boolean         @default(false) // Indique si l'OTP est activé
     otpSecret          String? // Clé secrète pour l'OTP (nullable car optionnel)
     otpVerified        Boolean         @default(false) // Indique si l'OTP a été vérifié
@@ -38,6 +39,7 @@ model Project {
     description String?
     user        User            @relation("OwnedProjects", fields: [userId], references: [id])
     userId      Int
+    locale      String?         @default("en")
     members     ProjectMember[]
     links       Link[]
     createdAt   DateTime        @default(now())
