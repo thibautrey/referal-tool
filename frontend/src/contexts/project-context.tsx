@@ -1,19 +1,27 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useMemo } from "react";
+
+import { useAuth } from "./AuthContext";
 
 interface ProjectContextType {
-  currentProjectId: number | undefined;
-  setCurrentProjectId: (id: number | undefined) => void;
+  currentProjectId: number | null;
+  setCurrentProjectId: (id: number | null) => void;
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
 export function ProjectProvider({ children }: { children: React.ReactNode }) {
-  const [currentProjectId, setCurrentProjectId] = useState<number>();
+  const { currentProjectId, setCurrentProjectId } = useAuth();
+
+  const value = useMemo(
+    () => ({
+      currentProjectId,
+      setCurrentProjectId,
+    }),
+    [currentProjectId, setCurrentProjectId]
+  );
 
   return (
-    <ProjectContext.Provider value={{ currentProjectId, setCurrentProjectId }}>
-      {children}
-    </ProjectContext.Provider>
+    <ProjectContext.Provider value={value}>{children}</ProjectContext.Provider>
   );
 }
 
