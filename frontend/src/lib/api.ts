@@ -63,11 +63,21 @@ export interface DashboardStats {
   topLinks: { linkId: number; visits: number; details: ReferralLink }[];
 }
 
+export interface ProjectOwner {
+  id: number;
+  email: string;
+  firstName?: string | null;
+  lastName?: string | null;
+}
+
 export interface Project {
   id: number;
   name: string;
+  description?: string | null;
   createdAt: string;
   updatedAt: string;
+  role?: string;
+  owner?: ProjectOwner | null;
 }
 
 export interface ProjectMember {
@@ -267,6 +277,11 @@ class Api {
       : "/analytics/dashboard";
 
     const response = await this.get<DashboardStats>(endpoint);
+    return response.data;
+  }
+
+  async getProject(projectId: number): Promise<Project> {
+    const response = await this.get<Project>(`/projects/${projectId}`);
     return response.data;
   }
 
