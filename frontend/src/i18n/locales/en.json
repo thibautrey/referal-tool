@@ -303,17 +303,17 @@
     }
   },
   "links": {
-    "title_list": "Referral Links",
+    "title_list": "Links",
     "title_create": "Create Link",
     "title_edit": "Edit Link",
     "breadcrumb": {
-      "list": "Referral Links",
+      "list": "Links",
       "create": "Create Link",
       "edit": "Edit Link"
     },
     "empty": {
       "title": "No links available",
-      "description": "Create your first referral link to start seeing analytics"
+      "description": "Create your first link to start seeing analytics"
     },
     "errors": {
       "load": "Failed to load links data",
@@ -336,7 +336,7 @@
     "form": {
       "basic": {
         "title": "Basic Settings",
-        "description": "Configure the essential information for your referral link.",
+        "description": "Configure the essential information for your link.",
         "name_label": "Link name",
         "name_placeholder": "Summer campaign",
         "url_label": "Destination URL",
@@ -453,7 +453,7 @@
           "cpc": "CPC",
           "display": "Display",
           "affiliate": "Affiliate",
-          "referral": "Referral",
+          "referral": "Recommendation",
           "organic": "Organic"
         },
         "preview_label": "Preview URL"
@@ -513,12 +513,12 @@
       }
     },
     "list": {
-      "title": "Referral Links",
+      "title": "Links",
       "empty_title": "No links",
-      "empty_description": "Start by creating your first referral link",
+      "empty_description": "Start by creating your first link",
       "create": "Create link",
       "name": "Name",
-      "referral_url": "Referral URL",
+      "referral_url": "Link URL",
       "short_url": "Short URL",
       "clicks": "Clicks",
       "created_at": "Creation date",
@@ -545,10 +545,10 @@
     "error_title": "Error",
     "error_description": "Please try again later or contact support if the issue persists.",
     "empty_title": "No analytics data available",
-    "empty_description": "Create your first referral link to start seeing analytics",
+    "empty_description": "Create your first link to start seeing analytics",
     "header": {
       "title": "Links Performance",
-      "subtitle": "Statistics and performance of all your referral links.",
+      "subtitle": "Statistics and performance of all your links.",
       "total_clicks": "Total Clicks",
       "number_of_links": "Number of Links"
     },

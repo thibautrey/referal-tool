@@ -20,7 +20,7 @@ const APP_TIPS: Tip[] = [
   //   {
   //     id: "project-setup",
   //     title: "Create your first project",
-  //     summary: "Start by creating a project to organize your referral links.",
+  //     summary: "Start by creating a project to organize your links.",
   //     image: "/images/tips/project.png",
   //   },
   // {
