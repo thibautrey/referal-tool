@@ -21,7 +21,22 @@ dotenv.config();
 const app: Application = express();
 
 // Configuration de trust proxy pour gérer correctement les headers X-Forwarded-For
-app.set("trust proxy", true);
+const trustProxyEnv = process.env.TRUST_PROXY;
+if (trustProxyEnv) {
+  if (trustProxyEnv === "false") {
+    app.set("trust proxy", false);
+  } else if (/^\d+$/.test(trustProxyEnv)) {
+    app.set("trust proxy", Number(trustProxyEnv));
+  } else if (trustProxyEnv.toLowerCase() === "true") {
+    // Avoid permissive "true" which trusts every proxy; default to loopback instead
+    app.set("trust proxy", "loopback");
+  } else {
+    app.set("trust proxy", trustProxyEnv);
+  }
+} else {
+  // Default to trusting only loopback addresses when no explicit configuration is provided
+  app.set("trust proxy", "loopback");
+}
 
 // Configuration du rate limiter
 const limiter = rateLimit({
