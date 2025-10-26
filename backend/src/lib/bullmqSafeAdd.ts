@@ -72,7 +72,7 @@ function sanitizeError(error: Error, seen: WeakSet<object>) {
     base.stack = error.stack;
   }
 
-  const asAny = error as Record<string, unknown>;
+  const asAny = error as unknown as Record<string, unknown>;
   for (const [key, value] of Object.entries(asAny)) {
     if (typeof value === "function" || value === undefined) continue;
     const sanitized = sanitizeForQueue(value, seen);
@@ -191,7 +191,7 @@ Queue.prototype.add = function <T = any>(
 const originalAddBulk = Queue.prototype.addBulk;
 Queue.prototype.addBulk = function <T = any>(
   this: Queue<T>,
-  jobs: BulkJobOptions<T>[]
+  jobs: BulkJobOptions[]
 ) {
   const sanitizedJobs = jobs.map((job) => ({
     ...job,
