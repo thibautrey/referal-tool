@@ -1,0 +1,520 @@
+diff --git a/node_modules/ip-location-api/src/db.mjs b/node_modules/ip-location-api/src/db.mjs
+index de1c376..0adf54f 100644
+--- a/node_modules/ip-location-api/src/db.mjs
++++ b/node_modules/ip-location-api/src/db.mjs
+@@ -11,11 +11,30 @@ import { Address4, Address6 } from 'ip-address'
+ import dayjs from 'dayjs'
+ 
+ import { setting, consoleLog, consoleWarn } from './setting.mjs'
+-import { getPostcodeDatabase, strToNum37, aton4, aton6, getSmallMemoryFile, numberToDir, countryCodeToNum } from './utils.mjs'
++import { LONG_POSTCODE_MARKER, getPostcodeDatabase, strToNum37, aton4, aton6, getSmallMemoryFile, numberToDir, countryCodeToNum } from './utils.mjs'
+ 
+ const __filename = fileURLToPath(import.meta.url)
+ const __dirname = path.dirname(__filename)
+ 
++const MAX_UINT32 = 0xFFFFFFFF
++const longPostcodeList = ['']
++const longPostcodeIndex = new Map()
++const getPostcodeForStorage = (postcode) => {
++        if(!postcode) return [0, 0]
++        const normalized = postcode.toUpperCase()
++        const result = getPostcodeDatabase(normalized)
++        if(result[1] <= MAX_UINT32) {
++                return result
++        }
++        var index = longPostcodeIndex.get(normalized)
++        if(!index){
++                index = longPostcodeList.length
++                longPostcodeIndex.set(normalized, index)
++                longPostcodeList.push(normalized)
++        }
++        return [LONG_POSTCODE_MARKER, index]
++}
++
+ const rimraf = (dir) => {
+ 	if(fs.rm){
+ 		return fs.rm(dir, {recursive: true, force: true, maxRetries: 3})
+@@ -377,7 +396,10 @@ const sha256Hash = async (file) => {
+ }
+ 
+ const createData = async (src) => {
+-	var mapDatas = []
++        longPostcodeIndex.clear()
++        longPostcodeList.length = 1
++        longPostcodeList[0] = ''
++        var mapDatas = []
+ 	var locationSrc = src.filter(file => file.includes('Locations'))
+ 	locationSrc.sort((a,b) => {
+ 		// Locations-en.csv should be the first
+@@ -392,12 +414,15 @@ const createData = async (src) => {
+ 	}
+ 	var blockSrc = src.filter(file => file.includes('Blocks'))
+ 	mapDatas.push([])
+-	for(var file of blockSrc){
+-		await createMainData(file, mapDatas)
+-	}
+-	if(setting.locFile){
+-		await createMapData(mapDatas)
+-	}
++        for(var file of blockSrc){
++                await createMainData(file, mapDatas)
++        }
++        if(setting.locFile){
++                await createMapData(mapDatas)
++        } else {
++                const payload = longPostcodeList.length > 1 ? { longPostcode: longPostcodeList.slice() } : {}
++                await fs.writeFile(path.join(setting.fieldDir, 'sub.json.tmp'), JSON.stringify(payload))
++        }
+ }
+ 
+ 
+@@ -598,12 +623,12 @@ const createMainData = async (file, mapDatas) => {
+ 							buffer3.writeInt32LE(longitude, offset)
+ 							offset += 4
+ 						}
+-						if(setting.mainFieldHash.postcode) {
+-							var postcodeDb = getPostcodeDatabase(postcode)
+-							buffer3.writeUInt32LE(postcodeDb[1], offset)
+-							buffer3.writeInt8(postcodeDb[0], offset + 4)
+-							offset += 5
+-						}
++                                                if(setting.mainFieldHash.postcode) {
++                                                        var postcodeDb = getPostcodeForStorage(postcode)
++                                                        buffer3.writeUInt32LE(postcodeDb[1], offset)
++                                                        buffer3.writeInt8(postcodeDb[0], offset + 4)
++                                                        offset += 5
++                                                }
+ 						if(setting.mainFieldHash.area) {
+ 							buffer3.writeUInt8(makeAreaDatabase(area), offset)
+ 						}
+@@ -780,21 +805,22 @@ const createMapData = async (mapDatas) => {
+ 	ws1.end()
+ 	ws2.end()
+ 
+-	var hash = {
+-		region1_name: DatabaseToArray(sub1Database),
+-		region2_name: DatabaseToArray(sub2Database),
+-		timezone: DatabaseToArray(timezoneDatabase),
+-		area: DatabaseToArray(areaDatabase).map(v => parseInt(v, 10)||0),
+-		eu: euHash
+-	}
++        var hash = {
++                region1_name: DatabaseToArray(sub1Database),
++                region2_name: DatabaseToArray(sub2Database),
++                timezone: DatabaseToArray(timezoneDatabase),
++                area: DatabaseToArray(areaDatabase).map(v => parseInt(v, 10)||0),
++                eu: euHash
++        }
++        if(longPostcodeList.length > 1){
++                hash.longPostcode = longPostcodeList.slice()
++        }
+ 	if(!setting.locFieldHash.region1_name) delete hash.region1_name
+ 	if(!setting.locFieldHash.region2_name) delete hash.region2_name
+ 	if(!setting.locFieldHash.timezone) delete hash.timezone
+ 	if(!setting.mainFieldHash.area) delete hash.area
+ 	if(!setting.locFieldHash.eu) delete hash.eu
+-	if(Object.keys(hash).length > 0){
+-		await fs.writeFile(path.join(setting.fieldDir, 'sub.json.tmp'), JSON.stringify(hash))
+-	}
++        await fs.writeFile(path.join(setting.fieldDir, 'sub.json.tmp'), JSON.stringify(hash))
+ 	sub1Database = sub2Database = timezoneDatabase = areaDatabase = null
+ 	mapDatas.length = 0
+ }
+diff --git a/node_modules/ip-location-api/src/main-pack.mjs b/node_modules/ip-location-api/src/main-pack.mjs
+index 0850e36..efd66f9 100644
+--- a/node_modules/ip-location-api/src/main-pack.mjs
++++ b/node_modules/ip-location-api/src/main-pack.mjs
+@@ -8,7 +8,7 @@ import { countries, continents } from 'countries-list'
+ import { CronJob } from 'cron'
+ 
+ import { setting, setSetting, getSettingCmd, consoleLog, consoleWarn } from './setting.mjs'
+-import { num37ToStr, getSmallMemoryFile, getZeroFill, aton6Start, aton4 } from './utils.mjs'
++import { LONG_POSTCODE_MARKER, num37ToStr, getSmallMemoryFile, getZeroFill, aton6Start, aton4 } from './utils.mjs'
+ import { update as updataDbAsync } from './db.mjs'
+ 
+ const v4db = setting.v4
+@@ -193,10 +193,10 @@ export const setupWithoutReload = setSetting
+  */
+ export const clear = () => {
+ 	v4db.startIps = v6db.startIps = v4db.endIps = v6db.endIps = v4db.mainBuffer = v6db.mainBuffer = null
+-	Region1NameJson = Region2NameJson = TimezoneJson = LocBuffer = CityNameBuffer = EuJson = null
++Region1NameJson = Region2NameJson = TimezoneJson = LocBuffer = CityNameBuffer = EuJson = LongPostcodeJson = null
+ }
+ 
+-var Region1NameJson, Region2NameJson, TimezoneJson, LocBuffer, CityNameBuffer, AreaJson, EuJson
++var Region1NameJson, Region2NameJson, TimezoneJson, LocBuffer, CityNameBuffer, AreaJson, EuJson, LongPostcodeJson
+ var updateJob
+ /**
+  * reload in-memory database
+@@ -228,7 +228,10 @@ export const reload = async (_setting, sync, _runningUpdate) => {
+ 		citySub: 		  path.join(dataDir, 'sub.json')
+ 	}
+ 
+-	var locBuffer, cityNameBuffer, subBuffer
++        const needSubFile = locFieldHash.region1_name || locFieldHash.region2_name || locFieldHash.timezone || mainFieldHash.area || locFieldHash.eu || mainFieldHash.postcode
++        const hasSubFile = needSubFile && fsSync.existsSync(dataFiles.citySub)
++
++        var locBuffer, cityNameBuffer, subBuffer
+ 	var buffer41, buffer42, buffer43, buffer61, buffer62, buffer63
+ 	if(sync){
+ 		if(!fsSync.existsSync(dataFiles.v41)){
+@@ -244,15 +247,17 @@ export const reload = async (_setting, sync, _runningUpdate) => {
+ 			buffer62 = fsSync.readFileSync(dataFiles.v62)
+ 			buffer63 = fsSync.readFileSync(dataFiles.v63)
+ 		}
+-		if(curSetting.locFile){
+-			locBuffer = fsSync.readFileSync(dataFiles.cityLocation)
+-			if(locFieldHash.city){
+-				cityNameBuffer = fsSync.readFileSync(dataFiles.cityName)
+-			}
+-			if(locFieldHash.region1_name || locFieldHash.region2_name || locFieldHash.timezone || mainFieldHash.area || locFieldHash.eu){
+-				subBuffer = fsSync.readFileSync(dataFiles.citySub)
+-			}
+-		}
++                if(curSetting.locFile){
++                        locBuffer = fsSync.readFileSync(dataFiles.cityLocation)
++                        if(locFieldHash.city){
++                                cityNameBuffer = fsSync.readFileSync(dataFiles.cityName)
++                        }
++                }
++                if(hasSubFile){
++                        subBuffer = fsSync.readFileSync(dataFiles.citySub)
++                } else if(mainFieldHash.postcode){
++                        LongPostcodeJson = null
++                }
+ 	} else {
+ 		if(!fsSync.existsSync(dataFiles.v41)){
+ 			consoleLog('Database creating ...')
+@@ -271,16 +276,18 @@ export const reload = async (_setting, sync, _runningUpdate) => {
+ 				fs.readFile(dataFiles.v63).then(data => buffer63 = data)
+ 			)
+ 		}
+-		if(curSetting.locFile){
+-			prs.push(fs.readFile(dataFiles.cityLocation).then(data => locBuffer = data))
+-			if(locFieldHash.city){
+-				prs.push(fs.readFile(dataFiles.cityName).then(data => cityNameBuffer = data))
+-			}
+-			if(locFieldHash.region1_name || locFieldHash.region2_name || locFieldHash.timezone || mainFieldHash.area || locFieldHash.eu){
+-				prs.push(fs.readFile(dataFiles.citySub).then(data => subBuffer = data))
+-			}
+-		}
+-		await Promise.all(prs)
++                if(curSetting.locFile){
++                        prs.push(fs.readFile(dataFiles.cityLocation).then(data => locBuffer = data))
++                        if(locFieldHash.city){
++                                prs.push(fs.readFile(dataFiles.cityName).then(data => cityNameBuffer = data))
++                        }
++                }
++                if(hasSubFile){
++                        prs.push(fs.readFile(dataFiles.citySub).then(data => subBuffer = data))
++                } else if(mainFieldHash.postcode){
++                        LongPostcodeJson = null
++                }
++                await Promise.all(prs)
+ 	}
+ 
+ 	if(_setting){
+@@ -300,18 +307,29 @@ export const reload = async (_setting, sync, _runningUpdate) => {
+ 	v6.lastLine = v6.startIps.length - 1
+ 	v4.firstIp = v4.startIps[0]
+ 	v6.firstIp = v6.startIps[0]
+-	if(curSetting.isCity){
+-		LocBuffer = locBuffer
+-		CityNameBuffer = cityNameBuffer
+-		if(subBuffer){
+-			var tmpJson = JSON.parse(subBuffer)
+-			if(locFieldHash.region1_name) Region1NameJson = tmpJson.region1_name
+-			if(locFieldHash.region2_name) Region2NameJson = tmpJson.region2_name
+-			if(locFieldHash.timezone) TimezoneJson = tmpJson.timezone
+-			if(mainFieldHash.area) AreaJson = tmpJson.area
+-			if(locFieldHash.eu) EuJson = tmpJson.eu
+-		}
+-	}
++        var tmpJson
++        if(subBuffer){
++                tmpJson = JSON.parse(subBuffer)
++                if(tmpJson.longPostcode){
++                        LongPostcodeJson = tmpJson.longPostcode
++                } else if(mainFieldHash.postcode){
++                        LongPostcodeJson = null
++                }
++        } else if(mainFieldHash.postcode){
++                LongPostcodeJson = null
++        }
++
++        if(curSetting.isCity){
++                LocBuffer = locBuffer
++                CityNameBuffer = cityNameBuffer
++                if(tmpJson){
++                        if(locFieldHash.region1_name) Region1NameJson = tmpJson.region1_name
++                        if(locFieldHash.region2_name) Region2NameJson = tmpJson.region2_name
++                        if(locFieldHash.timezone) TimezoneJson = tmpJson.timezone
++                        if(mainFieldHash.area) AreaJson = tmpJson.area
++                        if(locFieldHash.eu) EuJson = tmpJson.eu
++                }
++        }
+ 
+ 	// To avoid the error (when the database is updated while the server is running),
+ 	// we need to syncronous update the database
+@@ -530,25 +548,31 @@ const setCityRecord = (buffer, geodata, offset) => {
+ 	if(mainFieldHash.postcode){
+ 		var postcode2 = buffer.readUInt32LE(offset)
+ 		var postcode1 = buffer.readInt8(offset + 4)
+-		if (postcode2) {
+-			var postcode, tmp
+-			if(postcode1 < -9){
+-				tmp = (-postcode1).toString()
+-				postcode = postcode2.toString(36)
+-				postcode = getZeroFill(postcode.slice(0, -tmp[1]), tmp[0]-0) + '-' + getZeroFill(postcode.slice(-tmp[1]), tmp[1]-0)
+-			} else if(postcode1 < 0){
+-				postcode = getZeroFill(postcode2.toString(36), -postcode1)
+-			} else if(postcode1 < 10){
+-				postcode = getZeroFill(postcode2.toString(10), postcode1)
+-			} else if(postcode1 < 72){
+-				postcode1 = String(postcode1)
+-				postcode = getZeroFill(postcode2.toString(10), (postcode1[0]-0) + (postcode1[1]-0))
+-				postcode = postcode.slice(0, postcode1[0]-0) + '-' + postcode.slice(postcode1[0]-0)
+-			} else {
+-				postcode = postcode1.toString(36).slice(1) + postcode2.toString(36)
+-			}
+-			geodata.postcode = postcode.toUpperCase()
+-		}
++        if (postcode2) {
++                var postcode, tmp
++                if(postcode1 < -9){
++                        tmp = (-postcode1).toString()
++                        postcode = postcode2.toString(36)
++                        postcode = getZeroFill(postcode.slice(0, -tmp[1]), tmp[0]-0) + '-' + getZeroFill(postcode.slice(-tmp[1]), tmp[1]-0)
++                } else if(postcode1 < 0){
++                        postcode = getZeroFill(postcode2.toString(36), -postcode1)
++                } else if(postcode1 < 10){
++                        postcode = getZeroFill(postcode2.toString(10), postcode1)
++                } else if(postcode1 < 72){
++                        postcode1 = String(postcode1)
++                        postcode = getZeroFill(postcode2.toString(10), (postcode1[0]-0) + (postcode1[1]-0))
++                        postcode = postcode.slice(0, postcode1[0]-0) + '-' + postcode.slice(postcode1[0]-0)
++                } else if(postcode1 === LONG_POSTCODE_MARKER){
++                        if(LongPostcodeJson && postcode2 < LongPostcodeJson.length){
++                                postcode = LongPostcodeJson[postcode2]
++                        }
++                } else {
++                        postcode = postcode1.toString(36).slice(1) + postcode2.toString(36)
++                }
++                if(postcode){
++                        geodata.postcode = postcode.toUpperCase()
++                }
++        }
+ 		offset += 5
+ 	}
+ 	if(mainFieldHash.area){
+diff --git a/node_modules/ip-location-api/src/main.mjs b/node_modules/ip-location-api/src/main.mjs
+index c420e47..a86100d 100644
+--- a/node_modules/ip-location-api/src/main.mjs
++++ b/node_modules/ip-location-api/src/main.mjs
+@@ -8,7 +8,7 @@ import { countries, continents } from 'countries-list'
+ import { CronJob } from 'cron'
+ 
+ import { setting, setSetting, getSettingCmd, consoleLog, consoleWarn } from './setting.mjs'
+-import { num37ToStr, getSmallMemoryFile, getZeroFill, aton6Start, aton4 } from './utils.mjs'
++import { LONG_POSTCODE_MARKER, num37ToStr, getSmallMemoryFile, getZeroFill, aton6Start, aton4 } from './utils.mjs'
+ 
+ const v4db = setting.v4
+ const v6db = setting.v6
+@@ -191,11 +191,11 @@ export const setupWithoutReload = setSetting
+  * @return {void}
+  */
+ export const clear = () => {
+-	v4db.startIps = v6db.startIps = v4db.endIps = v6db.endIps = v4db.mainBuffer = v6db.mainBuffer = null
+-	Region1NameJson = Region2NameJson = TimezoneJson = LocBuffer = CityNameBuffer = EuJson = null
++        v4db.startIps = v6db.startIps = v4db.endIps = v6db.endIps = v4db.mainBuffer = v6db.mainBuffer = null
++        Region1NameJson = Region2NameJson = TimezoneJson = LocBuffer = CityNameBuffer = EuJson = LongPostcodeJson = null
+ }
+ 
+-var Region1NameJson, Region2NameJson, TimezoneJson, LocBuffer, CityNameBuffer, AreaJson, EuJson
++var Region1NameJson, Region2NameJson, TimezoneJson, LocBuffer, CityNameBuffer, AreaJson, EuJson, LongPostcodeJson
+ var updateJob
+ /**
+  * reload in-memory database
+@@ -227,7 +227,10 @@ export const reload = async (_setting, sync, _runningUpdate) => {
+ 		citySub: 		  path.join(dataDir, 'sub.json')
+ 	}
+ 
+-	var locBuffer, cityNameBuffer, subBuffer
++        const needSubFile = locFieldHash.region1_name || locFieldHash.region2_name || locFieldHash.timezone || mainFieldHash.area || locFieldHash.eu || mainFieldHash.postcode
++        const hasSubFile = needSubFile && fsSync.existsSync(dataFiles.citySub)
++
++        var locBuffer, cityNameBuffer, subBuffer
+ 	var buffer41, buffer42, buffer43, buffer61, buffer62, buffer63
+ 	if(sync){
+ 		if(!fsSync.existsSync(dataFiles.v41)){
+@@ -243,15 +246,17 @@ export const reload = async (_setting, sync, _runningUpdate) => {
+ 			buffer62 = fsSync.readFileSync(dataFiles.v62)
+ 			buffer63 = fsSync.readFileSync(dataFiles.v63)
+ 		}
+-		if(curSetting.locFile){
+-			locBuffer = fsSync.readFileSync(dataFiles.cityLocation)
+-			if(locFieldHash.city){
+-				cityNameBuffer = fsSync.readFileSync(dataFiles.cityName)
+-			}
+-			if(locFieldHash.region1_name || locFieldHash.region2_name || locFieldHash.timezone || mainFieldHash.area || locFieldHash.eu){
+-				subBuffer = fsSync.readFileSync(dataFiles.citySub)
+-			}
+-		}
++                if(curSetting.locFile){
++                        locBuffer = fsSync.readFileSync(dataFiles.cityLocation)
++                        if(locFieldHash.city){
++                                cityNameBuffer = fsSync.readFileSync(dataFiles.cityName)
++                        }
++                }
++                if(hasSubFile){
++                        subBuffer = fsSync.readFileSync(dataFiles.citySub)
++                } else if(mainFieldHash.postcode){
++                        LongPostcodeJson = null
++                }
+ 	} else {
+ 		if(!fsSync.existsSync(dataFiles.v41)){
+ 			consoleLog('Database creating ...')
+@@ -270,16 +275,18 @@ export const reload = async (_setting, sync, _runningUpdate) => {
+ 				fs.readFile(dataFiles.v63).then(data => buffer63 = data)
+ 			)
+ 		}
+-		if(curSetting.locFile){
+-			prs.push(fs.readFile(dataFiles.cityLocation).then(data => locBuffer = data))
+-			if(locFieldHash.city){
+-				prs.push(fs.readFile(dataFiles.cityName).then(data => cityNameBuffer = data))
+-			}
+-			if(locFieldHash.region1_name || locFieldHash.region2_name || locFieldHash.timezone || mainFieldHash.area || locFieldHash.eu){
+-				prs.push(fs.readFile(dataFiles.citySub).then(data => subBuffer = data))
+-			}
+-		}
+-		await Promise.all(prs)
++                if(curSetting.locFile){
++                        prs.push(fs.readFile(dataFiles.cityLocation).then(data => locBuffer = data))
++                        if(locFieldHash.city){
++                                prs.push(fs.readFile(dataFiles.cityName).then(data => cityNameBuffer = data))
++                        }
++                }
++                if(hasSubFile){
++                        prs.push(fs.readFile(dataFiles.citySub).then(data => subBuffer = data))
++                } else if(mainFieldHash.postcode){
++                        LongPostcodeJson = null
++                }
++                await Promise.all(prs)
+ 	}
+ 
+ 	if(_setting){
+@@ -299,18 +306,29 @@ export const reload = async (_setting, sync, _runningUpdate) => {
+ 	v6.lastLine = v6.startIps.length - 1
+ 	v4.firstIp = v4.startIps[0]
+ 	v6.firstIp = v6.startIps[0]
+-	if(curSetting.isCity){
+-		LocBuffer = locBuffer
+-		CityNameBuffer = cityNameBuffer
+-		if(subBuffer){
+-			var tmpJson = JSON.parse(subBuffer)
+-			if(locFieldHash.region1_name) Region1NameJson = tmpJson.region1_name
+-			if(locFieldHash.region2_name) Region2NameJson = tmpJson.region2_name
+-			if(locFieldHash.timezone) TimezoneJson = tmpJson.timezone
+-			if(mainFieldHash.area) AreaJson = tmpJson.area
+-			if(locFieldHash.eu) EuJson = tmpJson.eu
+-		}
+-	}
++        var tmpJson
++        if(subBuffer){
++                tmpJson = JSON.parse(subBuffer)
++                if(tmpJson.longPostcode){
++                        LongPostcodeJson = tmpJson.longPostcode
++                } else if(mainFieldHash.postcode){
++                        LongPostcodeJson = null
++                }
++        } else if(mainFieldHash.postcode){
++                LongPostcodeJson = null
++        }
++
++        if(curSetting.isCity){
++                LocBuffer = locBuffer
++                CityNameBuffer = cityNameBuffer
++                if(tmpJson){
++                        if(locFieldHash.region1_name) Region1NameJson = tmpJson.region1_name
++                        if(locFieldHash.region2_name) Region2NameJson = tmpJson.region2_name
++                        if(locFieldHash.timezone) TimezoneJson = tmpJson.timezone
++                        if(mainFieldHash.area) AreaJson = tmpJson.area
++                        if(locFieldHash.eu) EuJson = tmpJson.eu
++                }
++        }
+ 
+ 	// To avoid the error (when the database is updated while the server is running),
+ 	// we need to syncronous update the database
+@@ -514,25 +532,31 @@ const setCityRecord = (buffer, geodata, offset) => {
+ 	if(mainFieldHash.postcode){
+ 		var postcode2 = buffer.readUInt32LE(offset)
+ 		var postcode1 = buffer.readInt8(offset + 4)
+-		if (postcode2) {
+-			var postcode, tmp
+-			if(postcode1 < -9){
+-				tmp = (-postcode1).toString()
+-				postcode = postcode2.toString(36)
+-				postcode = getZeroFill(postcode.slice(0, -tmp[1]), tmp[0]-0) + '-' + getZeroFill(postcode.slice(-tmp[1]), tmp[1]-0)
+-			} else if(postcode1 < 0){
+-				postcode = getZeroFill(postcode2.toString(36), -postcode1)
+-			} else if(postcode1 < 10){
+-				postcode = getZeroFill(postcode2.toString(10), postcode1)
+-			} else if(postcode1 < 72){
+-				postcode1 = String(postcode1)
+-				postcode = getZeroFill(postcode2.toString(10), (postcode1[0]-0) + (postcode1[1]-0))
+-				postcode = postcode.slice(0, postcode1[0]-0) + '-' + postcode.slice(postcode1[0]-0)
+-			} else {
+-				postcode = postcode1.toString(36).slice(1) + postcode2.toString(36)
+-			}
+-			geodata.postcode = postcode.toUpperCase()
+-		}
++                if (postcode2) {
++                        var postcode, tmp
++                        if(postcode1 < -9){
++                                tmp = (-postcode1).toString()
++                                postcode = postcode2.toString(36)
++                                postcode = getZeroFill(postcode.slice(0, -tmp[1]), tmp[0]-0) + '-' + getZeroFill(postcode.slice(-tmp[1]), tmp[1]-0)
++                        } else if(postcode1 < 0){
++                                postcode = getZeroFill(postcode2.toString(36), -postcode1)
++                        } else if(postcode1 < 10){
++                                postcode = getZeroFill(postcode2.toString(10), postcode1)
++                        } else if(postcode1 < 72){
++                                postcode1 = String(postcode1)
++                                postcode = getZeroFill(postcode2.toString(10), (postcode1[0]-0) + (postcode1[1]-0))
++                                postcode = postcode.slice(0, postcode1[0]-0) + '-' + postcode.slice(postcode1[0]-0)
++                        } else if(postcode1 === LONG_POSTCODE_MARKER){
++                                if(LongPostcodeJson && postcode2 < LongPostcodeJson.length){
++                                        postcode = LongPostcodeJson[postcode2]
++                                }
++                        } else {
++                                postcode = postcode1.toString(36).slice(1) + postcode2.toString(36)
++                        }
++                        if(postcode){
++                                geodata.postcode = postcode.toUpperCase()
++                        }
++                }
+ 		offset += 5
+ 	}
+ 	if(mainFieldHash.area){
+diff --git a/node_modules/ip-location-api/src/utils.mjs b/node_modules/ip-location-api/src/utils.mjs
+index ee83911..f3e4d44 100644
+--- a/node_modules/ip-location-api/src/utils.mjs
++++ b/node_modules/ip-location-api/src/utils.mjs
+@@ -3,6 +3,7 @@ import path from 'path'
+ // export const DEBUG = process.argv.includes('debug')
+ 
+ //export const MaxLocationId = 0xFFFFFFFF - 26*26
++export const LONG_POSTCODE_MARKER = -128
+ export const countryCodeToNum = (code) => { // 0~675
+ 	code = code.toUpperCase()
+ 	return (code.charCodeAt(0)-65)*26 + (code.charCodeAt(1)-65)
+@@ -155,7 +156,8 @@ const isPostNumReg2 = /^(\d+)[-\s](\d+)$/
+ const isPostStrReg = /^([A-Z\d]+)$/
+ const isPostStrReg2 = /^([A-Z\d]+)[-\s]([A-Z\d]+)$/
+ export const getPostcodeDatabase = (postcode) => {
+-	if(!postcode) return [0, 0];
++        if(!postcode) return [0, 0];
++        postcode = postcode.toUpperCase();
+ 	// number type
+ 	if(isPostNumReg.test(postcode)){
+ 		return [
