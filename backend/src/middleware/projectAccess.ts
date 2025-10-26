@@ -1,11 +1,13 @@
 import { NextFunction, Request, Response } from "express";
 import prisma from "../lib/prisma";
+import { buildLocalizedResponse, createTranslator } from "../lib/i18n";
 
 export const validateProjectAccess = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
+  let translator = createTranslator({ req, userLocale: req.user?.locale });
   try {
     const userId = req.user?.id;
     const role = req.user?.role;
@@ -27,7 +29,11 @@ export const validateProjectAccess = async (
     }
 
     if (!userId) {
-      return res.status(401).json({ message: "Authentication required" });
+      return res
+        .status(401)
+        .json(
+          buildLocalizedResponse(translator, "common.errors.authentication_required")
+        );
     }
 
     const project = await prisma.project.findUnique({
@@ -45,8 +51,19 @@ export const validateProjectAccess = async (
     if (!project) {
       return res
         .status(403)
-        .json({ message: "Project not found or access denied" });
+        .json(
+          buildLocalizedResponse(
+            translator,
+            "project.errors.not_found_or_denied"
+          )
+        );
     }
+
+    translator = createTranslator({
+      req,
+      userLocale: req.user?.locale,
+      projectLocale: project.locale,
+    });
 
     const isOwner = project.userId === userId;
     const membership = project.members[0];
@@ -54,7 +71,12 @@ export const validateProjectAccess = async (
     if (!isAdmin && !isOwner && !membership) {
       return res
         .status(403)
-        .json({ message: "Project not found or access denied" });
+        .json(
+          buildLocalizedResponse(
+            translator,
+            "project.errors.not_found_or_denied"
+          )
+        );
     }
 
     // Add validated project to request
@@ -68,6 +90,12 @@ export const validateProjectAccess = async (
     next();
   } catch (error) {
     console.error("Project access validation error:", error);
-    res.status(500).json({ message: "Error validating project access" });
+    res
+      .status(500)
+      .json(
+        buildLocalizedResponse(translator, "common.errors.unexpected", {
+          error,
+        })
+      );
   }
 };

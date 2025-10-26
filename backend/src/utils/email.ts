@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { Locale } from "../lib/i18n";
 
 // Initialize Resend with API key
 const resend = new Resend(process.env.RESEND);
@@ -10,6 +11,8 @@ interface EmailOptions {
   from?: string;
   text?: string;
   replyTo?: string;
+  headers?: Record<string, string>;
+  locale?: Locale;
 }
 
 /**
@@ -24,16 +27,27 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
       from = "no-reply@rflnk.com",
       text,
       replyTo,
+      headers,
+      locale,
     } = options;
 
-    const { data, error } = await resend.emails.send({
+    const payload: any = {
       from: from,
       to: Array.isArray(to) ? to : [to],
       subject: subject,
       html: html,
       text: text,
       replyTo,
-    });
+    };
+
+    if (headers || locale) {
+      payload.headers = {
+        ...(headers ?? {}),
+        ...(locale ? { "X-Preferred-Locale": locale } : {}),
+      };
+    }
+
+    const { data, error } = await resend.emails.send(payload);
 
     if (error) {
       console.error("Error sending email via Resend:", error);

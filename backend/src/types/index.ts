@@ -37,7 +37,8 @@ export const addRuleStats = (ruleStats: RuleStats[]) => {
 };
 
 export interface ApiResponse<T = any> {
-  message: string;
+  message?: string;
+  messageKey?: string;
   data?: T;
   error?: any;
 }

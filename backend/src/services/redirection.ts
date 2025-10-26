@@ -7,6 +7,7 @@ import { get404Template } from "../templates/404";
 import { getCountryFromIp } from "../utils/geolocation";
 import { getPasswordTemplate } from "../templates/password";
 import prisma from "../lib/prisma";
+import { buildLocalizedResponse, createTranslator } from "../lib/i18n";
 
 // Add template for password entry page
 
@@ -15,8 +16,12 @@ export const getUserAgent = (
   req: Request
 ): { deviceType: string; userAgent: string } => {
   const userAgent = req.headers["user-agent"] || "";
-  if (/mobile/i.test(userAgent)) return { deviceType: "mobile", userAgent };
-  if (/tablet/i.test(userAgent)) return { deviceType: "tablet", userAgent };
+  if (/ipad|tablet/i.test(userAgent)) {
+    return { deviceType: "tablet", userAgent };
+  }
+  if (/mobile/i.test(userAgent)) {
+    return { deviceType: "mobile", userAgent };
+  }
   return { deviceType: "desktop", userAgent };
 };
 
@@ -104,7 +109,17 @@ const attachUtmParameters = (url: string, link: any): string => {
     if (link.utmContent)
       finalUrl.searchParams.set("utm_content", link.utmContent);
 
-    return finalUrl.toString();
+    const normalized = finalUrl.toString();
+    const originalEndsWithSlash = url.trim().endsWith("/");
+    if (
+      finalUrl.pathname === "/" &&
+      !finalUrl.search &&
+      !finalUrl.hash &&
+      !originalEndsWithSlash
+    ) {
+      return normalized.slice(0, -1);
+    }
+    return normalized;
   } catch {
     // If URL parsing fails, append parameters manually
     const separator = url.includes("?") ? "&" : "?";
@@ -132,41 +147,61 @@ export const handleRedirection = async (req: Request, res: Response) => {
   const path = req.params.path;
   console.log(`Processing redirection for path: ${path}`);
 
+  const translator = createTranslator({ req });
   try {
     // Check if link requires password and session is not valid
-    const linkData = await prisma.link.findFirst({
-      where: {
-        shortCode: path,
-        active: true,
-      },
-      select: {
-        id: true,
-        isPasswordProtected: true,
-        baseUrl: true,
-        rules: true,
-        deviceRules: true,
-        utmSource: true,
-        utmMedium: true,
-        utmCampaign: true,
-        utmTerm: true,
-        utmContent: true,
-      },
-    });
+    let linkData = await getCachedLinkData(path);
 
     if (!linkData) {
-      throw new Error("Link not found");
+      linkData = await prisma.link.findFirst({
+        where: {
+          shortCode: path,
+          active: true,
+        },
+        select: {
+          id: true,
+          isPasswordProtected: true,
+          baseUrl: true,
+          rules: {
+            select: {
+              id: true,
+              redirectUrl: true,
+              countries: true,
+              isExclusive: true,
+            },
+          },
+          deviceRules: {
+            select: {
+              id: true,
+              redirectUrl: true,
+              deviceType: true,
+            },
+          },
+          utmSource: true,
+          utmMedium: true,
+          utmCampaign: true,
+          utmTerm: true,
+          utmContent: true,
+        },
+      });
+
+      if (!linkData) {
+        throw new Error("Link not found");
+      }
+
+      await cacheLinkData(path, linkData);
     }
 
     if (linkData.isPasswordProtected) {
       const sessionToken = req.cookies.link_session;
       if (!sessionToken) {
-        return res.send(getPasswordTemplate(path));
+        return res.send(getPasswordTemplate(path, translator));
       }
 
       const sessionKey = `link_session:${path}:${sessionToken}`;
       const isValid = await getFromCache(sessionKey);
       if (!isValid) {
-        return res.send(getPasswordTemplate(path));
+        return res.send(getPasswordTemplate(path, translator));
       }
     }
 
@@ -253,8 +288,14 @@ export const handleRedirection = async (req: Request, res: Response) => {
   } catch (error: unknown) {
     console.error("Redirection error:", error);
     if (error instanceof Error && error.message === "Link not found") {
-      return res.status(404).send(get404Template());
+      return res.status(404).send(get404Template(translator));
     }
-    return res.status(500).json({ message: "Error handling redirection" });
+    return res
+      .status(500)
+      .json(
+        buildLocalizedResponse(translator, "common.errors.unexpected", {
+          error,
+        })
+      );
   }
 };

@@ -1,21 +1,29 @@
+import { Translator } from "../lib/i18n";
+
 interface ProjectMemberInvitationPayload {
   projectName: string;
   inviterEmail: string;
 }
 
 export const getProjectMemberInvitationTemplate = (
-  payload: ProjectMemberInvitationPayload
+  payload: ProjectMemberInvitationPayload,
+  translator: Translator
 ) => `
   <div style="font-family: Arial, sans-serif; color: #1f2933; padding: 24px;">
-    <h2 style="margin-bottom: 16px;">You've been invited to join ${payload.projectName}</h2>
+    <h2 style="margin-bottom: 16px;">${translator.t("email.invite.heading", {
+      projectName: payload.projectName,
+    })}</h2>
     <p style="margin-bottom: 16px;">
-      ${payload.inviterEmail} has added you as a member of the <strong>${payload.projectName}</strong> project.
+      ${translator.t("email.invite.body", {
+        inviterEmail: payload.inviterEmail,
+        projectName: payload.projectName,
+      })}
     </p>
     <p style="margin-bottom: 16px;">
-      Sign in to your referral tool account to collaborate with the rest of the team.
+      ${translator.t("email.invite.secondary")}
     </p>
     <p style="margin-bottom: 0; color: #52606d; font-size: 14px;">
-      If you believe this invitation was sent in error, you can safely ignore this message.
+      ${translator.t("email.invite.footer")}
     </p>
     <div style="margin-top: 24px;">
       <a
@@ -30,7 +38,7 @@ export const getProjectMemberInvitationTemplate = (
           font-weight: 600;
         "
       >
-        Go to rflnk.com
+        ${translator.t("email.invite.cta")}
       </a>
     </div>
   </div>

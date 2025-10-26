@@ -3,7 +3,7 @@ import {
   checkPasswordSession,
   validateLinkPassword,
 } from "../../src/middleware/passwordProtection";
-import { compare, hash } from "bcrypt";
+import { compare } from "bcrypt";
 import { getFromCache, saveToCache } from "../../src/lib/redis";
 
 import prisma from "../../src/lib/prisma";
@@ -16,6 +16,15 @@ describe("Password Protection Middleware", () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
   let nextFunction: NextFunction;
+
+  const prismaMock = prisma as unknown as {
+    link: {
+      findFirst: jest.Mock;
+    };
+  };
+  const redisGetMock = getFromCache as unknown as jest.Mock;
+  const redisSaveMock = saveToCache as unknown as jest.Mock;
+  const bcryptCompareMock = compare as unknown as jest.Mock;
 
   beforeEach(() => {
     mockRequest = {
@@ -31,6 +40,12 @@ describe("Password Protection Middleware", () => {
       cookie: jest.fn(),
     };
     nextFunction = jest.fn();
+    prismaMock.link.findFirst = jest.fn();
+    redisGetMock.mockReset();
+    redisSaveMock.mockReset();
+    bcryptCompareMock.mockReset();
+    redisGetMock.mockResolvedValue(null);
+    redisSaveMock.mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -45,9 +60,8 @@ describe("Password Protection Middleware", () => {
         passwordHash: "hashedPassword",
       };
 
-      (prisma.link.findUnique as jest.Mock).mockResolvedValue(mockLink);
-      (compare as jest.Mock).mockResolvedValue(true);
-      (saveToCache as jest.Mock).mockResolvedValue(true);
+      prismaMock.link.findFirst.mockResolvedValue(mockLink);
+      bcryptCompareMock.mockResolvedValue(true);
 
       await validateLinkPassword(
         mockRequest as Request,
@@ -55,8 +69,21 @@ describe("Password Protection Middleware", () => {
         nextFunction
       );
 
-      expect(nextFunction).toHaveBeenCalled();
-      expect(mockResponse.cookie).toHaveBeenCalled();
+      expect(mockResponse.cookie).toHaveBeenCalledWith(
+        "link_session",
+        expect.any(String),
+        expect.objectContaining({
+          httpOnly: true,
+        })
+      );
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          messageKey: "link.password.validated",
+          message: "Password validated successfully.",
+          sessionToken: expect.any(String),
+        })
+      );
+      expect(nextFunction).not.toHaveBeenCalled();
     });
 
     it("should reject invalid password", async () => {
@@ -66,8 +93,8 @@ describe("Password Protection Middleware", () => {
         passwordHash: "hashedPassword",
       };
 
-      (prisma.link.findUnique as jest.Mock).mockResolvedValue(mockLink);
-      (compare as jest.Mock).mockResolvedValue(false);
+      prismaMock.link.findFirst.mockResolvedValue(mockLink);
+      bcryptCompareMock.mockResolvedValue(false);
 
       await validateLinkPassword(
         mockRequest as Request,
@@ -76,14 +103,28 @@ describe("Password Protection Middleware", () => {
       );
 
       expect(mockResponse.status).toHaveBeenCalledWith(401);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: "Invalid password",
-      });
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          messageKey: "link.password.invalid",
+          message: "Invalid password.",
+          attempts: 1,
+        })
+      );
+      expect(redisSaveMock).toHaveBeenCalledWith(
+        expect.stringContaining("link_attempts:"),
+        "1",
+        expect.any(Number)
+      );
       expect(nextFunction).not.toHaveBeenCalled();
     });
 
     it("should handle rate limiting", async () => {
-      (getFromCache as jest.Mock).mockResolvedValue("5"); // Max attempts reached
+      prismaMock.link.findFirst.mockResolvedValue({
+        id: 1,
+        isPasswordProtected: true,
+        passwordHash: "hashedPassword",
+      });
+      redisGetMock.mockResolvedValue("5"); // Max attempts reached
 
       await validateLinkPassword(
         mockRequest as Request,
@@ -92,20 +133,19 @@ describe("Password Protection Middleware", () => {
       );
 
       expect(mockResponse.status).toHaveBeenCalledWith(429);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: "Too many failed attempts. Please try again later.",
-        blockDuration: 900,
-      });
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          messageKey: "link.password.rate_limited",
+          message: "Too many failed attempts. Please try again later.",
+          blockDuration: 900,
+        })
+      );
     });
   });
 
   describe("checkPasswordSession", () => {
     it("should pass through if link is not password protected", async () => {
-      const mockLink = {
-        isPasswordProtected: false,
-      };
-
-      (prisma.link.findUnique as jest.Mock).mockResolvedValue(mockLink);
+      prismaMock.link.findFirst.mockResolvedValue(null);
 
       await checkPasswordSession(
         mockRequest as Request,
@@ -125,8 +165,8 @@ describe("Password Protection Middleware", () => {
         link_session: "valid-token",
       };
 
-      (prisma.link.findUnique as jest.Mock).mockResolvedValue(mockLink);
-      (getFromCache as jest.Mock).mockResolvedValue("valid");
+      prismaMock.link.findFirst.mockResolvedValue(mockLink);
+      redisGetMock.mockResolvedValue("valid");
 
       await checkPasswordSession(
         mockRequest as Request,
@@ -146,8 +186,8 @@ describe("Password Protection Middleware", () => {
         link_session: "invalid-token",
       };
 
-      (prisma.link.findUnique as jest.Mock).mockResolvedValue(mockLink);
-      (getFromCache as jest.Mock).mockResolvedValue(null);
+      prismaMock.link.findFirst.mockResolvedValue(mockLink);
+      redisGetMock.mockResolvedValue(null);
 
       await checkPasswordSession(
         mockRequest as Request,
@@ -156,9 +196,12 @@ describe("Password Protection Middleware", () => {
       );
 
       expect(mockResponse.status).toHaveBeenCalledWith(401);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        message: "Password required",
-      });
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          messageKey: "link.password.session_invalid",
+          message: "Invalid or expired password session.",
+        })
+      );
     });
   });
 });

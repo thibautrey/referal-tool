@@ -137,6 +137,7 @@ describe("project controller", () => {
         expect.objectContaining({
           to: "member@example.com",
           subject: expect.stringContaining("Project 10"),
+          locale: "en",
         })
       );
       expect(res.status).toHaveBeenCalledWith(201);

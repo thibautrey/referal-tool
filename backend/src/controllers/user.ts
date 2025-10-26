@@ -1,16 +1,18 @@
-import { ApiResponse, ControllerFunction } from "../types";
+import { ControllerFunction } from "../types";
 import { Request, Response } from "express";
 
 import bcrypt from "bcrypt";
 import prisma from "../lib/prisma";
+import { buildLocalizedResponse, createTranslator } from "../lib/i18n";
 
 /**
  * Récupérer tous les utilisateurs
  */
 export const getUsers: ControllerFunction = async (
-  _req: Request,
+  req: Request,
   res: Response
 ) => {
+  const translator = createTranslator({ req, userLocale: req.user?.locale });
   try {
     const users = await prisma.user.findMany({
       select: {
@@ -25,17 +27,15 @@ export const getUsers: ControllerFunction = async (
       },
     });
 
-    const response: ApiResponse = {
-      message: "Utilisateurs récupérés avec succès",
-      data: users,
-    };
-
-    res.json(response);
+    res.json(
+      buildLocalizedResponse(translator, "user.list.success", { data: users })
+    );
   } catch (error) {
-    res.status(500).json({
-      message: "Erreur lors de la récupération des utilisateurs",
-      error,
-    });
+    res
+      .status(500)
+      .json(
+        buildLocalizedResponse(translator, "user.list.error", { error })
+      );
   }
 };
 
@@ -46,8 +46,9 @@ export const createUser: ControllerFunction = async (
   req: Request,
   res: Response
 ) => {
+  const translator = createTranslator({ req, userLocale: req.user?.locale });
   try {
-    const { email, firstName, lastName, password, role } = req.body;
+    const { email, firstName, lastName, password, role, locale } = req.body;
 
     // Vérifier si l'utilisateur existe déjà
     const existingUser = await prisma.user.findUnique({
@@ -55,9 +56,9 @@ export const createUser: ControllerFunction = async (
     });
 
     if (existingUser) {
-      res.status(400).json({
-        message: "Un utilisateur avec cet email existe déjà",
-      });
+      res
+        .status(400)
+        .json(buildLocalizedResponse(translator, "user.create.exists"));
       return;
     }
 
@@ -71,6 +72,7 @@ export const createUser: ControllerFunction = async (
         lastName,
         password: hashedPassword,
         role: role || undefined,
+        locale: locale ?? translator.locale,
       },
       select: {
         id: true,
@@ -79,22 +81,25 @@ export const createUser: ControllerFunction = async (
         lastName: true,
         role: true,
         active: true,
+        locale: true,
         createdAt: true,
         updatedAt: true,
       },
     });
 
-    const response: ApiResponse = {
-      message: "Utilisateur créé avec succès",
-      data: newUser,
-    };
-
-    res.status(201).json(response);
+    res
+      .status(201)
+      .json(
+        buildLocalizedResponse(translator, "user.create.success", {
+          data: newUser,
+        })
+      );
   } catch (error) {
-    res.status(500).json({
-      message: "Erreur lors de la création de l'utilisateur",
-      error,
-    });
+    res
+      .status(500)
+      .json(
+        buildLocalizedResponse(translator, "user.create.error", { error })
+      );
   }
 };
 
@@ -105,6 +110,7 @@ export const getUserById: ControllerFunction = async (
   req: Request,
   res: Response
 ) => {
+  let translator = createTranslator({ req, userLocale: req.user?.locale });
   try {
     const { id } = req.params;
     const userId = parseInt(id, 10);
@@ -118,29 +124,28 @@ export const getUserById: ControllerFunction = async (
         lastName: true,
         role: true,
         active: true,
+        locale: true,
         createdAt: true,
         updatedAt: true,
       },
     });
 
     if (!user) {
-      res.status(404).json({
-        message: "Utilisateur non trouvé",
-      });
+      res
+        .status(404)
+        .json(buildLocalizedResponse(translator, "common.errors.user_not_found"));
       return;
     }
 
-    const response: ApiResponse = {
-      message: "Utilisateur récupéré avec succès",
-      data: user,
-    };
+    translator = createTranslator({ req, userLocale: user.locale ?? translator.locale });
 
-    res.json(response);
+    res.json(
+      buildLocalizedResponse(translator, "user.get.success", { data: user })
+    );
   } catch (error) {
-    res.status(500).json({
-      message: "Erreur lors de la récupération de l'utilisateur",
-      error,
-    });
+    res
+      .status(500)
+      .json(buildLocalizedResponse(translator, "user.get.error", { error }));
   }
 };
 
@@ -151,21 +156,29 @@ export const updateUser: ControllerFunction = async (
   req: Request,
   res: Response
 ) => {
+  let translator = createTranslator({ req, userLocale: req.user?.locale });
   try {
     const { id } = req.params;
     const userId = parseInt(id, 10);
-    const { email, firstName, lastName, active, role, password } = req.body;
+    const { email, firstName, lastName, active, role, password, locale } =
+      req.body;
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
+      select: {
+        id: true,
+        locale: true,
+      },
     });
 
     if (!user) {
-      res.status(404).json({
-        message: "Utilisateur non trouvé",
-      });
+      res
+        .status(404)
+        .json(buildLocalizedResponse(translator, "common.errors.user_not_found"));
       return;
     }
+
+    translator = createTranslator({ req, userLocale: user.locale ?? translator.locale });
 
     // Préparer les données de mise à jour
     const updateData: any = {
@@ -174,6 +187,7 @@ export const updateUser: ControllerFunction = async (
       lastName,
       active,
       role,
+      locale,
     };
 
     // Si un nouveau mot de passe est fourni, le hacher
@@ -191,22 +205,23 @@ export const updateUser: ControllerFunction = async (
         lastName: true,
         role: true,
         active: true,
+        locale: true,
         createdAt: true,
         updatedAt: true,
       },
     });
 
-    const response: ApiResponse = {
-      message: "Utilisateur mis à jour avec succès",
-      data: updatedUser,
-    };
-
-    res.json(response);
+    res.json(
+      buildLocalizedResponse(translator, "user.update.success", {
+        data: updatedUser,
+      })
+    );
   } catch (error) {
-    res.status(500).json({
-      message: "Erreur lors de la mise à jour de l'utilisateur",
-      error,
-    });
+    res
+      .status(500)
+      .json(
+        buildLocalizedResponse(translator, "user.update.error", { error })
+      );
   }
 };
 
@@ -217,35 +232,36 @@ export const deleteUser: ControllerFunction = async (
   req: Request,
   res: Response
 ) => {
+  let translator = createTranslator({ req, userLocale: req.user?.locale });
   try {
     const { id } = req.params;
     const userId = parseInt(id, 10);
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
+      select: { locale: true },
     });
 
     if (!user) {
-      res.status(404).json({
-        message: "Utilisateur non trouvé",
-      });
+      res
+        .status(404)
+        .json(buildLocalizedResponse(translator, "common.errors.user_not_found"));
       return;
     }
+
+    translator = createTranslator({ req, userLocale: user.locale ?? translator.locale });
 
     await prisma.user.delete({
       where: { id: userId },
     });
 
-    const response: ApiResponse = {
-      message: "Utilisateur supprimé avec succès",
-    };
-
-    res.json(response);
+    res.json(buildLocalizedResponse(translator, "user.delete.success"));
   } catch (error) {
-    res.status(500).json({
-      message: "Erreur lors de la suppression de l'utilisateur",
-      error,
-    });
+    res
+      .status(500)
+      .json(
+        buildLocalizedResponse(translator, "user.delete.error", { error })
+      );
   }
 };
 
@@ -253,29 +269,33 @@ export const deleteUser: ControllerFunction = async (
  * Récupérer l'utilisateur actuellement connecté
  */
 export const getCurrentUser = async (req: any, res: any) => {
+  const translator = createTranslator({ req, userLocale: req.user?.locale });
   try {
     // L'utilisateur est déjà disponible dans req.user grâce au middleware authenticateJWT
     const user = req.user;
 
     if (!user) {
-      return res.status(404).json({
-        message: "Utilisateur non trouvé",
-      });
+      return res
+        .status(404)
+        .json(buildLocalizedResponse(translator, "common.errors.user_not_found"));
     }
 
     // Retourner les informations de l'utilisateur sans le mot de passe
     const userWithoutPassword = { ...user };
     delete userWithoutPassword.password;
 
-    return res.status(200).json({
-      message: "Utilisateur récupéré avec succès",
-      data: userWithoutPassword,
-    });
+    return res
+      .status(200)
+      .json(
+        buildLocalizedResponse(translator, "user.get.success", {
+          data: userWithoutPassword,
+        })
+      );
   } catch (error) {
     console.error("Erreur lors de la récupération de l'utilisateur:", error);
-    return res.status(500).json({
-      message: "Erreur lors de la récupération de l'utilisateur",
-    });
+    return res
+      .status(500)
+      .json(buildLocalizedResponse(translator, "user.get.error", { error }));
   }
 };
 
@@ -283,12 +303,15 @@ export const getCurrentUser = async (req: any, res: any) => {
  * Marquer un conseil comme vu
  */
 export const markTipAsSeen = async (req: Request, res: Response) => {
+  const translator = createTranslator({ req, userLocale: req.user?.locale });
   try {
     const userId = req.user?.id;
     const { tipId } = req.body;
 
     if (!userId) {
-      return res.status(401).json({ message: "User not authenticated" });
+      return res
+        .status(401)
+        .json(buildLocalizedResponse(translator, "common.errors.unauthenticated"));
     }
 
     const user = await prisma.user.findUnique({
@@ -306,9 +329,15 @@ export const markTipAsSeen = async (req: Request, res: Response) => {
       data: { seenTips: JSON.stringify(seenTips) },
     });
 
-    res.json({ message: "Tip marked as seen", data: { seenTips } });
+    res.json(
+      buildLocalizedResponse(translator, "user.tips.marked", {
+        data: { seenTips },
+      })
+    );
   } catch (error) {
-    res.status(500).json({ message: "Error updating seen tips" });
+    res
+      .status(500)
+      .json(buildLocalizedResponse(translator, "user.tips.error", { error }));
   }
 };
 
@@ -316,16 +345,21 @@ export const markTipAsSeen = async (req: Request, res: Response) => {
  * Update user's theme preference
  */
 export const updateTheme = async (req: Request, res: Response) => {
+  const translator = createTranslator({ req, userLocale: req.user?.locale });
   try {
     const userId = req.user?.id;
     const { theme } = req.body;
 
     if (!userId) {
-      return res.status(401).json({ message: "User not authenticated" });
+      return res
+        .status(401)
+        .json(buildLocalizedResponse(translator, "common.errors.unauthenticated"));
     }
 
     if (!theme || !["light", "dark", "system"].includes(theme)) {
-      return res.status(400).json({ message: "Invalid theme value" });
+      return res
+        .status(400)
+        .json(buildLocalizedResponse(translator, "user.theme.invalid_value"));
     }
 
     const updatedUser = await prisma.user.update({
@@ -339,17 +373,21 @@ export const updateTheme = async (req: Request, res: Response) => {
         role: true,
         active: true,
         theme: true,
+        locale: true,
         createdAt: true,
         updatedAt: true,
       },
     });
 
-    res.json({
-      message: "Theme updated successfully",
-      data: updatedUser,
-    });
+    res.json(
+      buildLocalizedResponse(translator, "user.theme.success", {
+        data: updatedUser,
+      })
+    );
   } catch (error) {
-    res.status(500).json({ message: "Error updating theme" });
+    res
+      .status(500)
+      .json(buildLocalizedResponse(translator, "user.theme.error", { error }));
   }
 };
 
@@ -357,17 +395,22 @@ export const updateTheme = async (req: Request, res: Response) => {
  * Update user's last selected project
  */
 export const updateLastProjectId = async (req: Request, res: Response) => {
+  let translator = createTranslator({ req, userLocale: req.user?.locale });
   try {
     const userId = req.user?.id;
     const isAdmin = req.user?.role === "ADMIN";
     const { projectId } = req.body;
 
     if (!userId) {
-      return res.status(401).json({ message: "User not authenticated" });
+      return res
+        .status(401)
+        .json(buildLocalizedResponse(translator, "common.errors.unauthenticated"));
     }
 
     if (!projectId || typeof projectId !== "number") {
-      return res.status(400).json({ message: "Invalid project ID" });
+      return res
+        .status(400)
+        .json(buildLocalizedResponse(translator, "user.last_project.invalid_id"));
     }
 
     // Verify that the project exists and belongs to the user
@@ -376,13 +419,21 @@ export const updateLastProjectId = async (req: Request, res: Response) => {
         id: projectId,
         ...(isAdmin ? {} : { userId: userId }),
       },
+      select: { locale: true },
     });
 
     if (!project) {
       return res
         .status(404)
-        .json({ message: "Project not found or access denied" });
+        .json(
+          buildLocalizedResponse(
+            translator,
+            "project.errors.not_found_or_denied"
+          )
+        );
     }
+
+    translator = createTranslator({ req, userLocale: req.user?.locale, projectLocale: project.locale });
 
     const updatedUser = await prisma.user.update({
       where: { id: userId },
@@ -396,16 +447,24 @@ export const updateLastProjectId = async (req: Request, res: Response) => {
         active: true,
         lastProjectId: true,
         theme: true,
+        locale: true,
         createdAt: true,
         updatedAt: true,
       },
     });
 
-    res.json({
-      message: "Last project ID updated successfully",
-      data: updatedUser,
-    });
+    res.json(
+      buildLocalizedResponse(translator, "user.last_project.success", {
+        data: updatedUser,
+      })
+    );
   } catch (error) {
-    res.status(500).json({ message: "Error updating last project ID" });
+    res
+      .status(500)
+      .json(
+        buildLocalizedResponse(translator, "user.last_project.error", {
+          error,
+        })
+      );
   }
 };

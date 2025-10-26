@@ -1,10 +1,33 @@
-export const getPasswordTemplate = (shortCode: string) => `
+import { Translator } from "../lib/i18n";
+
+export const getPasswordTemplate = (
+  shortCode: string,
+  translator: Translator
+) => {
+  const content = {
+    title: translator.t("template.password.title"),
+    description: translator.t("template.password.description"),
+    placeholder: translator.t("template.password.placeholder"),
+    submit: translator.t("template.password.submit"),
+    validating: translator.t("template.password.validating"),
+    genericError: translator.t("template.password.generic_error"),
+    invalidFallback: translator.t("template.password.invalid_fallback"),
+  };
+
+  const scriptStrings = JSON.stringify({
+    validating: content.validating,
+    submit: content.submit,
+    genericError: content.genericError,
+    invalidFallback: content.invalidFallback,
+  });
+
+  return `
 <!DOCTYPE html>
-<html lang="en">
+<html lang="${translator.locale}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Password Protected Link</title>
+    <title>${content.title}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -127,17 +150,18 @@ export const getPasswordTemplate = (shortCode: string) => `
 <body>
     <div class="container">
         <div class="header">
-            <h1 class="title">Password Protected Link</h1>
-            <p class="description">This link is protected. Please enter the password to continue.</p>
+            <h1 class="title">${content.title}</h1>
+            <p class="description">${content.description}</p>
         </div>
         <form id="passwordForm">
-            <input type="password" id="password" class="input" placeholder="Enter password" required>
+            <input type="password" id="password" class="input" placeholder="${content.placeholder}" required>
             <p id="errorMessage" class="error"></p>
-            <button type="submit" class="button" id="submitButton">Continue</button>
+            <button type="submit" class="button" id="submitButton">${content.submit}</button>
         </form>
     </div>
 
     <script>
+        const i18n = ${scriptStrings};
         const form = document.getElementById('passwordForm');
         const error = document.getElementById('errorMessage');
         const button = document.getElementById('submitButton');
@@ -148,7 +172,7 @@ export const getPasswordTemplate = (shortCode: string) => `
             if (isSubmitting) return;
 
             const password = document.getElementById('password').value;
-            button.textContent = 'Validating...';
+            button.textContent = i18n.validating;
             button.disabled = true;
             isSubmitting = true;
             error.classList.remove('visible');
@@ -164,14 +188,14 @@ export const getPasswordTemplate = (shortCode: string) => `
                     window.location.reload();
                 } else {
                     const data = await response.json();
-                    error.textContent = data.message || 'Invalid password';
+                    error.textContent = data.message || i18n.invalidFallback;
                     error.classList.add('visible');
                 }
             } catch (err) {
-                error.textContent = 'An error occurred. Please try again.';
+                error.textContent = i18n.genericError;
                 error.classList.add('visible');
             } finally {
-                button.textContent = 'Continue';
+                button.textContent = i18n.submit;
                 button.disabled = false;
                 isSubmitting = false;
             }
@@ -180,3 +204,4 @@ export const getPasswordTemplate = (shortCode: string) => `
 </body>
 </html>
 `;
+};
