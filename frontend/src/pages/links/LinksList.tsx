@@ -30,7 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ReferralLink } from "../types";
@@ -108,25 +108,28 @@ export function LinksList({
     setIsLoading(true);
   }, [projectId]);
 
-  useEffect(() => {
-    if (!projectId) {
-      return;
-    }
-
-    let isCancelled = false;
-
-    const fetchLinks = async (
+  const fetchLinks = useCallback(
+    async (
       page: number,
       sortBy: SortField = "createdAt",
-      order: SortOrder = "desc"
+      order: SortOrder = "desc",
+      options?: { signal?: AbortSignal }
     ) => {
+      if (!projectId) {
+        return;
+      }
+
+      const { signal } = options ?? {};
+
+      const shouldAbort = () => signal?.aborted === true;
+
       try {
         setIsLoading(true);
         setErrorState(null);
 
         const response = await api.getLinks(projectId, page, sortBy, order);
 
-        if (isCancelled) {
+        if (shouldAbort()) {
           return;
         }
 
@@ -136,7 +139,7 @@ export function LinksList({
         setSortField((response.sortBy as SortField) || "createdAt");
         setSortOrder(response.sortOrder || "desc");
       } catch (err) {
-        if (isCancelled) {
+        if (shouldAbort()) {
           return;
         }
 
@@ -167,18 +170,28 @@ export function LinksList({
         setTotalPages(1);
         setCurrentPage(1);
       } finally {
-        if (!isCancelled) {
+        if (!shouldAbort()) {
           setIsLoading(false);
         }
       }
-    };
+    },
+    [projectId, onError]
+  );
 
-    fetchLinks(currentPage, sortField, sortOrder);
+  useEffect(() => {
+    if (!projectId) {
+      return;
+    }
+
+    const abortController = new AbortController();
+    fetchLinks(currentPage, sortField, sortOrder, {
+      signal: abortController.signal,
+    });
 
     return () => {
-      isCancelled = true;
+      abortController.abort();
     };
-  }, [projectId, currentPage, sortField, sortOrder, onError]);
+  }, [projectId, currentPage, sortField, sortOrder, fetchLinks]);
 
   useEffect(() => {
     setCurrentDomain(window.location.host);
