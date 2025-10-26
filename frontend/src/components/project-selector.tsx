@@ -16,15 +16,11 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Settings } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Plus, Settings } from "lucide-react";
 import { api } from "@/lib/api";
-import type { ProjectMember } from "@/lib/api";
+import type { Project, ProjectMember } from "@/lib/api";
 import { useProject } from "@/contexts/project-context";
-
-export interface Project {
-  id: number;
-  name: string;
-}
 
 export function ProjectSelector() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -45,6 +41,13 @@ export function ProjectSelector() {
   const [removingMemberId, setRemovingMemberId] = useState<number | null>(null);
   const [isDeletingProject, setIsDeletingProject] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [newProjectName, setNewProjectName] = useState("");
+  const [newProjectDescription, setNewProjectDescription] = useState("");
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
+  const [createProjectError, setCreateProjectError] = useState<string | null>(
+    null
+  );
 
   useEffect(() => {
     const initializeProjects = async () => {
@@ -115,6 +118,20 @@ export function ProjectSelector() {
     setEditingProjectId(null);
     setEditingName("");
     resetModalState();
+  };
+
+  const openCreateModal = () => {
+    setNewProjectName("");
+    setNewProjectDescription("");
+    setCreateProjectError(null);
+    setIsCreateModalOpen(true);
+  };
+
+  const closeCreateModal = () => {
+    setIsCreateModalOpen(false);
+    setNewProjectName("");
+    setNewProjectDescription("");
+    setCreateProjectError(null);
   };
 
   const getErrorMessage = (error: unknown) => {
@@ -246,6 +263,50 @@ export function ProjectSelector() {
     }
   };
 
+  const handleCreateProject = async () => {
+    const trimmedName = newProjectName.trim();
+    if (!trimmedName) {
+      setCreateProjectError("Please enter a project name.");
+      return;
+    }
+
+    setIsCreatingProject(true);
+    setCreateProjectError(null);
+
+    try {
+      const response = await api.createProject({
+        name: trimmedName,
+        description: newProjectDescription.trim() || undefined,
+      });
+
+      const createdProjectId = response.data.id;
+      const updatedProjects = await refreshProjects();
+
+      const nextProjectId =
+        updatedProjects.find((project) => project.id === createdProjectId)?.id ??
+        updatedProjects[0]?.id;
+
+      if (nextProjectId) {
+        setCurrentProjectId(nextProjectId);
+        try {
+          await api.updateLastProject(nextProjectId);
+        } catch (error) {
+          console.error(
+            "Failed to update last project after creation",
+            error
+          );
+        }
+      }
+
+      closeCreateModal();
+    } catch (error) {
+      console.error("Failed to create project", error);
+      setCreateProjectError(getErrorMessage(error));
+    } finally {
+      setIsCreatingProject(false);
+    }
+  };
+
   return (
     <div className="flex items-center space-x-2">
       <Select
@@ -267,6 +328,14 @@ export function ProjectSelector() {
         </SelectContent>
       </Select>
       <Button
+        onClick={openCreateModal}
+        variant="ghost"
+        size="icon"
+        aria-label="Create Project"
+      >
+        <Plus className="w-4 h-4" />
+      </Button>
+      <Button
         onClick={openEditModal}
         variant="ghost"
         size="icon"
@@ -274,6 +343,78 @@ export function ProjectSelector() {
       >
         <Settings className="w-4 h-4" />
       </Button>
+
+      <Dialog
+        open={isCreateModalOpen}
+        onOpenChange={(open) => {
+          if (open) {
+            setIsCreateModalOpen(true);
+          } else {
+            closeCreateModal();
+          }
+        }}
+      >
+        <DialogContent className="max-w-lg space-y-6">
+          <DialogHeader>
+            <DialogTitle>Create new project</DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label
+                htmlFor="new-project-name"
+                className="text-sm font-medium"
+              >
+                Project name
+              </label>
+              <Input
+                id="new-project-name"
+                value={newProjectName}
+                onChange={(e) => setNewProjectName(e.target.value)}
+                placeholder="Enter a project name"
+                disabled={isCreatingProject}
+                autoFocus
+              />
+            </div>
+            <div className="space-y-2">
+              <label
+                htmlFor="new-project-description"
+                className="text-sm font-medium"
+              >
+                Description <span className="text-muted-foreground">(optional)</span>
+              </label>
+              <Textarea
+                id="new-project-description"
+                value={newProjectDescription}
+                onChange={(e) => setNewProjectDescription(e.target.value)}
+                placeholder="Add a short description"
+                disabled={isCreatingProject}
+              />
+            </div>
+            {createProjectError && (
+              <p className="text-sm text-destructive">{createProjectError}</p>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={closeCreateModal}
+              disabled={isCreatingProject}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleCreateProject}
+              disabled={
+                isCreatingProject || newProjectName.trim().length === 0
+              }
+            >
+              {isCreatingProject ? "Creating..." : "Create project"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={isEditingModalOpen}
