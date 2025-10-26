@@ -30,7 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ReferralLink } from "../types";
@@ -84,57 +84,101 @@ export function LinksList({
   const [sortField, setSortField] = useState<SortField>("createdAt");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
   const [errorState, setErrorState] = useState<string | null>(null);
+  const previousProjectId = useRef<number | null>(null);
 
-  const fetchLinks = async (
-    page: number,
-    sortBy: SortField = "createdAt",
-    order: SortOrder = "desc"
-  ) => {
-    try {
-      setIsLoading(true);
-      setErrorState(null);
+  useEffect(() => {
+    if (previousProjectId.current === projectId) {
+      return;
+    }
 
-      const response = await api.getLinks(projectId, page, sortBy, order);
+    previousProjectId.current = projectId;
 
-      setLinks(response.links || []);
-      setTotalPages(response.totalPages || 1);
-      setCurrentPage(response.page || 1);
-      setSortField((response.sortBy as SortField) || "createdAt");
-      setSortOrder(response.sortOrder || "desc");
-    } catch (err) {
-      console.error("Error fetching links:", err);
-
-      // Format error message
-      let errorMessage = "Unable to load links";
-      if (err instanceof Error) {
-        errorMessage = err.message;
-      } else if (typeof err === "object" && err !== null) {
-        const errorObj = err as Record<string, { name?: string } | string>;
-        if (
-          typeof errorObj.error === "object" &&
-          errorObj.error?.name === "PrismaClientValidationError"
-        ) {
-          errorMessage = "Database validation error. Please contact support.";
-        } else if (typeof errorObj.message === "string") {
-          errorMessage = errorObj.message;
-        }
-      }
-
-      setErrorState(errorMessage);
-      if (onError) onError(errorMessage);
-
-      // Set default values
+    if (!projectId) {
       setLinks([]);
       setTotalPages(1);
       setCurrentPage(1);
-    } finally {
-      setIsLoading(false);
+      setErrorState(null);
+      return;
     }
-  };
+
+    setLinks([]);
+    setTotalPages(1);
+    setCurrentPage(1);
+    setErrorState(null);
+    setIsLoading(true);
+  }, [projectId]);
 
   useEffect(() => {
+    if (!projectId) {
+      return;
+    }
+
+    let isCancelled = false;
+
+    const fetchLinks = async (
+      page: number,
+      sortBy: SortField = "createdAt",
+      order: SortOrder = "desc"
+    ) => {
+      try {
+        setIsLoading(true);
+        setErrorState(null);
+
+        const response = await api.getLinks(projectId, page, sortBy, order);
+
+        if (isCancelled) {
+          return;
+        }
+
+        setLinks(response.links || []);
+        setTotalPages(response.totalPages || 1);
+        setCurrentPage(response.page || 1);
+        setSortField((response.sortBy as SortField) || "createdAt");
+        setSortOrder(response.sortOrder || "desc");
+      } catch (err) {
+        if (isCancelled) {
+          return;
+        }
+
+        console.error("Error fetching links:", err);
+
+        // Format error message
+        let errorMessage = "Unable to load links";
+        if (err instanceof Error) {
+          errorMessage = err.message;
+        } else if (typeof err === "object" && err !== null) {
+          const errorObj = err as Record<string, { name?: string } | string>;
+          if (
+            typeof errorObj.error === "object" &&
+            errorObj.error?.name === "PrismaClientValidationError"
+          ) {
+            errorMessage =
+              "Database validation error. Please contact support.";
+          } else if (typeof errorObj.message === "string") {
+            errorMessage = errorObj.message;
+          }
+        }
+
+        setErrorState(errorMessage);
+        if (onError) onError(errorMessage);
+
+        // Set default values
+        setLinks([]);
+        setTotalPages(1);
+        setCurrentPage(1);
+      } finally {
+        if (!isCancelled) {
+          setIsLoading(false);
+        }
+      }
+    };
+
     fetchLinks(currentPage, sortField, sortOrder);
-  }, [currentPage, sortField, sortOrder]);
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [projectId, currentPage, sortField, sortOrder, onError]);
 
   useEffect(() => {
     setCurrentDomain(window.location.host);
