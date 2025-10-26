@@ -1,39 +1,84 @@
 import { lookup, reload } from "ip-location-api";
+import fs from "fs/promises";
 import path from "path";
 
 const DATA_DIR = process.env.ILA_DATA_DIR || path.join(process.cwd(), "data");
 const TMP_DATA_DIR =
   process.env.ILA_TMP_DATA_DIR || path.join(process.cwd(), "tmp");
+const AUTO_UPDATE = process.env.ILA_AUTO_UPDATE || "default";
 
 let databaseInitialized = false;
 
+const FIELDS = [
+  "country",
+  "city",
+  "metro",
+  "eu",
+  "timezone",
+  "latitude",
+  "longitude",
+  "area",
+  "postcode",
+];
+
+const ensureDirectories = async () => {
+  await fs.mkdir(DATA_DIR, { recursive: true });
+  await fs.mkdir(TMP_DATA_DIR, { recursive: true });
+};
+
+const reloadDatabase = async (licenseKey: string | undefined) =>
+  reload({
+    fields: FIELDS,
+    smallMemory: false,
+    dataDir: DATA_DIR,
+    tmpDataDir: TMP_DATA_DIR,
+    autoUpdate: AUTO_UPDATE,
+    licenseKey,
+  });
+
 // Configuration initiale
 const initGeolocation = async () => {
-  try {
-    // Initialize lookup
-    await reload({
-      fields: [
-        "country",
-        "city",
-        "metro",
-        "eu",
-        "timezone",
-        "latitude",
-        "longitude",
-        "area",
-        "postcode",
-      ],
-      smallMemory: false,
-      dataDir: DATA_DIR,
-      tmpDataDir: TMP_DATA_DIR,
-      autoUpdate: "default",
-    });
-    databaseInitialized = true;
-    console.log("IP geolocation service initialized successfully");
-  } catch (error) {
-    console.error("Failed to initialize IP geolocation service:", error);
-    console.log("Geolocation will return default values");
+  if (databaseInitialized) {
+    return;
   }
+
+  try {
+    await ensureDirectories();
+  } catch (error) {
+    console.error("Failed to prepare directories for geolocation database:", error);
+    console.log("Geolocation will return default values");
+    return;
+  }
+
+  const configuredLicense = process.env.ILA_LICENSE_KEY?.trim();
+  const licenseCandidates = configuredLicense
+    ? [configuredLicense, "redist"].filter(
+        (key, index, array) => key && array.indexOf(key) === index,
+      )
+    : ["redist"];
+
+  for (const licenseKey of licenseCandidates) {
+    try {
+      await reloadDatabase(licenseKey);
+      databaseInitialized = true;
+      const usedFallback = licenseKey === "redist" && !!configuredLicense;
+      if (usedFallback) {
+        console.warn(
+          "IP geolocation service is using the redistribution database as a fallback.",
+        );
+      } else {
+        console.log("IP geolocation service initialized successfully");
+      }
+      return;
+    } catch (error) {
+      console.error(
+        `Failed to initialize IP geolocation service with license '${licenseKey}':`,
+        error,
+      );
+    }
+  }
+
+  console.log("Geolocation will return default values");
 };
 
 export async function getCountryFromIp(ip: string): Promise<[string, string]> {
