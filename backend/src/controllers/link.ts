@@ -42,6 +42,37 @@ export const checkShortCodeAvailability = async (
   }
 };
 
+// Get all links for current user (API endpoint)
+export const getAllLinks = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const links = await prisma.link.findMany({
+      where: {
+        project: {
+          userId: userId,
+        },
+      },
+      include: {
+        rules: true,
+        project: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return res.json({ data: links });
+  } catch (error: unknown) {
+    console.error("Error fetching links:", error);
+    return res.status(500).json({ message: "Failed to fetch links" });
+  }
+};
+
 // Get all links for a project
 export const getLinksByProject = async (req: Request, res: Response) => {
   console.log("[DEBUG] Entering getLinksByProject function");

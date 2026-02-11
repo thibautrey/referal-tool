@@ -14,6 +14,11 @@ const router = Router();
 
 // All routes require authentication and project access validation
 router.use(authenticateJWT);
+
+// List all links (requires no specific project, just user auth)
+router.get("/", linkController.getAllLinks);
+
+// Remaining routes require project access validation
 router.use(validateProjectAccess);
 
 // Link CRUD operations
