@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Copy, ExternalLink } from "lucide-react";
+import { Copy } from "lucide-react";
 
 export default function ApiDocsPage() {
   const [copied, setCopied] = useState<string | null>(null);
