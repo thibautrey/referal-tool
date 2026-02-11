@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 import AnalyticsPage from "./pages/AnalyticsPage";
+import ApiDocsPage from "./pages/ApiDocsPage";
 import { AuthProvider } from "./contexts/AuthContext";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import HomePage from "./pages/HomePage";
@@ -69,6 +70,9 @@ function App() {
                 element={<ResetPasswordPage />}
               />
             </Route>
+
+            {/* Routes publiques sans protection */}
+            <Route path="/docs/api" element={<ApiDocsPage />} />
 
             {/* Routes protégées (nécessitent une authentification) */}
             <Route element={<ProtectedRoute />}>
