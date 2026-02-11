@@ -15,6 +15,7 @@ import projectRoutes from "./routes/project";
 import apiKeyRoutes from "./routes/apiKey";
 import rateLimit from "express-rate-limit";
 import userRoutes from "./routes/user";
+import { getOpenApiSchema } from "./lib/openapi";
 
 // Configuration
 dotenv.config();
@@ -101,6 +102,7 @@ app.use((req: Request, _res: Response, next: NextFunction) => {
 });
 
 // Routes API - should be checked first
+app.get("/api/openapi.json", getOpenApiSchema);
 app.use("/api/users", userRoutes);
 app.use("/api/links", linkRoutes);
 app.use("/api/analytics", analyticsRoutes);

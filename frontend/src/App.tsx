@@ -2,7 +2,7 @@ import { Route, Routes } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 import AnalyticsPage from "./pages/AnalyticsPage";
-import ApiDocsPage from "./pages/ApiDocsPage";
+import SwaggerApiPage from "./pages/SwaggerApiPage";
 import { AuthProvider } from "./contexts/AuthContext";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import HomePage from "./pages/HomePage";
@@ -69,10 +69,8 @@ function App() {
                 path="/app/reset-password"
                 element={<ResetPasswordPage />}
               />
+              <Route path="/app/docs/api" element={<SwaggerApiPage />} />
             </Route>
-
-            {/* Routes publiques sans protection */}
-            <Route path="/docs/api" element={<ApiDocsPage />} />
 
             {/* Routes protégées (nécessitent une authentification) */}
             <Route element={<ProtectedRoute />}>
