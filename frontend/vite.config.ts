@@ -36,10 +36,13 @@ export default defineConfig({
   server: {
     headers: {
       "Content-Security-Policy":
-        "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://astronomy-store.com *.astronomy-store.com; font-src 'self' data: https:; connect-src 'self' https:;",
+        "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; img-src 'self' data: https://astronomy-store.com *.astronomy-store.com; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https: http://localhost:3001;",
     },
     proxy: {
-      "/api": "http://localhost:3001",
+      "/api": {
+        target: "http://localhost:3001",
+        changeOrigin: true,
+      },
     },
   },
 });
