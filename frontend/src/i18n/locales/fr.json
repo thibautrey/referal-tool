@@ -554,7 +554,20 @@
       "next": "Page suivante",
       "no_expiration": "Pas d'expiration",
       "expired": "Expiré",
-      "expires_badge": "Planifié"
+      "expires_badge": "Planifié",
+      "search_placeholder": "Rechercher un lien (nom, URL, code court)",
+      "filter_all": "Tous les statuts",
+      "filter_active": "Actifs",
+      "filter_expired": "Expirés",
+      "filter_no_expiration": "Sans expiration",
+      "sort_created_at": "Trier: date de création",
+      "sort_name": "Trier: nom",
+      "sort_clicks": "Trier: clics",
+      "sort_expiration": "Trier: expiration",
+      "sort_order": "Ordre de tri",
+      "sort_asc": "Ordre: croissant",
+      "sort_desc": "Ordre: décroissant",
+      "no_results": "Aucun lien ne correspond à votre recherche."
     }
   },
   "analytics": {

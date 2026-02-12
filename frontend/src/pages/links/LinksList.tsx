@@ -1,13 +1,12 @@
 import {
   AlertCircle,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ChevronUp,
   Copy,
   Edit,
   Loader2,
   Plus,
+  Search,
   Trash,
 } from "lucide-react";
 import {
@@ -34,9 +33,17 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ReferralLink } from "../types";
 import { api } from "@/lib/api";
 import { motion } from "framer-motion";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
 import { useAppTranslation } from "@/i18n";
 
@@ -70,7 +77,10 @@ interface LinksListProps {
 }
 
 type SortOrder = "asc" | "desc";
-type SortField = "createdAt";
+type ApiSortField = "createdAt";
+type ApiSortOrder = "asc" | "desc";
+type ListSortField = "createdAt" | "name" | "clicks" | "expiresAt";
+type ExpirationFilter = "all" | "expired" | "active" | "noExpiration";
 
 export function LinksList({
   onAddLinkClick,
@@ -83,8 +93,13 @@ export function LinksList({
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [currentDomain, setCurrentDomain] = useState("");
-  const [sortField, setSortField] = useState<SortField>("createdAt");
-  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+  const [apiSortField, setApiSortField] = useState<ApiSortField>("createdAt");
+  const [apiSortOrder, setApiSortOrder] = useState<ApiSortOrder>("desc");
+  const [listSortField, setListSortField] = useState<ListSortField>("createdAt");
+  const [listSortOrder, setListSortOrder] = useState<SortOrder>("desc");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [expirationFilter, setExpirationFilter] =
+    useState<ExpirationFilter>("all");
   const [errorState, setErrorState] = useState<string | null>(null);
   const previousProjectId = useRef<number | null>(null);
   const { t, i18n } = useAppTranslation();
@@ -114,7 +129,7 @@ export function LinksList({
   const fetchLinks = useCallback(
     async (
       page: number,
-      sortBy: SortField = "createdAt",
+      sortBy: ApiSortField = "createdAt",
       order: SortOrder = "desc",
       options?: { signal?: AbortSignal }
     ) => {
@@ -139,8 +154,8 @@ export function LinksList({
         setLinks(response.links || []);
         setTotalPages(response.totalPages || 1);
         setCurrentPage(response.page || 1);
-        setSortField((response.sortBy as SortField) || "createdAt");
-        setSortOrder(response.sortOrder || "desc");
+        setApiSortField((response.sortBy as ApiSortField) || "createdAt");
+        setApiSortOrder(response.sortOrder || "desc");
       } catch (err) {
         if (shouldAbort()) {
           return;
@@ -174,14 +189,14 @@ export function LinksList({
     }
 
     const abortController = new AbortController();
-    fetchLinks(currentPage, sortField, sortOrder, {
+    fetchLinks(currentPage, apiSortField, apiSortOrder, {
       signal: abortController.signal,
     });
 
     return () => {
       abortController.abort();
     };
-  }, [projectId, currentPage, sortField, sortOrder, fetchLinks]);
+  }, [projectId, currentPage, apiSortField, apiSortOrder, fetchLinks]);
 
   useEffect(() => {
     setCurrentDomain(window.location.host);
@@ -191,11 +206,8 @@ export function LinksList({
     setCurrentPage(page);
   };
 
-  const handleSort = (field: SortField) => {
-    const newOrder =
-      field === sortField && sortOrder === "desc" ? "asc" : "desc";
-    setSortField(field);
-    setSortOrder(newOrder);
+  const toggleListSortOrder = () => {
+    setListSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
   };
 
   const handleDeleteLink = async (id: string) => {
@@ -291,14 +303,51 @@ export function LinksList({
     }
   };
 
-  const getSortIcon = (field: SortField) => {
-    if (field !== sortField) return null;
-    return sortOrder === "asc" ? (
-      <ChevronUp className="h-4 w-4 ml-1 inline" />
-    ) : (
-      <ChevronDown className="h-4 w-4 ml-1 inline" />
-    );
-  };
+  const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+  const filteredAndSortedLinks = [...(links ?? [])]
+    .filter((link) => {
+      if (!normalizedSearchQuery) return true;
+      const shortUrl = `${currentDomain}/l/${link.shortCode}`.toLowerCase();
+      return (
+        link.name.toLowerCase().includes(normalizedSearchQuery) ||
+        link.baseUrl.toLowerCase().includes(normalizedSearchQuery) ||
+        link.shortCode.toLowerCase().includes(normalizedSearchQuery) ||
+        shortUrl.includes(normalizedSearchQuery)
+      );
+    })
+    .filter((link) => {
+      if (expirationFilter === "all") return true;
+
+      if (!link.expiresAt) {
+        return expirationFilter === "noExpiration";
+      }
+
+      const isExpired = new Date(link.expiresAt).getTime() <= Date.now();
+      if (expirationFilter === "expired") return isExpired;
+      if (expirationFilter === "active") return !isExpired;
+      return true;
+    })
+    .sort((a, b) => {
+      const orderMultiplier = listSortOrder === "asc" ? 1 : -1;
+
+      if (listSortField === "name") {
+        return a.name.localeCompare(b.name, i18n.language) * orderMultiplier;
+      }
+
+      if (listSortField === "clicks") {
+        return (a.clicks - b.clicks) * orderMultiplier;
+      }
+
+      if (listSortField === "expiresAt") {
+        const aTime = a.expiresAt ? new Date(a.expiresAt).getTime() : Number.MAX_SAFE_INTEGER;
+        const bTime = b.expiresAt ? new Date(b.expiresAt).getTime() : Number.MAX_SAFE_INTEGER;
+        return (aTime - bTime) * orderMultiplier;
+      }
+
+      const aCreated = new Date(a.createdAt).getTime();
+      const bCreated = new Date(b.createdAt).getTime();
+      return (aCreated - bCreated) * orderMultiplier;
+    });
 
   if (isLoading) {
     return (
@@ -325,7 +374,7 @@ export function LinksList({
             <Button
               variant="glass"
               className="ring-1 ring-white/10 hover:ring-white/20"
-              onClick={() => fetchLinks(1, sortField, sortOrder)}
+              onClick={() => fetchLinks(1, apiSortField, apiSortOrder)}
             >
               {t("links.list.load_error_cta")}
             </Button>
@@ -371,6 +420,60 @@ export function LinksList({
 
       <Card className={glassCardStyle}>
         <CardContent className="px-6 py-0">
+          <div className="py-4 border-b border-white/10 flex flex-col gap-3 md:flex-row md:items-center">
+            <div className="relative w-full md:flex-1">
+              <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder={t("links.list.search_placeholder")}
+                className="pl-9"
+                aria-label={t("links.list.search_placeholder")}
+              />
+            </div>
+            <Select
+              value={expirationFilter}
+              onValueChange={(value) =>
+                setExpirationFilter(value as ExpirationFilter)
+              }
+            >
+              <SelectTrigger className="w-full md:w-[220px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("links.list.filter_all")}</SelectItem>
+                <SelectItem value="active">{t("links.list.filter_active")}</SelectItem>
+                <SelectItem value="expired">{t("links.list.filter_expired")}</SelectItem>
+                <SelectItem value="noExpiration">
+                  {t("links.list.filter_no_expiration")}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              value={listSortField}
+              onValueChange={(value) => setListSortField(value as ListSortField)}
+            >
+              <SelectTrigger className="w-full md:w-[220px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="createdAt">{t("links.list.sort_created_at")}</SelectItem>
+                <SelectItem value="name">{t("links.list.sort_name")}</SelectItem>
+                <SelectItem value="clicks">{t("links.list.sort_clicks")}</SelectItem>
+                <SelectItem value="expiresAt">{t("links.list.sort_expiration")}</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              onClick={toggleListSortOrder}
+              aria-label={t("links.list.sort_order")}
+              className="w-full md:w-auto"
+            >
+              {listSortOrder === "asc"
+                ? t("links.list.sort_asc")
+                : t("links.list.sort_desc")}
+            </Button>
+          </div>
           <div className="relative overflow-x-auto">
             <Table>
               <TableHeader>
@@ -387,12 +490,8 @@ export function LinksList({
                   <TableHead className="font-semibold text-right">
                     {t("links.list.clicks")}
                   </TableHead>
-                  <TableHead
-                    className="font-semibold cursor-pointer select-none"
-                    onClick={() => handleSort("createdAt")}
-                  >
-                    {t("links.list.created_at")}{" "}
-                    {getSortIcon("createdAt")}
+                  <TableHead className="font-semibold">
+                    {t("links.list.created_at")}
                   </TableHead>
                   <TableHead className="font-semibold">
                     {t("links.list.expiration")}
@@ -403,7 +502,7 @@ export function LinksList({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {links?.map((link, index) => (
+                {filteredAndSortedLinks.map((link, index) => (
                   <motion.tr
                     key={link.id}
                     initial={{ opacity: 0, y: 10 }}
@@ -492,6 +591,11 @@ export function LinksList({
                 ))}
               </TableBody>
             </Table>
+            {filteredAndSortedLinks.length === 0 && (
+              <div className="py-8 text-center text-sm text-muted-foreground">
+                {t("links.list.no_results")}
+              </div>
+            )}
           </div>
         </CardContent>
         <CardFooter className="flex items-center justify-between py-4 border-t border-white/10">

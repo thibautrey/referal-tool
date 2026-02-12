@@ -554,7 +554,20 @@
       "next": "Next page",
       "no_expiration": "No expiration",
       "expired": "Expired",
-      "expires_badge": "Scheduled"
+      "expires_badge": "Scheduled",
+      "search_placeholder": "Search a link (name, URL, short code)",
+      "filter_all": "All statuses",
+      "filter_active": "Active",
+      "filter_expired": "Expired",
+      "filter_no_expiration": "No expiration",
+      "sort_created_at": "Sort: creation date",
+      "sort_name": "Sort: name",
+      "sort_clicks": "Sort: clicks",
+      "sort_expiration": "Sort: expiration",
+      "sort_order": "Sort order",
+      "sort_asc": "Order: ascending",
+      "sort_desc": "Order: descending",
+      "no_results": "No links match your search."
     }
   },
   "analytics": {
