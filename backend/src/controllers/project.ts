@@ -129,13 +129,13 @@ export const getProjectLinks = async (req: Request, res: Response) => {
     const isAdmin = req.user?.role === "ADMIN";
     let {
       page = 1,
-      limit = 10,
+      limit = 100,
       sortBy = "createdAt",
       sortOrder = "desc",
     } = req.query;
 
     const pageNumber = Math.max(Number(page) || 1, 1);
-    const limitNumber = Math.max(Number(limit) || 10, 1);
+    const limitNumber = Math.min(Math.max(Number(limit) || 100, 1), 500); // Min 1, Max 500, Default 100
 
     if (!ALLOWED_SORT_FIELDS.includes(sortBy as string)) {
       sortBy = "createdAt";
