@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "rflnk": {
+      "command": "node",
+      "args": ["/path/to/mcp-server/dist/index.js"],
+      "env": {
+        "RFLNK_API_KEY": "your_api_key_here",
+        "RFLNK_API_URL": "https://your-domain.com/api"
+      }
+    }
+  }
+}

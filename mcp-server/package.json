@@ -1,0 +1,33 @@
+{
+  "name": "rflnk-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP Server for rflnk - Manage referral and affiliate links",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "rflnk-mcp-server": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "referral",
+    "affiliate",
+    "link-management"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.25",
+    "typescript": "^5.3.3"
+  }
+}
