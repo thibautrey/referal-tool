@@ -662,7 +662,7 @@ export function LinksList({
               </TableBody>
             </Table>
             </div>
-          )
+          )}
         </CardContent>
         <CardFooter className="flex items-center justify-between py-4 border-t border-white/10">
           <div className="text-sm text-muted-foreground">
