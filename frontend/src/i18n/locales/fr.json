@@ -570,7 +570,16 @@
       "no_results": "Aucun lien ne correspond à votre recherche.",
       "no_search_results_title": "Aucun résultat",
       "no_search_results_description": "Aucun lien ne correspond à votre recherche",
-      "clear_search": "Effacer la recherche"
+      "clear_search": "Effacer la recherche",
+      "select_all": "Tout sélectionner",
+      "select_item": "Sélectionner {{name}}",
+      "selected_count": "{{count}} sélectionné(s)",
+      "delete_selected": "Supprimer la sélection",
+      "delete_multiple_title": "Supprimer les liens sélectionnés",
+      "delete_multiple_description": "Voulez-vous vraiment supprimer {{count}} lien(s) ? Cette action est irréversible.",
+      "delete_multiple_success": "{{count}} lien(s) supprimé(s) avec succès",
+      "delete_multiple_error": "Erreur lors de la suppression de {{count}} lien(s)",
+      "items_per_page": "Par page"
     }
   },
   "analytics": {

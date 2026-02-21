@@ -570,7 +570,16 @@
       "no_results": "No links match your search.",
       "no_search_results_title": "No results found",
       "no_search_results_description": "No links match your search",
-      "clear_search": "Clear search"
+      "clear_search": "Clear search",
+      "select_all": "Select all",
+      "select_item": "Select {{name}}",
+      "selected_count": "{{count}} selected",
+      "delete_selected": "Delete selected",
+      "delete_multiple_title": "Delete selected links",
+      "delete_multiple_description": "Are you sure you want to delete {{count}} link(s)? This action cannot be undone.",
+      "delete_multiple_success": "{{count}} link(s) deleted successfully",
+      "delete_multiple_error": "Error deleting {{count}} link(s)",
+      "items_per_page": "Per page"
     }
   },
   "analytics": {

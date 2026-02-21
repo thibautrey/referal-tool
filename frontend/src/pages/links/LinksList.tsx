@@ -8,6 +8,7 @@ import {
   Plus,
   Search,
   Trash,
+  Trash2,
   X,
 } from "lucide-react";
 import {
@@ -103,6 +104,9 @@ export function LinksList({
   const [errorState, setErrorState] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
+  const [selectedLinkIds, setSelectedLinkIds] = useState<Set<number>>(new Set());
+  const [isDeletingMultiple, setIsDeletingMultiple] = useState(false);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const previousProjectId = useRef<number | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { t, i18n } = useAppTranslation();
@@ -160,7 +164,7 @@ export function LinksList({
         setIsLoading(true);
         setErrorState(null);
 
-        const response = await api.getLinks(projectId, page, sortBy, order, 10, search);
+        const response = await api.getLinks(projectId, page, sortBy, order, itemsPerPage, search);
 
         if (shouldAbort()) {
           return;
@@ -195,7 +199,7 @@ export function LinksList({
         }
       }
     },
-    [projectId, onError, t]
+    [projectId, onError, t, itemsPerPage]
   );
 
   useEffect(() => {
@@ -217,6 +221,11 @@ export function LinksList({
     setCurrentDomain(window.location.host);
   }, []);
 
+  // Reset selection when page or items per page changes
+  useEffect(() => {
+    setSelectedLinkIds(new Set());
+  }, [currentPage, itemsPerPage]);
+
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
@@ -229,9 +238,74 @@ export function LinksList({
     try {
       await api.deleteLink(projectId, id);
       setLinks(links.filter((link) => link.id !== parseInt(id)));
+      setSelectedLinkIds((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(parseInt(id));
+        return newSet;
+      });
       toast.success(t("links.list.delete_success"));
     } catch {
       toast.error(t("links.list.delete_error"));
+    }
+  };
+
+  const handleToggleSelect = (id: number) => {
+    setSelectedLinkIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = () => {
+    if (selectedLinkIds.size === filteredAndSortedLinks.length) {
+      setSelectedLinkIds(new Set());
+    } else {
+      setSelectedLinkIds(new Set(filteredAndSortedLinks.map((link) => link.id)));
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedLinkIds.size === 0) return;
+
+    setIsDeletingMultiple(true);
+    const idsToDelete = Array.from(selectedLinkIds);
+    let successCount = 0;
+    let errorCount = 0;
+
+    try {
+      await Promise.all(
+        idsToDelete.map(async (id) => {
+          try {
+            await api.deleteLink(projectId, id.toString());
+            successCount++;
+          } catch {
+            errorCount++;
+          }
+        })
+      );
+
+      setLinks((prev) => prev.filter((link) => !selectedLinkIds.has(link.id)));
+      setSelectedLinkIds(new Set());
+
+      if (successCount > 0) {
+        toast.success(
+          t("links.list.delete_multiple_success", { count: successCount })
+        );
+      }
+      if (errorCount > 0) {
+        toast.error(
+          t("links.list.delete_multiple_error", { count: errorCount })
+        );
+      }
+    } catch {
+      toast.error(t("links.list.delete_error"));
+    } finally {
+      setIsDeletingMultiple(false);
     }
   };
 
@@ -463,6 +537,53 @@ export function LinksList({
 
       <Card className={glassCardStyle}>
         <CardContent className="px-6 py-0">
+          {selectedLinkIds.size > 0 && (
+            <div className="flex items-center justify-between py-3 border-b border-white/10">
+              <span className="text-sm text-muted-foreground">
+                {t("links.list.selected_count", { count: selectedLinkIds.size })}
+              </span>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    disabled={isDeletingMultiple}
+                    className="gap-2"
+                  >
+                    {isDeletingMultiple ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
+                    {t("links.list.delete_selected")}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      {t("links.list.delete_multiple_title")}
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      {t("links.list.delete_multiple_description", {
+                        count: selectedLinkIds.size,
+                      })}
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>
+                      {t("links.list.cancel")}
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-destructive hover:bg-destructive/90"
+                      onClick={handleDeleteSelected}
+                    >
+                      {t("links.list.delete_confirm")}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          )}
           <div className="flex flex-col gap-3 py-4 border-b border-white/10 md:flex-row md:items-center">
             <div className="relative w-full md:flex-1">
               <Search className="absolute w-4 h-4 -translate-y-1/2 left-3 top-1/2 text-muted-foreground" />
@@ -526,6 +647,25 @@ export function LinksList({
                 ? t("links.list.sort_asc")
                 : t("links.list.sort_desc")}
             </Button>
+            <Select
+              value={itemsPerPage.toString()}
+              onValueChange={(value) => {
+                setItemsPerPage(parseInt(value));
+                setCurrentPage(1);
+              }}
+            >
+              <SelectTrigger className="w-full md:w-[160px]">
+                <SelectValue placeholder={t("links.list.items_per_page")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="10">10</SelectItem>
+                <SelectItem value="25">25</SelectItem>
+                <SelectItem value="50">50</SelectItem>
+                <SelectItem value="100">100</SelectItem>
+                <SelectItem value="250">250</SelectItem>
+                <SelectItem value="500">500</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           {filteredAndSortedLinks.length === 0 && debouncedSearchQuery ? (
             <div className="flex flex-col items-center justify-center min-h-[300px] text-center space-y-4 py-12">
@@ -548,6 +688,18 @@ export function LinksList({
             <Table>
               <TableHeader>
                 <TableRow className="border-b hover:bg-transparent border-white/10">
+                  <TableHead className="w-10">
+                    <input
+                      type="checkbox"
+                      checked={
+                        filteredAndSortedLinks.length > 0 &&
+                        selectedLinkIds.size === filteredAndSortedLinks.length
+                      }
+                      onChange={handleSelectAll}
+                      className="w-4 h-4 rounded border-input bg-background text-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                      aria-label={t("links.list.select_all")}
+                    />
+                  </TableHead>
                   <TableHead className="font-semibold">
                     {t("links.list.name")}
                   </TableHead>
@@ -580,6 +732,17 @@ export function LinksList({
                     transition={{ delay: index * 0.05 }}
                     className="transition-colors hover:bg-white/5"
                   >
+                    <TableCell className="w-10">
+                      <input
+                        type="checkbox"
+                        checked={selectedLinkIds.has(link.id)}
+                        onChange={() => handleToggleSelect(link.id)}
+                        className="w-4 h-4 rounded border-input bg-background text-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                        aria-label={t("links.list.select_item", {
+                          name: link.name,
+                        })}
+                      />
+                    </TableCell>
                     <TableCell className="font-medium">{link.name}</TableCell>
                     <TableCell className="max-w-xs truncate text-muted-foreground">
                       {link.baseUrl}
