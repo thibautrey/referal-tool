@@ -223,11 +223,14 @@ class Api {
     page: number = 1,
     sortBy: string = "createdAt",
     sortOrder: "asc" | "desc" = "desc",
-    limit: number = 10
+    limit: number = 10,
+    search?: string
   ): Promise<LinksResponse> {
-    const response = await this.get<LinksResponse>(
-      `/projects/${projectId}/links?page=${page}&limit=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`
-    );
+    let url = `/projects/${projectId}/links?page=${page}&limit=${limit}&sortBy=${sortBy}&sortOrder=${sortOrder}`;
+    if (search && search.trim()) {
+      url += `&search=${encodeURIComponent(search.trim())}`;
+    }
+    const response = await this.get<LinksResponse>(url);
     return response.data;
   }
 

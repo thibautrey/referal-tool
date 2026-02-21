@@ -1,10 +1,10 @@
-import { ProjectMemberRole } from "@prisma/client";
 import { Request, Response } from "express";
-
-import prisma from "../lib/prisma";
-import { getProjectMemberInvitationTemplate } from "../templates/project-member-invite";
-import { sendEmail } from "../utils/email";
 import { buildLocalizedResponse, createTranslator } from "../lib/i18n";
+
+import { ProjectMemberRole } from "@prisma/client";
+import { getProjectMemberInvitationTemplate } from "../templates/project-member-invite";
+import prisma from "../lib/prisma";
+import { sendEmail } from "../utils/email";
 
 const ALLOWED_SORT_FIELDS = [
   "id",
@@ -132,6 +132,7 @@ export const getProjectLinks = async (req: Request, res: Response) => {
       limit = 100,
       sortBy = "createdAt",
       sortOrder = "desc",
+      search,
     } = req.query;
 
     const pageNumber = Math.max(Number(page) || 1, 1);
@@ -168,15 +169,27 @@ export const getProjectLinks = async (req: Request, res: Response) => {
 
     translator = getRequestTranslator(req, project.locale);
 
+    // Build search filter
+    const searchQuery = search ? (search as string).trim() : "";
+    const whereClause: any = { projectId };
+
+    if (searchQuery) {
+      whereClause.OR = [
+        { name: { contains: searchQuery } },
+        { baseUrl: { contains: searchQuery } },
+        { shortCode: { contains: searchQuery } },
+      ];
+    }
+
     const links = await prisma.link.findMany({
-      where: { projectId },
+      where: whereClause,
       orderBy: { [sortBy as string]: sortOrder },
       take: limitNumber,
       skip: (pageNumber - 1) * limitNumber,
     });
 
     const total = await prisma.link.count({
-      where: { projectId },
+      where: whereClause,
     });
 
     res.json(

@@ -91,6 +91,9 @@ model Link {
 
     @@index([projectId])
     @@index([expiresAt])
+    @@index([name])
+    @@index([baseUrl])
+    @@index([shortCode])
 }
 
 model LinkRule {

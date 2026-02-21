@@ -567,7 +567,10 @@
       "sort_order": "Ordre de tri",
       "sort_asc": "Ordre: croissant",
       "sort_desc": "Ordre: décroissant",
-      "no_results": "Aucun lien ne correspond à votre recherche."
+      "no_results": "Aucun lien ne correspond à votre recherche.",
+      "no_search_results_title": "Aucun résultat",
+      "no_search_results_description": "Aucun lien ne correspond à votre recherche",
+      "clear_search": "Effacer la recherche"
     }
   },
   "analytics": {

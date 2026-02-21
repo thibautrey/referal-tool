@@ -8,6 +8,7 @@ import {
   Plus,
   Search,
   Trash,
+  X,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -97,12 +98,25 @@ export function LinksList({
   const [apiSortOrder, setApiSortOrder] = useState<ApiSortOrder>("desc");
   const [listSortField, setListSortField] = useState<ListSortField>("createdAt");
   const [listSortOrder, setListSortOrder] = useState<SortOrder>("desc");
-  const [searchQuery, setSearchQuery] = useState("");
   const [expirationFilter, setExpirationFilter] =
     useState<ExpirationFilter>("all");
   const [errorState, setErrorState] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState("");
   const previousProjectId = useRef<number | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const { t, i18n } = useAppTranslation();
+
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+      // Reset to page 1 when search changes
+      setCurrentPage(1);
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   useEffect(() => {
     if (previousProjectId.current === projectId) {
@@ -131,6 +145,7 @@ export function LinksList({
       page: number,
       sortBy: ApiSortField = "createdAt",
       order: SortOrder = "desc",
+      search?: string,
       options?: { signal?: AbortSignal }
     ) => {
       if (!projectId) {
@@ -145,7 +160,7 @@ export function LinksList({
         setIsLoading(true);
         setErrorState(null);
 
-        const response = await api.getLinks(projectId, page, sortBy, order);
+        const response = await api.getLinks(projectId, page, sortBy, order, 10, search);
 
         if (shouldAbort()) {
           return;
@@ -189,14 +204,14 @@ export function LinksList({
     }
 
     const abortController = new AbortController();
-    fetchLinks(currentPage, apiSortField, apiSortOrder, {
+    fetchLinks(currentPage, apiSortField, apiSortOrder, debouncedSearchQuery, {
       signal: abortController.signal,
     });
 
     return () => {
       abortController.abort();
     };
-  }, [projectId, currentPage, apiSortField, apiSortOrder, fetchLinks]);
+  }, [projectId, currentPage, apiSortField, apiSortOrder, debouncedSearchQuery, fetchLinks]);
 
   useEffect(() => {
     setCurrentDomain(window.location.host);
@@ -286,7 +301,7 @@ export function LinksList({
           <span className="text-sm">{formatted}</span>
           <Badge
             variant={isExpired ? "destructive" : "secondary"}
-            className="w-fit text-xs font-medium"
+            className="text-xs font-medium w-fit"
           >
             {isExpired
               ? t("links.list.expired")
@@ -354,7 +369,7 @@ export function LinksList({
       <AnimatedCard>
         <Card className={glassCardStyle}>
           <CardContent className="flex justify-center items-center min-h-[400px]">
-            <Loader2 className="h-8 w-8 animate-spin text-primary/50" />
+            <Loader2 className="w-8 h-8 animate-spin text-primary/50" />
           </CardContent>
         </Card>
       </AnimatedCard>
@@ -367,10 +382,10 @@ export function LinksList({
         <Card className={glassCardStyle}>
           <CardContent className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-4">
             <div className="p-4 rounded-full bg-destructive/10 backdrop-blur-sm">
-              <AlertCircle className="h-8 w-8 text-destructive" />
+              <AlertCircle className="w-8 h-8 text-destructive" />
             </div>
             <h3 className="text-lg font-medium">{t("links.list.load_error")}</h3>
-            <p className="text-muted-foreground max-w-md mx-auto">{errorState}</p>
+            <p className="max-w-md mx-auto text-muted-foreground">{errorState}</p>
             <Button
               variant="glass"
               className="ring-1 ring-white/10 hover:ring-white/20"
@@ -384,20 +399,26 @@ export function LinksList({
     );
   }
 
-  if (links?.length === 0) {
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setDebouncedSearchQuery("");
+    searchInputRef.current?.focus();
+  };
+
+  if (links?.length === 0 && !debouncedSearchQuery) {
     return (
       <AnimatedCard>
         <Card className={glassCardStyle}>
           <CardContent className="flex flex-col items-center justify-center min-h-[400px] text-center space-y-4">
             <div className="p-4 rounded-full bg-muted/30 backdrop-blur-sm">
-              <Plus className="h-8 w-8 text-primary/70" />
+              <Plus className="w-8 h-8 text-primary/70" />
             </div>
             <h3 className="text-lg font-medium">{t("links.list.empty_title")}</h3>
             <p className="text-muted-foreground">
               {t("links.list.empty_description")}
             </p>
             <Button onClick={onAddLinkClick}>
-              <Plus className="h-4 w-4" />
+              <Plus className="w-4 h-4" />
               {t("links.list.create")}
             </Button>
           </CardContent>
@@ -408,28 +429,60 @@ export function LinksList({
 
   return (
     <AnimatedCard className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-2xl font-semibold tracking-tight">
           {t("links.list.title")}
         </h2>
-        <Button onClick={onAddLinkClick}>
-          <Plus className="h-4 w-4" />
-          {t("links.list.create")}
-        </Button>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search className="absolute w-4 h-4 -translate-y-1/2 left-3 top-1/2 text-muted-foreground" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder={t("links.list.search_placeholder") || "Rechercher..."}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full h-10 text-sm border rounded-md sm:w-64 border-input bg-background pl-9 pr-9 ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            />
+            {searchQuery && (
+              <button
+                onClick={handleClearSearch}
+                className="absolute -translate-y-1/2 right-3 top-1/2 text-muted-foreground hover:text-foreground"
+                aria-label="Clear search"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+          <Button onClick={onAddLinkClick}>
+            <Plus className="w-4 h-4" />
+            {t("links.list.create")}
+          </Button>
+        </div>
       </div>
 
       <Card className={glassCardStyle}>
         <CardContent className="px-6 py-0">
-          <div className="py-4 border-b border-white/10 flex flex-col gap-3 md:flex-row md:items-center">
+          <div className="flex flex-col gap-3 py-4 border-b border-white/10 md:flex-row md:items-center">
             <div className="relative w-full md:flex-1">
-              <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Search className="absolute w-4 h-4 -translate-y-1/2 left-3 top-1/2 text-muted-foreground" />
               <Input
+                ref={searchInputRef}
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder={t("links.list.search_placeholder")}
-                className="pl-9"
+                className="pl-9 pr-9"
                 aria-label={t("links.list.search_placeholder")}
               />
+              {searchQuery && (
+                <button
+                  onClick={handleClearSearch}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label="Clear search"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
             </div>
             <Select
               value={expirationFilter}
@@ -474,10 +527,27 @@ export function LinksList({
                 : t("links.list.sort_desc")}
             </Button>
           </div>
-          <div className="relative overflow-x-auto">
+          {filteredAndSortedLinks.length === 0 && debouncedSearchQuery ? (
+            <div className="flex flex-col items-center justify-center min-h-[300px] text-center space-y-4 py-12">
+              <div className="p-4 rounded-full bg-muted/30 backdrop-blur-sm">
+                <Search className="w-8 h-8 text-primary/70" />
+              </div>
+              <h3 className="text-lg font-medium">
+                {t("links.list.no_search_results_title") || "Aucun résultat"}
+              </h3>
+              <p className="max-w-md text-muted-foreground">
+                {t("links.list.no_search_results_description") || `Aucun lien ne correspond à "${debouncedSearchQuery}"`}
+              </p>
+              <Button variant="outline" onClick={handleClearSearch}>
+                <X className="w-4 h-4 mr-2" />
+                {t("links.list.clear_search") || "Effacer la recherche"}
+              </Button>
+            </div>
+          ) : (
+            <div className="relative overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="hover:bg-transparent border-b border-white/10">
+                <TableRow className="border-b hover:bg-transparent border-white/10">
                   <TableHead className="font-semibold">
                     {t("links.list.name")}
                   </TableHead>
@@ -508,24 +578,24 @@ export function LinksList({
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    className="hover:bg-white/5 transition-colors"
+                    className="transition-colors hover:bg-white/5"
                   >
                     <TableCell className="font-medium">{link.name}</TableCell>
-                    <TableCell className="truncate max-w-xs text-muted-foreground">
+                    <TableCell className="max-w-xs truncate text-muted-foreground">
                       {link.baseUrl}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       <div className="flex items-center">
-                        <div className="flex items-center border rounded-md px-3 py-1 bg-muted/30">
+                        <div className="flex items-center px-3 py-1 border rounded-md bg-muted/30">
                           <span className="text-sm">{currentDomain}/l/</span>
-                          <span className="font-medium text-sm">
+                          <span className="text-sm font-medium">
                             {link.shortCode}
                           </span>
                         </div>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 ml-1"
+                          className="w-8 h-8 p-0 ml-1"
                           onClick={() => handleCopyLink(link.shortCode)}
                           title={t("links.list.copy")}
                           aria-label={t("links.list.copy")}
@@ -544,7 +614,7 @@ export function LinksList({
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0"
+                          className="w-8 h-8 p-0"
                           onClick={() => handleEditClick(link)}
                           aria-label={t("links.breadcrumb.edit")}
                         >
@@ -555,7 +625,7 @@ export function LinksList({
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-8 w-8 p-0 hover:text-destructive"
+                              className="w-8 h-8 p-0 hover:text-destructive"
                               aria-label={t("links.list.delete_confirm")}
                             >
                               <Trash className="h-3.5 w-3.5" />
@@ -591,12 +661,8 @@ export function LinksList({
                 ))}
               </TableBody>
             </Table>
-            {filteredAndSortedLinks.length === 0 && (
-              <div className="py-8 text-center text-sm text-muted-foreground">
-                {t("links.list.no_results")}
-              </div>
-            )}
-          </div>
+            </div>
+          )
         </CardContent>
         <CardFooter className="flex items-center justify-between py-4 border-t border-white/10">
           <div className="text-sm text-muted-foreground">
@@ -614,7 +680,7 @@ export function LinksList({
               disabled={currentPage <= 1}
               aria-label={t("links.list.previous")}
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="w-4 h-4" />
             </Button>
             <Button
               variant="glass"
@@ -624,7 +690,7 @@ export function LinksList({
               disabled={currentPage >= totalPages}
               aria-label={t("links.list.next")}
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
         </CardFooter>

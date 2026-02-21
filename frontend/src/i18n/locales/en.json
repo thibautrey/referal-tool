@@ -567,7 +567,10 @@
       "sort_order": "Sort order",
       "sort_asc": "Order: ascending",
       "sort_desc": "Order: descending",
-      "no_results": "No links match your search."
+      "no_results": "No links match your search.",
+      "no_search_results_title": "No results found",
+      "no_search_results_description": "No links match your search",
+      "clear_search": "Clear search"
     }
   },
   "analytics": {
